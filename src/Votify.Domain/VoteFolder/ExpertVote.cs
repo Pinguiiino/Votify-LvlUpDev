@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Votify.Domain
+namespace Votify.Domain.Vote.VoteVoteFoler
 {
     internal class ExpertVote : Vote
     {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Votify.Domain;
+namespace Votify.Domain.EventFolder;
 
 public class Event
 {

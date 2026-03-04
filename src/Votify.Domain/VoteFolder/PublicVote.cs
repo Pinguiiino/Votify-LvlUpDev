@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 
-namespace Votify.Domain
+namespace Votify.Domain.VoteFoler
 {
     internal class PublicVote : Vote
     {

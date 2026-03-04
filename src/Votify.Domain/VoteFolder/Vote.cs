@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Votify.Domain
+namespace Votify.Domain.VoteFoler
 {
     public abstract class Vote
     {
