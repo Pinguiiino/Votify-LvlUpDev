@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Votify.Api/Votify.Api.csproj" />
+    <Project Path="src/Votify.Domain/Votify.Domain.csproj" />
+    <Project Path="src/Votify.Infrastructure/Votify.Infrastructure.csproj" />
+    <Project Path="src/Votify.Web/Votify.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Votify.Tests/Votify.Tests.csproj" />
+  </Folder>
+</Solution>
