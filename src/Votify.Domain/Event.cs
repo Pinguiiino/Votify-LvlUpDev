@@ -4,20 +4,22 @@ using System.Text;
 
 namespace Votify.Domain;
 
-public abstract class Event
+public class Event
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
+    public string Id { get; set; }
+    public string Name { get; set; }
+    public string? Description { get; set; }
     public int MaxProjects { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
 
-    protected Event(string name, int maxProjects)
+    protected Event(string name, int maxProjects, DateTime startDate, string? description)
     {
-        Name = name;
-        MaxProjects = maxProjects;
-    }
+        this.Id = Guid.NewGuid().ToString();
+        this.Name = name;
+        this.MaxProjects = maxProjects;
+        this.StartDate = startDate;
 
-    public abstract string Modality();
+        if(description is not null) {  this.Description = description; }
+    }
 }
