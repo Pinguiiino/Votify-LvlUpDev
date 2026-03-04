@@ -13,7 +13,8 @@ public class Event
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
 
-    protected Event(string name, int maxProjects, DateTime startDate, string? description)
+    public Event() { }
+    public Event(string name, int maxProjects, DateTime startDate, string? description)
     {
         this.Id = Guid.NewGuid().ToString();
         this.Name = name;

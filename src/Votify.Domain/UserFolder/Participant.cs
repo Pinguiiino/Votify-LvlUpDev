@@ -6,6 +6,7 @@ namespace Votify.Domain.UserFolder
 {
     public class Participant : Voter
     {
+        public Participant() { }
         public Participant(string name, string email, string password) : base(name, email, password)
         {
         }

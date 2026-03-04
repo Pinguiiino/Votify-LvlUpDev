@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Votify.Domain.Vote.VoteVoteFoler
+namespace Votify.Domain.VoteFoler
 {
-    internal class ExpertVote : Vote
+    public class ExpertVote : Vote
     {
         public int Weight { get; set; }
 
+        public ExpertVote() { }
         public ExpertVote(string projectId, string userId, int weight) : base(projectId, userId)
         {
             this.Weight = weight;

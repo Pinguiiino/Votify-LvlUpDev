@@ -11,6 +11,7 @@ namespace Votify.Domain.VoteFoler
         public string UserId { get; set; }
         public DateTime CreatedAt { get; set; }
 
+        public Vote() { }
         protected Vote(string projectId, string userId)
         {
             this.Id = Guid.NewGuid().ToString();

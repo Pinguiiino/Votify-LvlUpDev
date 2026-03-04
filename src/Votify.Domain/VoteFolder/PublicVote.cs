@@ -5,8 +5,9 @@ using System.Text;
 
 namespace Votify.Domain.VoteFoler
 {
-    internal class PublicVote : Vote
+    public class PublicVote : Vote
     {
+        public PublicVote() { }
         public PublicVote(string projectId, string userId) : base(projectId, userId)
         {
         }

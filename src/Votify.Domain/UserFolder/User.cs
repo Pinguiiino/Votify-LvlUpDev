@@ -11,7 +11,8 @@ namespace Votify.Domain.UserFolder
         public string Email { get; set; }
         public string Password { get; set; }
 
-        protected User(string name, string email, string password)
+        public User() { }
+        public User(string name, string email, string password)
         {
             this.Id = Guid.NewGuid().ToString();
             this.Name = name;
