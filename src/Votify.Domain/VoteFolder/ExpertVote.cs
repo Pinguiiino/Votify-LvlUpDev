@@ -2,16 +2,23 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Votify.Domain.VoteFoler
-{
-    public class ExpertVote : Vote
-    {
-        public int Weight { get; set; }
+namespace Votify.Domain.VoteFolder;
 
-        public ExpertVote() { }
-        public ExpertVote(string projectId, string userId, int weight) : base(projectId, userId)
-        {
-            this.Weight = weight;
-        }
-    }
+public class ExpertVote : Vote
+{
+    public ExpertVote() { }
+
+    public ExpertVote(string projectId, string userId, double rawScore)
+        : base(projectId, userId, rawScore) { }
+
+    public override string VoterRole() => "EXPERT";
+
+    public override double NormalizedScore() => RawScore * 1.20;
 }
+
+
+
+
+
+
+
