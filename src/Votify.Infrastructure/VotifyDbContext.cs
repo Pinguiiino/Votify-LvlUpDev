@@ -35,12 +35,6 @@ public class VotifyDbContext : DbContext
             .HasValue<Jury>("Jurado")
             .HasValue<Participant>("Participante");
 
-        // ── Herencia de Event (Table-Per-Hierarchy) ─────────────────────────
-        modelBuilder.Entity<Event>()
-            .HasDiscriminator<string>("EventType")
-            .HasValue<HackathonEvent>("Hackathon")
-            .HasValue<InnovationFairEvent>("InnovationFair");
-
         // ── Herencia de Project (Table-Per-Hierarchy) ───────────────────────
         modelBuilder.Entity<Project>()
             .HasDiscriminator<string>("ProjectType")
