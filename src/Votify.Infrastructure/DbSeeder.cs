@@ -75,19 +75,19 @@ public static class DbSeeder
         // 2. EVENTOS (via Factory Method)
         // ════════════════════════════════════════════════════════════════════
 
-        EventCreator hackathonCreator = new HackathonEventCreator();
-        var hackUPC = hackathonCreator.Create(
+        var hackUPC = new Event(
             name: "HackUPC 2026",
             maxProjects: 30,
             startDate: new DateTime(2026, 4, 10),
+            modality: "hackatoonEvent",
             description: "El hackathon más grande de la UPC. 24h de innovación continua."
         );
 
-        EventCreator fairCreator = new InnovationFairEventCreator();
-        var fibFair = fairCreator.Create(
+        var fibFair = new Event(
             name: "FIB Innovation Fair 2026",
             maxProjects: 20,
             startDate: new DateTime(2026, 5, 22),
+            modality: "innovationFairEvent",
             description: "Feria de innovación anual de la Facultad de Informática de Barcelona."
         );
 

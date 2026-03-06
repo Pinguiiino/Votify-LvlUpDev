@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Votify.Domain.EventFolder;
 
-public abstract class Event
+public class Event
 {
     public string Id { get; set; }
     public string Name { get; set; }
@@ -12,17 +12,18 @@ public abstract class Event
     public int MaxProjects { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
+    public string Modality { get; set; }
 
     public Event() { }
-    public Event(string name, int maxProjects, DateTime startDate, string? description = null)
+    public Event(string name, int maxProjects, DateTime startDate, string modality, string? description = null)
     {
         this.Id = Guid.NewGuid().ToString();
         this.Name = name;
         this.MaxProjects = maxProjects;
         this.StartDate = startDate;
         this.Description = description;
+        this.Modality = modality;
 
         if (description is not null) { this.Description = description; }
     }
-    public abstract string Modality();
 }
