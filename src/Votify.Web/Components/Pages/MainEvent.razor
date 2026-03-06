@@ -1,0 +1,68 @@
+﻿@page "/"
+@inject NavigationManager Navigation
+
+<PageTitle>Inicio - Votify</PageTitle>
+
+<div class="mainevent-container">
+    <header class="hero-section">
+        <div class="status-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
+            </svg>
+            Eventos Activos
+        </div>
+        <h1 class="main-title">Plataforma de Gestión de Proyectos</h1>
+        <p class="subtitle">Explora los eventos activos, descubre proyectos innovadores y comparte tu opinión</p>
+    </header>
+
+    <div class="toolbar">
+        <button class="btn-dark" @onclick="IrACrearEvento">
+            + Crear Evento
+        </button>
+    </div>
+
+    <div class="events-grid">
+        @foreach (var evento in EventosActivos)
+        {
+            <div class="event-card">
+                <div class="icon-container">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                        <path d="M11.354 4.646a.5.5 0 0 0-.708 0l-6 6a.5.5 0 0 0 .708.708l6-6a.5.5 0 0 0 0-.708z" />
+                    </svg>
+                </div>
+                <div class="card-info">
+                    <h2 class="card-title">@evento.Name</h2>
+                    <span class="card-date">@evento.Date</span>
+                    <p class="card-description">@evento.Description</p>
+                    <a href="/evento/@evento.Id" class="card-link">Ver categorías &gt;</a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    // Método para navegar a la página de creación
+    private void IrACrearEvento()
+    {
+        Navigation.NavigateTo("/crear-evento");
+    }
+
+    // Datos temporales para visualizar el diseño
+    private List<EventViewModel> EventosActivos = new()
+    {
+        new EventViewModel { Id = 1, Name = "Hackathon 2026", Date = "15 de Marzo, 2026", Description = "Competencia de desarrollo de software enfocada en innovación tecnológica" },
+        new EventViewModel { Id = 2, Name = "Design Sprint", Date = "22 de Marzo, 2026", Description = "Evento de diseño colaborativo para crear soluciones creativas" },
+        new EventViewModel { Id = 3, Name = "Startup Weekend", Date = "5 de Abril, 2026", Description = "Fin de semana intensivo para crear y lanzar nuevos negocios" },
+        new EventViewModel { Id = 4, Name = "Innovation Lab", Date = "12 de Abril, 2026", Description = "Laboratorio de ideas innovadoras para el futuro" }
+    };
+
+    public class EventViewModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public string Date { get; set; } = "";
+        public string Description { get; set; } = "";
+    }
+}
