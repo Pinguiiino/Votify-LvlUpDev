@@ -52,19 +52,19 @@ public static class DbSeeder
         // 2. EVENTOS (Instanciación Directa, ya no hay Factory)
         // ════════════════════════════════════════════════════════════════════
 
-        var hackUPC = new Event(
+        EventCreator hackathonCreator = new HackathonEventCreator();
+        var hackUPC = hackathonCreator.Create(
             name: "HackUPC 2026",
             maxProjects: 30,
             startDate: new DateTime(2026, 4, 10, 0, 0, 0, DateTimeKind.Utc),
-            modality: "hackathon",
             description: "El hackathon más grande de la UPC..."
         );
 
-        var fibFair = new Event(
+        EventCreator fairCreator = new InnovationFairEventCreator();
+        var fibFair = fairCreator.Create(
             name: "FIB Innovation Fair 2026",
             maxProjects: 20,
             startDate: new DateTime(2026, 5, 22, 0, 0, 0, DateTimeKind.Utc),
-            modality: "innovationFair",
             description: "Feria de innovación anual..."
         );
 

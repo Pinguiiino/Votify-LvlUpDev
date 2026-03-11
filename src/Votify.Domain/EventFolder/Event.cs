@@ -1,10 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System;
 
 namespace Votify.Domain.EventFolder;
 
-public class Event
+/// <summary>
+/// Product abstracto del patrón Factory Method para la familia Event.
+/// Define el contrato común de todos los tipos de evento.
+/// </summary>
+public abstract class Event
 {
     public string Id { get; set; }
     public string Name { get; set; }
@@ -12,18 +14,24 @@ public class Event
     public int MaxProjects { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
-    public string Modality { get; set; }
 
-    public Event() { }
-    public Event(string name, int maxProjects, DateTime startDate, string modality, string? description = null)
+    protected Event() { }
+
+    protected Event(string name, int maxProjects, DateTime startDate, string? description = null)
     {
         this.Id = Guid.NewGuid().ToString();
         this.Name = name;
         this.MaxProjects = maxProjects;
         this.StartDate = startDate;
         this.Description = description;
-        this.Modality = modality;
-
-        if (description is not null) { this.Description = description; }
     }
+
+    /// <summary>
+    /// Factory Method hook: devuelve la modalidad concreta del evento.
+    /// Cada subclase lo sobreescribe con su propio valor.
+    /// </summary>
+    public abstract string Modality();
+
+    public virtual string Summary()
+        => $"[{Modality()}] {Name} — hasta {MaxProjects} proyectos, desde {StartDate:d}";
 }
