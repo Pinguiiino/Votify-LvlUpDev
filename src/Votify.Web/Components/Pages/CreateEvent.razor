@@ -4,6 +4,7 @@
 @using Microsoft.EntityFrameworkCore
 @using Votify.Domain.EventFolder
 @using Votify.Infrastructure
+@using Votify.Domain.Factory
 @inject NavigationManager Navigation
 @inject IDbContextFactory<VotifyDbContext> DbFactory
 
@@ -79,10 +80,15 @@
     {
         using var context = await DbFactory.CreateDbContextAsync();
 
-        var nuevoEvento = new Event(
+        EventCreator eventCreator = new ModalityEventCreator();
+
+        var fechaSeleccionada = eventModel.Date ?? DateTime.UtcNow;
+        var fechaUtc = DateTime.SpecifyKind(fechaSeleccionada, DateTimeKind.Utc);
+
+        var nuevoEvento = eventCreator.Create(
             name: eventModel.Name,
             maxProjects: eventModel.MaxProjects,
-            startDate: eventModel.Date ?? DateTime.UtcNow,
+            startDate: fechaUtc,
             modality: eventModel.Modality,
             description: eventModel.Description
         );

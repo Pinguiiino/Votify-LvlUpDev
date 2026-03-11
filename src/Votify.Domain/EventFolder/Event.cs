@@ -26,12 +26,6 @@ public abstract class Event
         this.Description = description;
     }
 
-    /// <summary>
-    /// Factory Method hook: devuelve la modalidad concreta del evento.
-    /// Cada subclase lo sobreescribe con su propio valor.
-    /// </summary>
-    public abstract string Modality();
-
     public virtual string Summary()
-        => $"[{Modality()}] {Name} — hasta {MaxProjects} proyectos, desde {StartDate:d}";
+        => $"{Name} — hasta {MaxProjects} proyectos, desde {StartDate:d}";
 }

@@ -52,7 +52,7 @@
 </div>
 
 @code {
-    private List<Event>? EventosActivos;
+    private List<ModalityEvent>? EventosActivos;
 
     protected override async Task OnInitializedAsync()
     {
@@ -62,12 +62,9 @@
     private async Task CargarEventos()
     {
         using var context = await DbFactory.CreateDbContextAsync();
-
-        EventosActivos = await context.Events.AsNoTracking().ToListAsync();
-    }
-
-    private void IrACrearEvento()
-    {
-        Navigation.NavigateTo("/crear-evento");
+        EventosActivos = await context.Events
+            .OfType<ModalityEvent>()
+            .AsNoTracking()
+            .ToListAsync();
     }
 }
