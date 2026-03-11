@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using Votify.Domain.EventFolder;
-using Votify.Factory;
 
 namespace Votify.Domain.Factory
 {

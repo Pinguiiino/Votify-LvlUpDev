@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Votify.Domain.CategoryFolder;
 using Votify.Domain.EventFolder;
+using Votify.Domain.Factory;
 using Votify.Domain.ProjectFolder;
 using Votify.Domain.UserFolder;
 using Votify.Domain.VoteFolder;
-using Votify.Factory;
 
 namespace Votify.Infrastructure.Data;
 
@@ -17,9 +17,6 @@ public static class DbSeeder
         // Guard: no sembrar si ya hay datos
         if (await context.Usuarios.AnyAsync() || await context.Events.AnyAsync())
             return;
-
-        // (Hemos eliminado el Guard de "if (AnyAsync) return" porque
-        // ahora queremos sembrar siempre tras haber vaciado).
 
         // ════════════════════════════════════════════════════════════════════
         // 1. USUARIOS
@@ -49,28 +46,30 @@ public static class DbSeeder
         );
 
         // ════════════════════════════════════════════════════════════════════
-        // 2. EVENTOS (Instanciación Directa, ya no hay Factory)
+        // 2. EVENTOS (Actualizado a ModalityEventCreator)
         // ════════════════════════════════════════════════════════════════════
 
-        EventCreator hackathonCreator = new HackathonEventCreator();
-        var hackUPC = hackathonCreator.Create(
+        // Usamos la nueva fábrica que creaste
+        EventCreator modalityCreator = new ModalityEventCreator();
+
+        var hackUPC = modalityCreator.Create(
             name: "HackUPC 2026",
             maxProjects: 30,
             startDate: new DateTime(2026, 4, 10, 0, 0, 0, DateTimeKind.Utc),
+            modality: "Presencial", // <-- NUEVO PARÁMETRO
             description: "El hackathon más grande de la UPC..."
         );
 
-        EventCreator fairCreator = new InnovationFairEventCreator();
-        var fibFair = fairCreator.Create(
+        var fibFair = modalityCreator.Create(
             name: "FIB Innovation Fair 2026",
             maxProjects: 20,
             startDate: new DateTime(2026, 5, 22, 0, 0, 0, DateTimeKind.Utc),
+            modality: "Híbrido", // <-- NUEVO PARÁMETRO
             description: "Feria de innovación anual..."
         );
 
         context.Events.AddRange(hackUPC, fibFair);
 
-        // AHORA guardamos Usuarios y Eventos para que se les genere un ID real en BD
         await context.SaveChangesAsync();
 
         // ════════════════════════════════════════════════════════════════════
@@ -115,8 +114,6 @@ public static class DbSeeder
         );
 
         context.Categories.AddRange(catIA, catSocial, catSostenibilidad, catStartup, catImpacto);
-
-        // Guardamos las categorías para que tengan ID
         await context.SaveChangesAsync();
 
         // ════════════════════════════════════════════════════════════════════
@@ -140,8 +137,6 @@ public static class DbSeeder
         var p10 = sustCreator.Create("WaterSense", fibFair.Id, catImpacto.Id, 7.5, 9.5, "Sensores IoT de agua.");
 
         context.Projects.AddRange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
-
-        // Guardamos los proyectos para que tengan ID
         await context.SaveChangesAsync();
 
         // ════════════════════════════════════════════════════════════════════
@@ -180,8 +175,6 @@ public static class DbSeeder
         votes.Add(publicCreator.Create(p8.Id, pub3.Id, RawScore(9.0, 8.5)));
 
         context.Votes.AddRange(votes);
-
-        // Guardado final
         await context.SaveChangesAsync();
     }
 
