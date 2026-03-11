@@ -21,13 +21,30 @@ public class VotifyDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // ── Herencia de Vote (Table-Per-Hierarchy) ──────────────────────────
+        // ── 1. CONECTAR PADRES E HIJOS EXPLÍCITAMENTE (El parche para el error) ──
+        modelBuilder.Entity<ModalityEvent>().HasBaseType<Event>();
+
+        modelBuilder.Entity<AiProject>().HasBaseType<Project>();
+        modelBuilder.Entity<SustainabilityProject>().HasBaseType<Project>();
+
+        modelBuilder.Entity<ExpertVote>().HasBaseType<Vote>();
+        modelBuilder.Entity<PublicVote>().HasBaseType<Vote>();
+
+        modelBuilder.Entity<Organizer>().HasBaseType<User>();
+        modelBuilder.Entity<Public>().HasBaseType<User>();
+        modelBuilder.Entity<Jury>().HasBaseType<User>();
+        modelBuilder.Entity<Participant>().HasBaseType<User>();
+
+        // ── 2. DISCRIMINADORES (Table-Per-Hierarchy) ─────────────────────────
+        modelBuilder.Entity<Event>()
+            .HasDiscriminator<string>("EventType")
+            .HasValue<ModalityEvent>("Modality");
+
         modelBuilder.Entity<Vote>()
             .HasDiscriminator<string>("VoteType")
             .HasValue<ExpertVote>("Expert")
             .HasValue<PublicVote>("Public");
 
-        // ── Herencia de User (Table-Per-Hierarchy) ──────────────────────────
         modelBuilder.Entity<User>()
             .HasDiscriminator<string>("TipoUsuario")
             .HasValue<Organizer>("Organizador")
@@ -35,29 +52,24 @@ public class VotifyDbContext : DbContext
             .HasValue<Jury>("Jurado")
             .HasValue<Participant>("Participante");
 
-        // ── Herencia de Project (Table-Per-Hierarchy) ───────────────────────
         modelBuilder.Entity<Project>()
             .HasDiscriminator<string>("ProjectType")
             .HasValue<AiProject>("AI")
             .HasValue<SustainabilityProject>("Sustainability");
 
-        // ── Relaciones ───────────────────────────────────────────────────────
-
-        // Event (1) ──── (*) Category
+        // ── 3. RELACIONES Y RESTRICCIONES ────────────────────────────────────
         modelBuilder.Entity<Category>()
             .HasOne<Event>()
             .WithMany()
             .HasForeignKey(c => c.EventId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Category (1) ──── (*) Project
         modelBuilder.Entity<Project>()
             .HasOne(p => p.Category)
             .WithMany(c => c.Projects)
             .HasForeignKey(p => p.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // ── Precisión de decimales ───────────────────────────────────────────
         modelBuilder.Entity<Category>(e =>
         {
             e.Property(c => c.WeightCriterionA).HasPrecision(5, 2);
