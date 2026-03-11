@@ -1,5 +1,9 @@
 ﻿@page "/"
+@using Microsoft.EntityFrameworkCore
+@using Votify.Domain.EventFolder
+@using Votify.Infrastructure
 @inject NavigationManager Navigation
+@inject IDbContextFactory<VotifyDbContext> DbFactory
 
 <PageTitle>Inicio - Votify</PageTitle>
 
@@ -21,48 +25,55 @@
         </button>
     </div>
 
-    <div class="events-grid">
-        @foreach (var evento in EventosActivos)
-        {
-            <div class="event-card">
-                <div class="icon-container">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                        <path d="M11.354 4.646a.5.5 0 0 0-.708 0l-6 6a.5.5 0 0 0 .708.708l6-6a.5.5 0 0 0 0-.708z" />
-                    </svg>
+    @if (EventosActivos == null)
+    {
+        <p><em>Cargando eventos desde la base de datos...</em></p>
+    }
+    else if (!EventosActivos.Any())
+    {
+        <p>No hay eventos disponibles en este momento.</p>
+    }
+    else
+    {
+        <div class="events-grid">
+            @foreach (var evento in EventosActivos)
+            {
+                <div class="event-card">
+                    <div class="icon-container">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                            <path d="M11.354 4.646a.5.5 0 0 0-.708 0l-6 6a.5.5 0 0 0 .708.708l6-6a.5.5 0 0 0 0-.708z" />
+                        </svg>
+                    </div>
+                    <div class="card-info">
+                        <h2 class="card-title">@evento.Name</h2>
+                        <span class="card-date">@evento.StartDate.ToString("dd 'de' MMMM, yyyy")</span>
+                        <p class="card-description">@evento.Description</p>
+                        <a class="card-modality" style="font-weight:bold; color: #4b5563;">@evento.Modality</a>
+                    </div>
                 </div>
-                <div class="card-info">
-                    <h2 class="card-title">@evento.Name</h2>
-                    <span class="card-date">@evento.Date</span>
-                    <p class="card-description">@evento.Description</p>
-                    <a href="/evento/@evento.Id" class="card-link">Ver categorías &gt;</a>
-                </div>
-            </div>
-        }
-    </div>
+            }
+        </div>
+    }
 </div>
 
 @code {
-    // Método para navegar a la página de creación
+    private List<Event>? EventosActivos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarEventos();
+    }
+
+    private async Task CargarEventos()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+
+        EventosActivos = await context.Events.AsNoTracking().ToListAsync();
+    }
+
     private void IrACrearEvento()
     {
         Navigation.NavigateTo("/crear-evento");
-    }
-
-    // Datos temporales para visualizar el diseño
-    private List<EventViewModel> EventosActivos = new()
-    {
-        new EventViewModel { Id = 1, Name = "Hackathon 2026", Date = "15 de Marzo, 2026", Description = "Competencia de desarrollo de software enfocada en innovación tecnológica" },
-        new EventViewModel { Id = 2, Name = "Design Sprint", Date = "22 de Marzo, 2026", Description = "Evento de diseño colaborativo para crear soluciones creativas" },
-        new EventViewModel { Id = 3, Name = "Startup Weekend", Date = "5 de Abril, 2026", Description = "Fin de semana intensivo para crear y lanzar nuevos negocios" },
-        new EventViewModel { Id = 4, Name = "Innovation Lab", Date = "12 de Abril, 2026", Description = "Laboratorio de ideas innovadoras para el futuro" }
-    };
-
-    public class EventViewModel
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = "";
-        public string Date { get; set; } = "";
-        public string Description { get; set; } = "";
     }
 }

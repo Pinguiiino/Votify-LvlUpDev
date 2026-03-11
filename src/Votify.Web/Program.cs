@@ -1,6 +1,11 @@
+using Microsoft.EntityFrameworkCore;
+using Votify.Infrastructure;
 using Votify.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContextFactory<VotifyDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
