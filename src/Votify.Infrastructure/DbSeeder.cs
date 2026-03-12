@@ -123,18 +123,32 @@ public static class DbSeeder
         ProjectCreator aiCreator = new AiProjectCreator();
         ProjectCreator sustCreator = new SustainabilityProjectCreator();
 
-        var p1 = aiCreator.Create("MediScan AI", hackUPC.Id, catIA.Id, 9.0, 7.5, "Detección temprana de enfermedades.");
-        var p2 = aiCreator.Create("EduAdapt", hackUPC.Id, catIA.Id, 8.0, 8.5, "Plataforma de aprendizaje adaptativo.");
-        var p3 = aiCreator.Create("TrafficFlow", hackUPC.Id, catIA.Id, 7.5, 6.0, "Optimización de semáforos.");
-        var p4 = aiCreator.Create("RefugeeConnect", hackUPC.Id, catSocial.Id, 8.5, 9.0, "App de integración laboral.");
-        var p5 = aiCreator.Create("CuidaMayor", hackUPC.Id, catSocial.Id, 7.0, 8.0, "Plataforma de teleasistencia.");
+        var p1 = aiCreator.Create("MediScan AI", hackUPC.Id, 9.0, 7.5, "Detección temprana de enfermedades.");
+        var p2 = aiCreator.Create("EduAdapt", hackUPC.Id, 8.0, 8.5, "Plataforma de aprendizaje adaptativo.");
+        var p3 = aiCreator.Create("TrafficFlow", hackUPC.Id, 7.5, 6.0, "Optimización de semáforos.");
+        var p4 = aiCreator.Create("RefugeeConnect", hackUPC.Id, 8.5, 9.0, "App de integración laboral.");
+        var p5 = aiCreator.Create("CuidaMayor", hackUPC.Id, 7.0, 8.0, "Plataforma de teleasistencia.");
 
-        var p6 = sustCreator.Create("PlastiTrack", hackUPC.Id, catSostenibilidad.Id, 9.5, 8.0, "Trazabilidad de plásticos.");
-        var p7 = sustCreator.Create("SolarGrid", hackUPC.Id, catSostenibilidad.Id, 8.0, 9.0, "Red P2P de energía solar.");
+        var p6 = sustCreator.Create("PlastiTrack", hackUPC.Id, 9.5, 8.0, "Trazabilidad de plásticos.");
+        var p7 = sustCreator.Create("SolarGrid", hackUPC.Id, 8.0, 9.0, "Red P2P de energía solar.");
 
-        var p8 = aiCreator.Create("QuantumSec", fibFair.Id, catStartup.Id, 9.0, 8.0, "Criptografía post-cuántica.");
-        var p9 = aiCreator.Create("BioPrint3D", fibFair.Id, catStartup.Id, 8.5, 7.5, "Impresión 3D de tejidos.");
-        var p10 = sustCreator.Create("WaterSense", fibFair.Id, catImpacto.Id, 7.5, 9.5, "Sensores IoT de agua.");
+        var p8 = aiCreator.Create("QuantumSec", fibFair.Id, 9.0, 8.0, "Criptografía post-cuántica.");
+        var p9 = aiCreator.Create("BioPrint3D", fibFair.Id, 8.5, 7.5, "Impresión 3D de tejidos.");
+        var p10 = sustCreator.Create("WaterSense", fibFair.Id, 7.5, 9.5, "Sensores IoT de agua.");
+
+        p1.ProjectCategories.Add(new ProjectCategory { ProjectId = p1.Id, CategoryId = catIA.Id });
+        p1.ProjectCategories.Add(new ProjectCategory { ProjectId = p1.Id, CategoryId = catSocial.Id });
+        p2.ProjectCategories.Add(new ProjectCategory { ProjectId = p2.Id, CategoryId = catIA.Id });
+        p3.ProjectCategories.Add(new ProjectCategory { ProjectId = p3.Id, CategoryId = catIA.Id });
+        p4.ProjectCategories.Add(new ProjectCategory { ProjectId = p4.Id, CategoryId = catSocial.Id });
+        p5.ProjectCategories.Add(new ProjectCategory { ProjectId = p5.Id, CategoryId = catSocial.Id });
+
+        p6.ProjectCategories.Add(new ProjectCategory { ProjectId = p6.Id, CategoryId = catSostenibilidad.Id });
+        p7.ProjectCategories.Add(new ProjectCategory { ProjectId = p7.Id, CategoryId = catSostenibilidad.Id });
+
+        p8.ProjectCategories.Add(new ProjectCategory { ProjectId = p8.Id, CategoryId = catStartup.Id });
+        p9.ProjectCategories.Add(new ProjectCategory { ProjectId = p9.Id, CategoryId = catStartup.Id });
+        p10.ProjectCategories.Add(new ProjectCategory { ProjectId = p10.Id, CategoryId = catImpacto.Id });
 
         context.Projects.AddRange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
         await context.SaveChangesAsync();

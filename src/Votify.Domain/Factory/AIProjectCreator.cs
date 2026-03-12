@@ -4,8 +4,8 @@ namespace Votify.Domain.Factory
 {
     public class AiProjectCreator : ProjectCreator
     {
-        public override Project Create(string title, string eventId, string categoryId,
+        public override Project Create(string title, string eventId,
                                        double criterionA, double criterionB, string? description = null)
-            => new AiProject(title, eventId, categoryId, criterionA, criterionB, description);
+            => new AiProject(title, eventId, criterionA, criterionB, description);
     }
 }

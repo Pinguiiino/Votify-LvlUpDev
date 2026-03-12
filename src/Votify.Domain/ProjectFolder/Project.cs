@@ -8,24 +8,21 @@ namespace Votify.Domain.ProjectFolder
         public string Title { get; set; }
         public string? Description { get; set; }
         public string EventId { get; set; }
-        public string CategoryId { get; set; }
+        public virtual List<ProjectCategory> ProjectCategories { get; set; } = new List<ProjectCategory>();
+
 
 
         public double CriterionA { get; set; }
         public double CriterionB { get; set; }
 
-
-        public Category? Category { get; set; }
-
         protected Project() { }
 
-        protected Project(string title, string eventId, string categoryId,
+        protected Project(string title, string eventId,
                           double criterionA, double criterionB, string? description = null)
         {
             Id = Guid.NewGuid().ToString();
             Title = title;
             EventId = eventId;
-            CategoryId = categoryId;
             CriterionA = criterionA;
             CriterionB = criterionB;
             Description = description;
@@ -37,10 +34,16 @@ namespace Votify.Domain.ProjectFolder
 
         public virtual double WeightedScore()
         {
-            if (Category is not null)
-                return CriterionA * Category.WeightCriterionA + CriterionB * Category.WeightCriterionB;
+            if (!ProjectCategories.Any())
+                return (CriterionA + CriterionB) / 2.0;
 
-            return (CriterionA + CriterionB) / 2.0;
+            double total = 0;
+            foreach(ProjectCategory category in ProjectCategories)
+            {
+                total += CriterionA * category.Category.WeightCriterionA + CriterionB * category.Category.WeightCriterionB;
+            }
+            return total / ProjectCategories.Count();
+
         }
     }
 }

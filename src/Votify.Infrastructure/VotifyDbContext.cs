@@ -64,11 +64,18 @@ public class VotifyDbContext : DbContext
             .HasForeignKey(c => c.EventId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Project>()
-            .HasOne(p => p.Category)
-            .WithMany(c => c.Projects)
-            .HasForeignKey(p => p.CategoryId)
-            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<ProjectCategory>()
+            .HasKey(pc => new { pc.ProjectId, pc.CategoryId });
+
+        modelBuilder.Entity<ProjectCategory>()
+            .HasOne(pc => pc.Project)
+            .WithMany(p => p.ProjectCategories)
+            .HasForeignKey(pc => pc.ProjectId);
+
+        modelBuilder.Entity<ProjectCategory>()
+            .HasOne(pc => pc.Category)
+            .WithMany(c => c.ProjectCategories)
+            .HasForeignKey(pc => pc.CategoryId);
 
         modelBuilder.Entity<Category>(e =>
         {

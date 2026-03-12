@@ -16,8 +16,7 @@ public class Category
     public double WeightCriterionA { get; set; }
     public double WeightCriterionB { get; set; }
 
-
-    public List<Project> Projects { get; set; } = new();
+    public virtual List<ProjectCategory> ProjectCategories { get; set; } = new List<ProjectCategory>();
 
     public Category() { }
 
