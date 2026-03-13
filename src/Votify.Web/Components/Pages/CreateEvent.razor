@@ -2,11 +2,9 @@
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.EntityFrameworkCore
-@using Votify.Domain.EventFolder
-@using Votify.Infrastructure
-@using Votify.Domain.Factory
 @inject NavigationManager Navigation
-@inject IDbContextFactory<VotifyDbContext> DbFactory
+@inject HttpClient Http
+@inject IJSRuntime JS
 
 <PageTitle>Crear Nuevo Evento - Votify</PageTitle>
 
@@ -78,25 +76,27 @@
 
     private async Task ManejarSubmitValido()
     {
-        using var context = await DbFactory.CreateDbContextAsync();
+        try
+        {
+            var apiUrl = "https://localhost:7150/api/events";
 
-        EventCreator eventCreator = new ModalityEventCreator();
+            var respuesta = await Http.PostAsJsonAsync(apiUrl, eventModel);
 
-        var fechaSeleccionada = eventModel.Date ?? DateTime.UtcNow;
-        var fechaUtc = DateTime.SpecifyKind(fechaSeleccionada, DateTimeKind.Utc);
-
-        var nuevoEvento = eventCreator.Create(
-            name: eventModel.Name,
-            maxProjects: eventModel.MaxProjects,
-            startDate: fechaUtc,
-            modality: eventModel.Modality,
-            description: eventModel.Description
-        );
-
-        context.Events.Add(nuevoEvento);
-        await context.SaveChangesAsync();
-
-        Navigation.NavigateTo("/");
+            if (respuesta.IsSuccessStatusCode)
+            {
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Error al crear el evento. Por favor, revisa los datos.");
+                Navigation.NavigateTo("/");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", "Error crítico: No se pudo conectar con el servidor.");
+            Navigation.NavigateTo("/");
+        }
     }
 
     private void Cancelar()

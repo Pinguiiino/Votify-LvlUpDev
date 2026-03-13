@@ -18,11 +18,15 @@ builder.Services.AddCors(options =>
         });
 });
 
+builder.Services.AddControllers();
+
 var app = builder.Build();
 
 app.UseCors("AllowBlazor");
 
 app.MapGet("/", () => "API funcionando");
+
+app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
