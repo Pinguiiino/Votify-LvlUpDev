@@ -30,20 +30,5 @@ namespace Votify.Domain.ProjectFolder
 
 
         public abstract string ProjectType();
-
-
-        public virtual double WeightedScore()
-        {
-            if (!ProjectCategories.Any())
-                return (CriterionA + CriterionB) / 2.0;
-
-            double total = 0;
-            foreach(ProjectCategory category in ProjectCategories)
-            {
-                total += CriterionA * category.Category.WeightCriterionA + CriterionB * category.Category.WeightCriterionB;
-            }
-            return total / ProjectCategories.Count();
-
-        }
     }
 }

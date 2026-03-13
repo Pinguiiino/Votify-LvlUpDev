@@ -1,7 +1,6 @@
 ﻿@page "/create-event"
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
-@using Microsoft.EntityFrameworkCore
 @inject NavigationManager Navigation
 @inject HttpClient Http
 @inject IJSRuntime JS
@@ -47,7 +46,7 @@
 
             <div class="form-group">
                 <label>Número máximo de proyectos *</label>
-                <InputNumber class="form-control" placeholder=DefaultMaxProjects @bind-Value="eventModel.MaxProjects" />
+                <InputNumber class="form-control" placeholder="20" @bind-Value="eventModel.MaxProjects" />
                 <ValidationMessage For="@(() => eventModel.MaxProjects)" />
             </div>
 
@@ -56,30 +55,146 @@
                 <InputDate class="form-control" @bind-Value="eventModel.StartDate" />
                 <ValidationMessage For="@(() => eventModel.StartDate)" />
             </div>
+
+            <hr style="margin: 1rem 0; border: 0; border-top: 1px solid #e5e7eb;" />
+
+            <div class="form-group">
+                <label>Categorías del Evento * <span style="font-weight: normal; font-size: 0.85rem; color: #6b7280;">(Añade al menos una)</span></label>
+
+                @if (eventModel.AssociatedCategories.Any())
+                {
+                    <div class="categories-list">
+                        @foreach (var cat in eventModel.AssociatedCategories)
+                        {
+                            <div class="category-item">
+                                <div>
+                                    <strong>@cat.Name</strong>
+                                    <span style="font-size: 0.8rem; color: #6b7280; display: block;">@cat.Description | Premio: @cat.PrizeDescription</span>
+                                </div>
+                                <button type="button" class="btn-delete" @onclick="() => EliminarCategoria(cat)">X</button>
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (errorCategorias)
+                {
+                    <div class="validation-message">Debes añadir al menos una categoría para crear el evento.</div>
+                }
+
+                @if (!mostrandoFormularioCategoria)
+                {
+                    <button type="button" class="btn-secondary mt-2" style="border: 2px dashed #d1d5db; color: #4b5563;" @onclick="MostrarFormulario">
+                        + Añadir Categoría
+                    </button>
+                }
+                else
+                {
+                    <div class="add-category-box">
+                        <h4 style="margin-top: 0; margin-bottom: 1rem; font-size: 0.95rem; color: #374151;">Configurar categoría</h4>
+
+                        <div class="form-group">
+                            <input type="text" class="form-control form-control-sm" placeholder="Nombre (Ej: Innovación IA)" @bind="nuevaCategoria.Name" />
+                        </div>
+
+                        <div class="form-group">
+                            <textarea class="form-control form-control-sm" rows="2" placeholder="Descripción de la categoría..." @bind="nuevaCategoria.Description"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <input type="text" class="form-control form-control-sm" placeholder="Premio (Ej: 1.000€ y trofeo)" @bind="nuevaCategoria.PrizeDescription" />
+                        </div>
+
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                            <button type="button" class="btn-primary" style="flex: 1; padding: 0.5rem;" @onclick="ConfirmarCategoria">Confirmar</button>
+                            <button type="button" class="btn-secondary" style="flex: 1; padding: 0.5rem;" @onclick="OcultarFormulario">Cancelar</button>
+                        </div>
+
+                        @if (errorNuevaCategoria)
+                        {
+                            <div class="validation-message" style="margin-top: 0.5rem;">Por favor, rellena el nombre de la categoría.</div>
+                        }
+                    </div>
+                }
+            </div>
         </div>
 
         <footer class="modal-footer">
-            <button type="submit" class="btn-primary">Crear Evento</button>
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;">Finalizar y Crear Evento</button>
         </footer>
     </EditForm>
 </div>
 
 @code {
     private CreateEventModel eventModel = new();
+    private CategoryDraft nuevaCategoria = new();
 
-	private const int DefaultMaxProjects = 20;
+    private bool errorCategorias = false;
+    private bool errorNuevaCategoria = false;
+    private bool mostrandoFormularioCategoria = false; // <-- Controla si se ve el formulario o el botón
+
+    private const int DefaultMaxProjects = 20;
 
     protected override void OnInitialized()
     {
         eventModel.MaxProjects = DefaultMaxProjects;
+        eventModel.StartDate = DateTime.Today;
+    }
+
+    // Muestra el formulario vacío
+    private void MostrarFormulario()
+    {
+        nuevaCategoria = new CategoryDraft();
+        errorNuevaCategoria = false;
+        mostrandoFormularioCategoria = true;
+    }
+
+    // Oculta el formulario sin guardar
+    private void OcultarFormulario()
+    {
+        mostrandoFormularioCategoria = false;
+    }
+
+    // Valida y guarda la categoría en la lista
+    private void ConfirmarCategoria()
+    {
+        if (string.IsNullOrWhiteSpace(nuevaCategoria.Name))
+        {
+            errorNuevaCategoria = true;
+            return;
+        }
+
+        errorNuevaCategoria = false;
+        errorCategorias = false;
+
+        eventModel.AssociatedCategories.Add(new CategoryDraft
+        {
+            Name = nuevaCategoria.Name,
+            Description = nuevaCategoria.Description ?? "",
+            PrizeDescription = nuevaCategoria.PrizeDescription ?? "",
+			Criterios = nuevaCategoria.Criterios ?? []
+        });
+
+        // Al confirmar, ocultamos el formulario para que vuelva a salir el botón de Añadir
+        mostrandoFormularioCategoria = false;
+    }
+
+    private void EliminarCategoria(CategoryDraft cat)
+    {
+        eventModel.AssociatedCategories.Remove(cat);
     }
 
     private async Task ManejarSubmitValido()
     {
+        if (!eventModel.AssociatedCategories.Any())
+        {
+            errorCategorias = true;
+            return;
+        }
+
         try
         {
             var apiUrl = "https://localhost:7150/api/events";
-
             var respuesta = await Http.PostAsJsonAsync(apiUrl, eventModel);
 
             if (respuesta.IsSuccessStatusCode)
@@ -88,14 +203,13 @@
             }
             else
             {
-                await JS.InvokeVoidAsync("alert", "Error al crear el evento. Por favor, revisa los datos.");
-                Navigation.NavigateTo("/");
+                var errorMsg = await respuesta.Content.ReadAsStringAsync();
+                await JS.InvokeVoidAsync("alert", $"Error del servidor: {errorMsg}");
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            await JS.InvokeVoidAsync("alert", "Error crítico: No se pudo conectar con el servidor.");
-            Navigation.NavigateTo("/");
+            await JS.InvokeVoidAsync("alert", "Error crítico: No se pudo conectar con el servidor API.");
         }
     }
 
@@ -106,21 +220,28 @@
 
     public class CreateEventModel
     {
-        [Required(ErrorMessage = "El nombre del evento es requerido")]
-        [StringLength(100, ErrorMessage = "El nombre no puede superar los 100 caracteres")]
+        [Required(ErrorMessage = "Requerido")]
         public string Name { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "La descripción es requerida")]
-        public string Description { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "La modalidad es requerida")]
+        [Required(ErrorMessage = "Requerido")]
         public string Modality { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Establece un número máximo de proyectos")]
-        [Range(1, 1000, ErrorMessage = "El número debe ser mayor a 0")]
+        [Range(1, 1000)]
         public int MaxProjects { get; set; }
 
-        [Required(ErrorMessage = "La fecha es requerida")]
+        [Required]
         public DateTime? StartDate { get; set; }
+
+        public string Description { get; set; } = string.Empty;
+
+        public List<CategoryDraft> AssociatedCategories { get; set; } = new();
+    }
+
+    public class CategoryDraft
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string PrizeDescription { get; set; } = string.Empty;
+        public List<double> Criterios { get; set; } = [];
     }
 }

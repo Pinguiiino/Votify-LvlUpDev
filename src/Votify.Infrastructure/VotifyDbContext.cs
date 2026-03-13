@@ -60,7 +60,7 @@ public class VotifyDbContext : DbContext
         // ── 3. RELACIONES Y RESTRICCIONES ────────────────────────────────────
         modelBuilder.Entity<Category>()
             .HasOne<Event>()
-            .WithMany()
+            .WithMany(e => e.AssociatedCategories)
             .HasForeignKey(c => c.EventId)
             .OnDelete(DeleteBehavior.Cascade);
 
@@ -76,12 +76,6 @@ public class VotifyDbContext : DbContext
             .HasOne(pc => pc.Category)
             .WithMany(c => c.ProjectCategories)
             .HasForeignKey(pc => pc.CategoryId);
-
-        modelBuilder.Entity<Category>(e =>
-        {
-            e.Property(c => c.WeightCriterionA).HasPrecision(5, 2);
-            e.Property(c => c.WeightCriterionB).HasPrecision(5, 2);
-        });
 
         modelBuilder.Entity<Project>(e =>
         {

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Votify.Infrastructure;
@@ -12,9 +13,11 @@ using Votify.Infrastructure;
 namespace Votify.Infrastructure.Migrations
 {
     [DbContext(typeof(VotifyDbContext))]
-    partial class VotifyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260313111105_UpdateCategoryCriterios")]
+    partial class UpdateCategoryCriterios
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -29,6 +32,7 @@ namespace Votify.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.PrimitiveCollection<List<double>>("Criterios")
+                        .IsRequired()
                         .HasColumnType("double precision[]");
 
                     b.Property<string>("Description")
@@ -36,6 +40,9 @@ namespace Votify.Infrastructure.Migrations
 
                     b.Property<string>("EventId")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("EventId1")
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
@@ -48,6 +55,8 @@ namespace Votify.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("EventId");
+
+                    b.HasIndex("EventId1");
 
                     b.ToTable("Categories");
                 });
@@ -274,10 +283,14 @@ namespace Votify.Infrastructure.Migrations
             modelBuilder.Entity("Votify.Domain.CategoryFolder.Category", b =>
                 {
                     b.HasOne("Votify.Domain.EventFolder.Event", null)
-                        .WithMany("AssociatedCategories")
+                        .WithMany()
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Votify.Domain.EventFolder.Event", null)
+                        .WithMany("AssociatedCategories")
+                        .HasForeignKey("EventId1");
                 });
 
             modelBuilder.Entity("Votify.Domain.ProjectFolder.ProjectCategory", b =>
