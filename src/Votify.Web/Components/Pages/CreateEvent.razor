@@ -53,8 +53,8 @@
 
             <div class="form-group">
                 <label>Fecha de comienzo *</label>
-                <InputDate class="form-control" @bind-Value="eventModel.Date" />
-                <ValidationMessage For="@(() => eventModel.Date)" />
+                <InputDate class="form-control" @bind-Value="eventModel.StartDate" />
+                <ValidationMessage For="@(() => eventModel.StartDate)" />
             </div>
         </div>
 
@@ -121,6 +121,6 @@
         public int MaxProjects { get; set; }
 
         [Required(ErrorMessage = "La fecha es requerida")]
-        public DateTime? Date { get; set; }
+        public DateTime? StartDate { get; set; }
     }
 }
