@@ -1,19 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Text;
+﻿namespace Votify.Domain.VoteFolder;
 
-namespace Votify.Domain.VoteFolder
+public class PublicVote : Vote
 {
-    public class PublicVote : Vote
+    public double RawScore { get; set; }
+
+    public PublicVote() { }
+
+    public PublicVote(string votingSessionId, string projectId, string userId,
+                      string categoryId, double rawScore, string? comment = null)
+        : base(votingSessionId, projectId, userId, categoryId, comment)
     {
-        public PublicVote() { }
-
-        public PublicVote(string projectId, string userId, double rawScore)
-            : base(projectId, userId, rawScore) { }
-
-        public override string VoterRole() => "PUBLIC";
-
-        public override double NormalizedScore() => RawScore * 0.85;
+        RawScore = rawScore;
     }
+
+    public override double NormalizedScore() => RawScore * 0.85;
 }
+

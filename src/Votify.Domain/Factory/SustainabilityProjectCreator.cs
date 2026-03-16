@@ -4,11 +4,11 @@ namespace Votify.Domain.Factory
 {
     public class SustainabilityProjectCreator : ProjectCreator
     {
-        public override Project Create(string title, string eventId,
-                                       double criterionA, double criterionB, string? description = null)
-            => new SustainabilityProject(title, eventId, criterionA, criterionB, description);
+        public override Project Create(string title, string eventId, string? description = null)
+            => new SustainabilityProject(title, eventId, description);
     }
 }
+
 
 
 

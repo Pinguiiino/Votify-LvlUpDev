@@ -4,8 +4,9 @@ namespace Votify.Domain.Factory
 {
     public abstract class VoteCreator
     {
-        public abstract Vote Create(string projectId, string userId, double rawScore);
-
+        public abstract Vote Create(string votingSessionId, string projectId,
+                                    string userId, string categoryId,
+                                    double rawScore, string? comment = null);
     }
 }
 

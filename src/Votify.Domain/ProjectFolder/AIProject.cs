@@ -4,9 +4,8 @@ namespace Votify.Domain.ProjectFolder
     {
         public AiProject() { }
 
-        public AiProject(string title, string eventId,
-                         double criterionA, double criterionB, string? description = null)
-            : base(title, eventId, criterionA, criterionB, description) { }
+        public AiProject(string title, string eventId, string? description = null)
+            : base(title, eventId, description) { }
 
         public override string ProjectType() => "AI";
     }

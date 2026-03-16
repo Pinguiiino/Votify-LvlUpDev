@@ -1,34 +1,64 @@
-using Votify.Domain.CategoryFolder;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace Votify.Domain.ProjectFolder
+namespace Votify.Domain.ProjectFolder;
+
+public enum MaterialType
 {
-    public abstract class Project
+    Photo,
+    Video,
+    Document,
+    Audio,
+    Other
+}
+
+public class ProjectMaterial
+{
+    public string Id { get; set; }
+    public string ProjectId { get; set; }
+    public MaterialType Type { get; set; }
+    public string Url { get; set; }
+    public string? Description { get; set; }
+
+    public ProjectMaterial() { }
+
+    public ProjectMaterial(string projectId, MaterialType type, string url,
+                           string? description = null)
     {
-        public string Id { get; set; }
-        public string Title { get; set; }
-        public string? Description { get; set; }
-        public string EventId { get; set; }
-        public virtual List<ProjectCategory> ProjectCategories { get; set; } = new List<ProjectCategory>();
+        Id = Guid.NewGuid().ToString();
+        ProjectId = projectId;
+        Type = type;
+        Url = url;
+        Description = description;
+    }
+}
 
+public abstract class Project
+{
+    public string Id { get; set; }
+    public string Title { get; set; }
+    public string? Description { get; set; }
+    public string EventId { get; set; }
 
+    public virtual List<ProjectCategory> ProjectCategories { get; set; } = new();
+    public virtual List<ProjectMaterial> Materials { get; set; } = new();
 
-        public double CriterionA { get; set; }
-        public double CriterionB { get; set; }
+    protected Project() { }
 
-        protected Project() { }
+    protected Project(string title, string eventId, string? description = null)
+    {
+        Id = Guid.NewGuid().ToString();
+        Title = title;
+        EventId = eventId;
+        Description = description;
+    }
 
-        protected Project(string title, string eventId,
-                          double criterionA, double criterionB, string? description = null)
-        {
-            Id = Guid.NewGuid().ToString();
-            Title = title;
-            EventId = eventId;
-            CriterionA = criterionA;
-            CriterionB = criterionB;
-            Description = description;
-        }
+    public abstract string ProjectType();
 
-
-        public abstract string ProjectType();
+    public virtual double WeightedScore()
+    {
+        if (!ProjectCategories.Any()) return 0;
+        return ProjectCategories.Average(pc => pc.WeightedScore());
     }
 }

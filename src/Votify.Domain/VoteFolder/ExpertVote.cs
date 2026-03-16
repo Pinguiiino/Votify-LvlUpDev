@@ -1,20 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace Votify.Domain.VoteFolder;
 
-namespace Votify.Domain.VoteFolder
+public class ExpertVote : Vote
 {
-    public class ExpertVote : Vote
+    public double RawScore { get; set; }
+
+    public ExpertVote() { }
+
+    public ExpertVote(string votingSessionId, string projectId, string userId,
+                      string categoryId, double rawScore, string? comment = null)
+        : base(votingSessionId, projectId, userId, categoryId, comment)
     {
-        public ExpertVote() { }
-
-        public ExpertVote(string projectId, string userId, double rawScore)
-            : base(projectId, userId, rawScore) { }
-
-        public override string VoterRole() => "EXPERT";
-
-        public override double NormalizedScore() => RawScore * 1.20;
+        RawScore = rawScore;
     }
+
+    public override double NormalizedScore() => RawScore * 1.20;
 }
 
 
