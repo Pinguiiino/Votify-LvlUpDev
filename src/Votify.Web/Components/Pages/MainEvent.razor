@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 @using Microsoft.EntityFrameworkCore
 @using Votify.Domain.EventFolder
 @using Votify.Infrastructure
@@ -43,7 +43,8 @@
                         <h2 class="card-title">@evento.Name</h2>
                         <span class="card-date">@evento.StartDate.ToString("dd 'de' MMMM, yyyy")</span>
                         <p class="card-description">@evento.Description</p>
-                        <a class="card-modality" style="font-weight:bold; color: #4b5563;">@evento.Modality</a>
+                        @* Modality() es un método abstracto, se invoca con () *@
+                        <span class="card-modality" style="font-weight: bold; color: #4b5563;">@evento.Modality()</span>
                     </div>
                 </div>
             }

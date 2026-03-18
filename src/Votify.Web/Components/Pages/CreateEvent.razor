@@ -1,4 +1,4 @@
-﻿@page "/create-event"
+@page "/create-event"
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @inject NavigationManager Navigation
@@ -26,6 +26,7 @@
         </header>
 
         <div class="modal-body">
+
             <div class="form-group">
                 <label>Nombre del evento *</label>
                 <InputText class="form-control" placeholder="Ej: Hackathon 2026" @bind-Value="eventModel.Name" />
@@ -33,9 +34,8 @@
             </div>
 
             <div class="form-group">
-                <label>Descripción *</label>
+                <label>Descripción</label>
                 <InputTextArea class="form-control" rows="4" placeholder="Describe el evento..." @bind-Value="eventModel.Description" />
-                <ValidationMessage For="@(() => eventModel.Description)" />
             </div>
 
             <div class="form-group">
@@ -50,10 +50,17 @@
                 <ValidationMessage For="@(() => eventModel.MaxProjects)" />
             </div>
 
-            <div class="form-group">
-                <label>Fecha de comienzo *</label>
-                <InputDate class="form-control" @bind-Value="eventModel.StartDate" />
-                <ValidationMessage For="@(() => eventModel.StartDate)" />
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                    <label>Fecha de inicio *</label>
+                    <InputDate class="form-control" @bind-Value="eventModel.StartDate" />
+                    <ValidationMessage For="@(() => eventModel.StartDate)" />
+                </div>
+                <div class="form-group">
+                    <label>Fecha de fin *</label>
+                    <InputDate class="form-control" @bind-Value="eventModel.EndDate" />
+                    <ValidationMessage For="@(() => eventModel.EndDate)" />
+                </div>
             </div>
 
             <hr style="margin: 1rem 0; border: 0; border-top: 1px solid #e5e7eb;" />
@@ -61,17 +68,20 @@
             <div class="form-group">
                 <label>Categorías del Evento * <span style="font-weight: normal; font-size: 0.85rem; color: #6b7280;">(Añade al menos una)</span></label>
 
-                @if (eventModel.AssociatedCategories.Any())
+                @if (eventModel.Categories.Any())
                 {
                     <div class="categories-list">
-                        @foreach (var cat in eventModel.AssociatedCategories)
+                        @foreach (var cat in eventModel.Categories)
                         {
                             <div class="category-item">
                                 <div>
                                     <strong>@cat.Name</strong>
-                                    <span style="font-size: 0.8rem; color: #6b7280; display: block;">@cat.Description | Premio: @cat.PrizeDescription</span>
+                                    <span style="font-size: 0.8rem; color: #6b7280; display: block;">
+                                        @cat.Description | Modo: @cat.VotingMode
+                                        | Criterios: @cat.Criteria.Count | Premios: @cat.Prizes.Count
+                                    </span>
                                 </div>
-                                <button type="button" class="btn-delete" @onclick="() => EliminarCategoria(cat)">X</button>
+                                <button type="button" class="btn-delete" @onclick="() => eventModel.Categories.Remove(cat)">X</button>
                             </div>
                         }
                     </div>
@@ -94,26 +104,91 @@
                         <h4 style="margin-top: 0; margin-bottom: 1rem; font-size: 0.95rem; color: #374151;">Configurar categoría</h4>
 
                         <div class="form-group">
-                            <input type="text" class="form-control form-control-sm" placeholder="Nombre (Ej: Innovación IA)" @bind="nuevaCategoria.Name" />
+                            <input type="text" class="form-control form-control-sm" placeholder="Nombre (Ej: Proyectos de IA)" @bind="nuevaCategoria.Name" />
                         </div>
 
                         <div class="form-group">
                             <textarea class="form-control form-control-sm" rows="2" placeholder="Descripción de la categoría..." @bind="nuevaCategoria.Description"></textarea>
                         </div>
 
-                        <div class="form-group">
-                            <input type="text" class="form-control form-control-sm" placeholder="Premio (Ej: 1.000€ y trofeo)" @bind="nuevaCategoria.PrizeDescription" />
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                            <div class="form-group">
+                                <label style="font-size: 0.85rem;">Modo de votación</label>
+                                <select class="form-control form-control-sm" @bind="nuevaCategoria.VotingMode">
+                                    <option value="Scored">Scored (criterios con peso)</option>
+                                    <option value="PointPool">PointPool (reparto de puntos)</option>
+                                    <option value="TopN">TopN (elegir N proyectos)</option>
+                                    <option value="Ranked">Ranked (ranking)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size: 0.85rem;">Parámetro (N / puntos)</label>
+                                <input type="number" class="form-control form-control-sm" placeholder="Ej: 3" @bind="nuevaCategoria.VotingParameter" />
+                            </div>
                         </div>
+
+                        <div class="form-group">
+                            <label style="font-size: 0.85rem;">
+                                <input type="checkbox" @bind="nuevaCategoria.AllowSelfVoting" /> Permitir que los participantes voten su propio proyecto
+                            </label>
+                        </div>
+
+                        @* ── Criterios ── *@
+                        <div style="margin-top: 0.75rem;">
+                            <label style="font-size: 0.85rem; font-weight: 600;">Criterios de evaluación</label>
+                            @foreach (var cr in nuevaCategoria.Criteria)
+                            {
+                                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 0.5rem; margin-top: 0.4rem; align-items: center;">
+                                    <input type="text" class="form-control form-control-sm" placeholder="Nombre criterio" @bind="cr.Name" />
+                                    <select class="form-control form-control-sm" @bind="cr.Type">
+                                        <option value="Numeric">Numérico</option>
+                                        <option value="Checklist">Checklist</option>
+                                        <option value="Rubric">Rúbrica</option>
+                                        <option value="Comment">Comentario</option>
+                                        <option value="Audio">Audio</option>
+                                        <option value="Video">Vídeo</option>
+                                    </select>
+                                    <input type="number" class="form-control form-control-sm" step="0.05" min="0" max="1" placeholder="Peso" @bind="cr.Weight" />
+                                    <button type="button" class="btn-delete" @onclick="() => nuevaCategoria.Criteria.Remove(cr)">X</button>
+                                </div>
+                            }
+                            @if (errorPesos)
+                            {
+                                <div class="validation-message" style="margin-top: 0.25rem;">Los pesos de los criterios deben sumar 1.0.</div>
+                            }
+                            <button type="button" class="btn-secondary mt-2" style="font-size: 0.8rem;"
+                                    @onclick="() => nuevaCategoria.Criteria.Add(new CriterionDraft())">
+                                + Añadir criterio
+                            </button>
+                        </div>
+
+                        @* ── Premios ── *@
+                        <div style="margin-top: 0.75rem;">
+                            <label style="font-size: 0.85rem; font-weight: 600;">Premios</label>
+                            @foreach (var pr in nuevaCategoria.Prizes)
+                            {
+                                <div style="display: grid; grid-template-columns: auto 2fr 2fr auto; gap: 0.5rem; margin-top: 0.4rem; align-items: center;">
+                                    <input type="number" class="form-control form-control-sm" placeholder="Pos." min="1" @bind="pr.Position" style="width: 4rem;" />
+                                    <input type="text" class="form-control form-control-sm" placeholder="Nombre (Ej: 1.000€)" @bind="pr.Name" />
+                                    <input type="text" class="form-control form-control-sm" placeholder="Descripción" @bind="pr.Description" />
+                                    <button type="button" class="btn-delete" @onclick="() => nuevaCategoria.Prizes.Remove(pr)">X</button>
+                                </div>
+                            }
+                            <button type="button" class="btn-secondary mt-2" style="font-size: 0.8rem;"
+                                    @onclick="() => nuevaCategoria.Prizes.Add(new PrizeDraft { Position = nuevaCategoria.Prizes.Count + 1 })">
+                                + Añadir premio
+                            </button>
+                        </div>
+
+                        @if (errorNombreCategoria)
+                        {
+                            <div class="validation-message" style="margin-top: 0.5rem;">El nombre de la categoría es obligatorio.</div>
+                        }
 
                         <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
                             <button type="button" class="btn-primary" style="flex: 1; padding: 0.5rem;" @onclick="ConfirmarCategoria">Confirmar</button>
                             <button type="button" class="btn-secondary" style="flex: 1; padding: 0.5rem;" @onclick="OcultarFormulario">Cancelar</button>
                         </div>
-
-                        @if (errorNuevaCategoria)
-                        {
-                            <div class="validation-message" style="margin-top: 0.5rem;">Por favor, rellena el nombre de la categoría.</div>
-                        }
                     </div>
                 }
             </div>
@@ -127,66 +202,62 @@
 
 @code {
     private CreateEventModel eventModel = new();
-    private CategoryDraft nuevaCategoria = new();
+    private CategoryDraft    nuevaCategoria = new();
 
-    private bool errorCategorias = false;
-    private bool errorNuevaCategoria = false;
-    private bool mostrandoFormularioCategoria = false; // <-- Controla si se ve el formulario o el botón
+    private bool errorCategorias      = false;
+    private bool errorNombreCategoria = false;
+    private bool errorPesos           = false;
+    private bool mostrandoFormularioCategoria = false;
 
     private const int DefaultMaxProjects = 20;
 
     protected override void OnInitialized()
     {
         eventModel.MaxProjects = DefaultMaxProjects;
-        eventModel.StartDate = DateTime.Today;
+        eventModel.StartDate   = DateTime.Today;
+        eventModel.EndDate     = DateTime.Today.AddDays(1);
     }
 
-    // Muestra el formulario vacío
     private void MostrarFormulario()
     {
-        nuevaCategoria = new CategoryDraft();
-        errorNuevaCategoria = false;
+        nuevaCategoria        = new CategoryDraft();
+        errorNombreCategoria  = false;
+        errorPesos            = false;
         mostrandoFormularioCategoria = true;
     }
 
-    // Oculta el formulario sin guardar
-    private void OcultarFormulario()
-    {
-        mostrandoFormularioCategoria = false;
-    }
+    private void OcultarFormulario() => mostrandoFormularioCategoria = false;
 
-    // Valida y guarda la categoría en la lista
     private void ConfirmarCategoria()
     {
+        errorNombreCategoria = false;
+        errorPesos           = false;
+
         if (string.IsNullOrWhiteSpace(nuevaCategoria.Name))
         {
-            errorNuevaCategoria = true;
+            errorNombreCategoria = true;
             return;
         }
 
-        errorNuevaCategoria = false;
-        errorCategorias = false;
-
-        eventModel.AssociatedCategories.Add(new CategoryDraft
+        // Validar pesos solo en modo Scored con criterios definidos
+        if (nuevaCategoria.VotingMode == "Scored" && nuevaCategoria.Criteria.Any())
         {
-            Name = nuevaCategoria.Name,
-            Description = nuevaCategoria.Description ?? "",
-            PrizeDescription = nuevaCategoria.PrizeDescription ?? "",
-			Criterios = nuevaCategoria.Criterios ?? []
-        });
+            var suma = nuevaCategoria.Criteria.Sum(c => c.Weight);
+            if (Math.Abs(suma - 1.0) > 0.01)
+            {
+                errorPesos = true;
+                return;
+            }
+        }
 
-        // Al confirmar, ocultamos el formulario para que vuelva a salir el botón de Añadir
+        errorCategorias = false;
+        eventModel.Categories.Add(nuevaCategoria);
         mostrandoFormularioCategoria = false;
-    }
-
-    private void EliminarCategoria(CategoryDraft cat)
-    {
-        eventModel.AssociatedCategories.Remove(cat);
     }
 
     private async Task ManejarSubmitValido()
     {
-        if (!eventModel.AssociatedCategories.Any())
+        if (!eventModel.Categories.Any())
         {
             errorCategorias = true;
             return;
@@ -194,13 +265,30 @@
 
         try
         {
-            var apiUrl = "https://localhost:7150/api/events";
-            var respuesta = await Http.PostAsJsonAsync(apiUrl, eventModel);
+            var payload = new
+            {
+                eventModel.Name,
+                eventModel.Description,
+                eventModel.Modality,
+                eventModel.MaxProjects,
+                StartDate  = eventModel.StartDate!.Value,
+                EndDate    = eventModel.EndDate!.Value,
+                Categories = eventModel.Categories.Select(c => new
+                {
+                    c.Name,
+                    c.Description,
+                    c.VotingMode,
+                    c.VotingParameter,
+                    c.AllowSelfVoting,
+                    Criteria = c.Criteria.Select(cr => new { cr.Name, cr.Type, cr.Weight, cr.Description }),
+                    Prizes   = c.Prizes.Select(p  => new { p.Position, p.Name, p.Description })
+                })
+            };
+
+            var respuesta = await Http.PostAsJsonAsync("https://localhost:7150/api/events", payload);
 
             if (respuesta.IsSuccessStatusCode)
-            {
                 Navigation.NavigateTo("/");
-            }
             else
             {
                 var errorMsg = await respuesta.Content.ReadAsStringAsync();
@@ -213,15 +301,16 @@
         }
     }
 
-    private void Cancelar()
-    {
-        Navigation.NavigateTo("/");
-    }
+    private void Cancelar() => Navigation.NavigateTo("/");
+
+    // ── Modelos locales del formulario ───────────────────────────────────────
 
     public class CreateEventModel
     {
         [Required(ErrorMessage = "Requerido")]
         public string Name { get; set; } = string.Empty;
+
+        public string Description { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Requerido")]
         public string Modality { get; set; } = string.Empty;
@@ -229,19 +318,35 @@
         [Range(1, 1000)]
         public int MaxProjects { get; set; }
 
-        [Required]
-        public DateTime? StartDate { get; set; }
+        [Required] public DateTime? StartDate { get; set; }
+        [Required] public DateTime? EndDate   { get; set; }
 
-        public string Description { get; set; } = string.Empty;
-
-        public List<CategoryDraft> AssociatedCategories { get; set; } = new();
+        public List<CategoryDraft> Categories { get; set; } = new();
     }
 
     public class CategoryDraft
     {
-        public string Name { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public string PrizeDescription { get; set; } = string.Empty;
-        public List<double> Criterios { get; set; } = [];
+        public string  Name            { get; set; } = string.Empty;
+        public string? Description     { get; set; }
+        public string  VotingMode      { get; set; } = "Scored";
+        public int?    VotingParameter { get; set; }
+        public bool    AllowSelfVoting { get; set; } = false;
+        public List<CriterionDraft> Criteria { get; set; } = new();
+        public List<PrizeDraft>     Prizes   { get; set; } = new();
+    }
+
+    public class CriterionDraft
+    {
+        public string  Name        { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string  Type        { get; set; } = "Numeric";
+        public double  Weight      { get; set; } = 0.0;
+    }
+
+    public class PrizeDraft
+    {
+        public int     Position    { get; set; } = 1;
+        public string  Name        { get; set; } = string.Empty;
+        public string? Description { get; set; }
     }
 }
