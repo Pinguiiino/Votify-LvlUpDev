@@ -91,10 +91,13 @@ namespace Votify.Api.Controllers
 
             foreach (var catDto in request.Categories)
             {
+                // Convertir strings a enums
+                var votingMode = Enum.TryParse<VotingMode>(catDto.VotingMode, out var vm) ? vm : VotingMode.Scored;
+
                 var categoria = new Category(
                     eventId: nuevoEvento.Id,
                     name: catDto.Name,
-                    votingMode: catDto.VotingMode,
+                    votingMode: votingMode,
                     description: catDto.Description,
                     allowSelfVoting: catDto.AllowSelfVoting
                 );
@@ -105,10 +108,12 @@ namespace Votify.Api.Controllers
                 // Criterios de evaluación con sus pesos
                 foreach (var crDto in catDto.Criteria)
                 {
+                    var criterionType = Enum.TryParse<CriterionType>(crDto.Type, out var ct) ? ct : CriterionType.Numeric;
+
                     var criterio = new Criterion(
                         categoryId: categoria.Id,
                         name: crDto.Name,
-                        type: crDto.Type,
+                        type: criterionType,
                         weight: crDto.Weight,
                         description: crDto.Description
                     );
@@ -154,7 +159,7 @@ namespace Votify.Api.Controllers
     {
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public VotingMode VotingMode { get; set; } = VotingMode.Scored;
+        public string VotingMode { get; set; } = "Scored";  // string para evitar problemas de deserialización
         public int? VotingParameter { get; set; }
         public bool AllowSelfVoting { get; set; } = false;
         public List<CriterionDto> Criteria { get; set; } = new();
@@ -165,7 +170,7 @@ namespace Votify.Api.Controllers
     {
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public CriterionType Type { get; set; } = CriterionType.Numeric;
+        public string Type { get; set; } = "Numeric";  // string para evitar problemas de deserialización
         public double Weight { get; set; }
     }
 
