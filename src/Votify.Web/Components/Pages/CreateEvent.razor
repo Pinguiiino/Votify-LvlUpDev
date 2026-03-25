@@ -83,7 +83,7 @@
                                     <div>
                                         <strong>@cat.Name</strong>
                                         <span style="font-size: 0.8rem; color: #6b7280; display: block;">
-                                            @cat.Description | Modo: @cat.VotingMode
+                                            @cat.Description
                                             | Criterios: @cat.Criteria.Count | Premios: @cat.Prizes.Count
                                         </span>
                                     </div>
@@ -121,28 +121,6 @@
                                     <textarea class="form-control form-control-sm" rows="2"
                                               placeholder="Descripción de la categoría..." @bind="nuevaCategoria.Description"></textarea>
                                 </div>
-
-                                <div class="form-group">
-                                    <label style="font-size: 0.85rem;">Modo de votación</label>
-                                    <select class="form-control form-control-sm" @bind="nuevaCategoria.VotingMode">
-                                        <option value="Scored">Scored — criterios con peso</option>
-                                        <option value="PointPool">PointPool — repartir puntos entre proyectos</option>
-                                        <option value="TopN">TopN — elegir los N mejores proyectos</option>
-                                        <option value="Ranked">Ranked — asignar puntos por posición</option>
-                                    </select>
-                                </div>
-
-                                @if (nuevaCategoria.VotingMode != "Scored")
-                                {
-                                    <div class="form-group">
-                                        <label style="font-size: 0.85rem;">@ParametroLabel(nuevaCategoria.VotingMode)</label>
-                                        <input type="number" class="form-control form-control-sm"
-                                               placeholder="@ParametroPlaceholder(nuevaCategoria.VotingMode)"
-                                               @bind="nuevaCategoria.VotingParameter" />
-                                        <span
-                                        style="font-size: 0.75rem; color: #6b7280;">@ParametroAyuda(nuevaCategoria.VotingMode)</span>
-                                    </div>
-                                }
 
                                 <div class="form-group">
                                     <label style="font-size: 0.85rem;">
@@ -271,8 +249,7 @@
             return;
         }
 
-        // Validar pesos solo en modo Scored con criterios definidos
-        if (nuevaCategoria.VotingMode == "Scored" && nuevaCategoria.Criteria.Any())
+        if (nuevaCategoria.Criteria.Any())
         {
             var suma = nuevaCategoria.Criteria.Sum(c => c.Weight);
             if (Math.Abs(suma - 1.0) > 0.01)
@@ -309,8 +286,6 @@
                 {
                     c.Name,
                     c.Description,
-                    c.VotingMode,
-                    c.VotingParameter,
                     c.AllowSelfVoting,
                     Criteria = c.Criteria.Select(cr => new { cr.Name, cr.Type, cr.Weight, cr.Description }),
                     Prizes = c.Prizes.Select(p => new { p.Position, p.Name, p.Description })
@@ -334,32 +309,6 @@
     }
 
     private void Cancelar() => Navigation.NavigateTo("/");
-
-    // ── Helpers para el parámetro de votación ────────────────────────────────
-
-    private static string ParametroLabel(string modo) => modo switch
-    {
-        "PointPool" => "Puntos a repartir por votante",
-        "TopN" => "Número de proyectos a elegir (N)",
-        "Ranked" => "Puntos para el 1er puesto",
-        _ => "Parámetro"
-    };
-
-    private static string ParametroPlaceholder(string modo) => modo switch
-    {
-        "PointPool" => "Ej: 100",
-        "TopN" => "Ej: 3",
-        "Ranked" => "Ej: 10",
-        _ => ""
-    };
-
-    private static string ParametroAyuda(string modo) => modo switch
-    {
-        "PointPool" => "Cada votante distribuye este total de puntos entre los proyectos.",
-        "TopN" => "Cada votante selecciona exactamente N proyectos favoritos.",
-        "Ranked" => "El 1er proyecto recibe estos puntos, el 2º la mitad, el 3º un tercio...",
-        _ => ""
-    };
 
     // ── Modelos locales del formulario ───────────────────────────────────────
 
@@ -386,8 +335,6 @@
     {
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public string VotingMode { get; set; } = "Scored";
-        public int? VotingParameter { get; set; }
         public bool AllowSelfVoting { get; set; } = false;
         public List<CriterionDraft> Criteria { get; set; } = new();
         public List<PrizeDraft> Prizes { get; set; } = new();

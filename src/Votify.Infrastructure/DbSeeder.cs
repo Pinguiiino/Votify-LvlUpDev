@@ -70,12 +70,9 @@ public static class DbSeeder
         await context.SaveChangesAsync();
 
         // ── 3. CATEGORÍAS + CRITERIOS + PREMIOS ───────────────────────────
-        //
-        // Category usa: (eventId, name, votingMode, description, allowSelfVoting)
-        // Los criterios y premios son entidades independientes vinculadas por FK.
 
         // HackUPC — Proyectos de IA  (pesos: innovación 65 %, impacto 35 %)
-        var catIA = new Category(hackUPC.Id, "Proyectos de IA", VotingMode.Scored,
+        var catIA = new Category(hackUPC.Id, "Proyectos de IA",
                                  "Proyectos que aplican IA o machine learning.");
         var crIA1 = new Criterion(catIA.Id, "Innovación técnica", CriterionType.Numeric, 0.65,
                                   "Nivel de novedad y complejidad técnica.");
@@ -85,7 +82,7 @@ public static class DbSeeder
                               "1.000€ + mentoría de 6 meses en startup de IA.");
 
         // HackUPC — Proyectos Sociales  (pesos: 50 / 50)
-        var catSocial = new Category(hackUPC.Id, "Proyectos Sociales", VotingMode.Scored,
+        var catSocial = new Category(hackUPC.Id, "Proyectos Sociales",
                                      "Proyectos con impacto social directo.");
         var crSoc1 = new Criterion(catSocial.Id, "Impacto social", CriterionType.Numeric, 0.50,
                                    "Mejora real en la vida de personas.");
@@ -95,7 +92,7 @@ public static class DbSeeder
                                "500€ + acceso a incubadora universitaria.");
 
         // HackUPC — Sostenibilidad  (pesos: 55 / 45)
-        var catSost = new Category(hackUPC.Id, "Sostenibilidad", VotingMode.Scored,
+        var catSost = new Category(hackUPC.Id, "Sostenibilidad",
                                    "Proyectos enfocados en medioambiente y economía circular.");
         var crSost1 = new Criterion(catSost.Id, "Reducción de huella", CriterionType.Numeric, 0.55,
                                     "Impacto medioambiental medible.");
@@ -105,7 +102,7 @@ public static class DbSeeder
                                 "750€ + presentación en COP31.");
 
         // FIB Fair — Startups Tecnológicas  (pesos: 60 / 40)
-        var catStartup = new Category(fibFair.Id, "Startups Tecnológicas", VotingMode.Scored,
+        var catStartup = new Category(fibFair.Id, "Startups Tecnológicas",
                                       "Proyectos con modelo de negocio escalable y base tecnológica.");
         var crStu1 = new Criterion(catStartup.Id, "Modelo de negocio", CriterionType.Numeric, 0.60,
                                    "Claridad y solidez del plan de negocio.");
@@ -115,7 +112,7 @@ public static class DbSeeder
                                "2.000€ + ronda de presentaciones a inversores.");
 
         // FIB Fair — Impacto Social  (pesos: 45 / 55)
-        var catImpacto = new Category(fibFair.Id, "Impacto Social", VotingMode.Scored,
+        var catImpacto = new Category(fibFair.Id, "Impacto Social",
                                       "Proyectos que priorizan el bienestar social.");
         var crImp1 = new Criterion(catImpacto.Id, "Alcance social", CriterionType.Numeric, 0.45,
                                    "Número de personas beneficiadas.");
@@ -123,13 +120,6 @@ public static class DbSeeder
                                    "Continuidad del proyecto en el tiempo.");
         var prImp1 = new Prize(catImpacto.Id, 1, "Premio Impacto — 1er lugar",
                                "1.000€ + colaboración con ONG partner.");
-
-        context.Categories.AddRange(catIA, catSocial, catSost, catStartup, catImpacto);
-        context.Criteria.AddRange(
-            crIA1, crIA2, crSoc1, crSoc2,
-            crSost1, crSost2, crStu1, crStu2, crImp1, crImp2);
-        context.Prizes.AddRange(prIA1, prSoc1, prSost1, prStu1, prImp1);
-        await context.SaveChangesAsync();
 
         // ── 4. SESIONES DE VOTACIÓN ───────────────────────────────────────
         var sessionHack = new VotingSession(

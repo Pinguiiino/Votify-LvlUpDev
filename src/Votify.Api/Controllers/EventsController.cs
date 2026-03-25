@@ -48,8 +48,6 @@ namespace Votify.Api.Controllers
                         c.Id,
                         c.Name,
                         c.Description,
-                        c.VotingMode,
-                        c.VotingParameter,
                         c.AllowSelfVoting,
                         Criteria = c.Criteria.Select(cr => new
                         {
@@ -91,19 +89,12 @@ namespace Votify.Api.Controllers
 
             foreach (var catDto in request.Categories)
             {
-                // Convertir strings a enums
-                var votingMode = Enum.TryParse<VotingMode>(catDto.VotingMode, out var vm) ? vm : VotingMode.Scored;
-
                 var categoria = new Category(
                     eventId: nuevoEvento.Id,
                     name: catDto.Name,
-                    votingMode: votingMode,
                     description: catDto.Description,
                     allowSelfVoting: catDto.AllowSelfVoting
                 );
-
-                if (catDto.VotingParameter.HasValue)
-                    categoria.VotingParameter = catDto.VotingParameter;
 
                 // Criterios de evaluación con sus pesos
                 foreach (var crDto in catDto.Criteria)
