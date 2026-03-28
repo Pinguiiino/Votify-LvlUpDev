@@ -11,23 +11,23 @@ namespace Votify.Api.Controllers
     [Route("api/[controller]")]
     public class EventsController : ControllerBase
     {
-        private readonly VotifyDbContext _context;
+        private readonly VotifyDbContext Context;
 
         public EventsController(VotifyDbContext context)
         {
-            _context = context;
+            this.Context = context;
         }
 
         // GET api/events
         [HttpGet]
         public async Task<IActionResult> GetEvents()
         {
-            var eventos = await _context.Events
+            var eventos = await this.Context.Events
                 .AsNoTracking()
                 .ToListAsync();
 
             // Las categorías se cargan aparte porque Event no tiene propiedad de navegación
-            var categorias = await _context.Categories
+            var categorias = await this.Context.Categories
                 .Include(c => c.Criteria)
                 .Include(c => c.Prizes)
                 .AsNoTracking()
@@ -40,6 +40,7 @@ namespace Votify.Api.Controllers
                 e.Description,
                 e.MaxProjects,
                 e.StartDate,
+                e.TopNProjectsAllowed,
                 Modality = e.Modality(),
                 Categories = categorias
                     .Where(c => c.EventId == e.Id)
@@ -84,6 +85,7 @@ namespace Votify.Api.Controllers
                 maxProjects: request.MaxProjects,
                 startDate: startDateUtc,
                 endDate: endDateUtc,
+                topNProjectsAllowed: request.TopNProjectsAllowed,
                 description: request.Description
             );
 
@@ -123,11 +125,11 @@ namespace Votify.Api.Controllers
                     categoria.Prizes.Add(premio);
                 }
 
-                _context.Categories.Add(categoria);
+                this.Context.Categories.Add(categoria);
             }
 
-            _context.Events.Add(nuevoEvento);
-            await _context.SaveChangesAsync();
+            this.Context.Events.Add(nuevoEvento);
+            await this.Context.SaveChangesAsync();
 
             return Ok(new { message = "Evento creado con éxito", id = nuevoEvento.Id });
         }
@@ -143,6 +145,7 @@ namespace Votify.Api.Controllers
         public int MaxProjects { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
+        public int TopNProjectsAllowed { get; set; }
         public List<CategoryDto> Categories { get; set; } = new();
     }
 
@@ -150,8 +153,6 @@ namespace Votify.Api.Controllers
     {
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public string VotingMode { get; set; } = "Scored";  // string para evitar problemas de deserialización
-        public int? VotingParameter { get; set; }
         public bool AllowSelfVoting { get; set; } = false;
         public List<CriterionDto> Criteria { get; set; } = new();
         public List<PrizeDto> Prizes { get; set; } = new();

@@ -11,7 +11,6 @@ public class Category
     public string EventId { get; set; }
     public string Name { get; set; }
     public string? Description { get; set; }
-
     public bool AllowSelfVoting { get; set; } = false;
 
     public virtual List<Criterion> Criteria { get; set; } = new();

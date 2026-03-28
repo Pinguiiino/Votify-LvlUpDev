@@ -10,6 +10,7 @@ public abstract class Event
     public string Name { get; set; }
     public string? Description { get; set; }
     public int MaxProjects { get; set; }
+    public int TopNProjectsAllowed { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
 
@@ -17,19 +18,20 @@ public abstract class Event
 
     protected Event() { }
 
-    protected Event(string name, int maxProjects, DateTime startDate, DateTime endDate,
+    protected Event(string name, int maxProjects, DateTime startDate, DateTime endDate, int topNProjectsAllowed,
                     string? description = null)
     {
-        Id = Guid.NewGuid().ToString();
-        Name = name;
-        MaxProjects = maxProjects;
-        StartDate = startDate;
-        EndDate = endDate;
-        Description = description;
+        this.Id = Guid.NewGuid().ToString();
+        this.Name = name;
+        this.MaxProjects = maxProjects;
+        this.StartDate = startDate;
+        this.EndDate = endDate;
+        this.TopNProjectsAllowed = topNProjectsAllowed;
+        this.Description = description;
     }
 
     public abstract string Modality();
 
     public virtual string Summary()
-        => $"{Name} [{Modality()}] — hasta {MaxProjects} proyectos, {StartDate:d} → {EndDate:d}";
+        => $"{this.Name} [{Modality()}] — hasta {this.MaxProjects} proyectos, {this.StartDate:d} → {this.EndDate:d}";
 }

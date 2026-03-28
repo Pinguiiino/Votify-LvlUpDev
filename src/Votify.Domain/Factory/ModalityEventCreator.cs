@@ -5,17 +5,17 @@ namespace Votify.Domain.Factory
 {
     public class ModalityEventCreator : EventCreator
     {
-        private readonly string _modality;
+        private readonly string Modality;
 
         public ModalityEventCreator(string modality)
         {
-            _modality = modality;
+            this.Modality = modality;
         }
 
         public override Event Create(string name, int maxProjects,
                                      DateTime startDate, DateTime endDate,
-                                     string? description = null)
-            => new ModalityEvent(name, maxProjects, startDate, endDate, _modality, description);
+                                     int topNProjectsAllowed, string? description = null)
+            => new ModalityEvent(name, maxProjects, startDate, endDate, this.Modality, topNProjectsAllowed, description);
     }
 }
 

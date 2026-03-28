@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Votify.Infrastructure;
@@ -11,9 +12,11 @@ using Votify.Infrastructure;
 namespace Votify.Infrastructure.Migrations
 {
     [DbContext(typeof(VotifyDbContext))]
-    partial class VotifyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260325092132_EliminarColumnaAmigo")]
+    partial class EliminarColumnaAmigo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -129,9 +132,6 @@ namespace Votify.Infrastructure.Migrations
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("TopNProjectsAllowed")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

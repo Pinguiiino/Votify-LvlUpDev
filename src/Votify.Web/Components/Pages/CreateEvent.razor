@@ -54,6 +54,12 @@
                 <ValidationMessage For="@(() => eventModel.MaxProjects)" />
             </div>
 
+            <div class="form-group">
+                <label>Top N de proyectos a votar *</label>
+                <InputNumber class="form-control" placeholder="3" @bind-Value="eventModel.TopNProjectsAllowed" />
+                <ValidationMessage For="@(() => eventModel.TopNProjectsAllowed)" />
+            </div>
+
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                 <div class="form-group">
                     <label>Fecha de inicio *</label>
@@ -280,6 +286,7 @@
                 eventModel.Description,
                 eventModel.Modality,
                 eventModel.MaxProjects,
+                eventModel.TopNProjectsAllowed,
                 StartDate = eventModel.StartDate!.Value,
                 EndDate = eventModel.EndDate!.Value,
                 Categories = eventModel.Categories.Select(c => new
@@ -324,6 +331,9 @@
 
         [Range(1, 1000)]
         public int MaxProjects { get; set; }
+
+        [Range(1, 100, ErrorMessage = "Debe permitir votar al menos 1 proyecto")]
+        public int TopNProjectsAllowed { get; set; } = 3;
 
         [Required] public DateTime? StartDate { get; set; }
         [Required] public DateTime? EndDate { get; set; }

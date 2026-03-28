@@ -53,6 +53,7 @@ public static class DbSeeder
             maxProjects: 30,
             startDate: new DateTime(2026, 4, 10, 0, 0, 0, DateTimeKind.Utc),
             endDate: new DateTime(2026, 4, 12, 0, 0, 0, DateTimeKind.Utc),
+            topNProjectsAllowed: 3,
             description: "El hackathon más grande de la UPC.");
 
         // ModalityEventCreator guarda una sola modalidad en su estado interno;
@@ -64,6 +65,7 @@ public static class DbSeeder
             maxProjects: 20,
             startDate: new DateTime(2026, 5, 22, 0, 0, 0, DateTimeKind.Utc),
             endDate: new DateTime(2026, 5, 23, 0, 0, 0, DateTimeKind.Utc),
+            topNProjectsAllowed: 2,
             description: "Feria de innovación anual de la FIB.");
 
         context.Events.AddRange(hackUPC, fibFair);
