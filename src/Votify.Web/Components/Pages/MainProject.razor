@@ -1,0 +1,61 @@
+﻿@page "/view-projects"
+@using Microsoft.EntityFrameworkCore
+@using Votify.Domain.ProjectFolder
+@using Votify.Infrastructure
+@inject NavigationManager Navigation
+@inject IDbContextFactory<VotifyDbContext> DbFactory
+
+<PageTitle>Proyectos - Votify</PageTitle>
+
+<div class="mainproject-container">
+    <header class="hero-section">
+        <h1 class="main-title">Proyectos</h1>
+        <p class="subtitle">Explora los proyectos y vota los tres mejores</p>
+    </header>
+
+    @if (ProyectosSubidos == null)
+    {
+        <p><em>Cargando proyectos desde la base de datos...</em></p>
+    }
+    else if (!ProyectosSubidos.Any())
+    {
+        <p>No hay proyectos disponibles en este momento.</p>
+    }
+    else
+    {
+        <div class="projects-grid">
+            @foreach (var proyecto in ProyectosSubidos)
+            {
+                <div class="project-card">
+                    <div class="icon-container">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31z" />
+                        </svg>
+                    </div>
+                    <div class="card-info">
+                        <h2 class="card-title">@proyecto.Title</h2>
+                        <p class="card-description">@proyecto.Description</p>
+                        <span class="card-modality" style="font-weight: bold; color: #4b5563;">@proyecto.ProjectType()</span>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<Project>? ProyectosSubidos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarProyectos();
+    }
+
+    private async Task CargarProyectos()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        ProyectosSubidos = await context.Projects
+            .AsNoTracking()
+            .ToListAsync();
+    }
+}

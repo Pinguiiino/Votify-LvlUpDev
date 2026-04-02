@@ -17,6 +17,12 @@
         <a href="/create-event" class="btn-dark" style="text-decoration: none;">
             + Crear Evento
         </a>
+        <a href="/create-project" class="btn-dark" style="text-decoration: none;">
+            + Subir Proyecto
+        </a>
+        <a href="/view-projects" class="btn-dark" style="text-decoration: none;">
+            Ver Proyectos
+        </a>
     </div>
 
     @if (EventosActivos == null)
@@ -53,7 +59,7 @@
 </div>
 
 @code {
-    private List<ModalityEvent>? EventosActivos;
+    private List<Event>? EventosActivos;
 
     protected override async Task OnInitializedAsync()
     {
@@ -64,7 +70,7 @@
     {
         using var context = await DbFactory.CreateDbContextAsync();
         EventosActivos = await context.Events
-            .OfType<ModalityEvent>()
+            .OfType<Event>()
             .AsNoTracking()
             .ToListAsync();
     }

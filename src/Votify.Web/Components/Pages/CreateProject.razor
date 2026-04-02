@@ -1,0 +1,164 @@
+﻿@page "/create-project"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using Votify.Domain.ProjectFolder
+@inject NavigationManager Navigation
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<PageTitle>Crear Proyecto - Votify</PageTitle>
+
+<div class="create-project-container">
+    <EditForm Model="projectModel" OnValidSubmit="ManejarSubmitValido">
+        <DataAnnotationsValidator />
+
+        <header class="modal-header">
+            <div class="header-title">
+                <h1>Nuevo Proyecto</h1>
+            </div>
+            <button type="button" class="close-btn" @onclick="Cancelar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                </svg>
+            </button>
+        </header>
+
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Vincular a Evento (ID) * - PROVISIONAL</label>
+                <InputText class="form-control" placeholder="Introduce el ID del evento" @bind-Value="projectModel.EventId" />
+                <ValidationMessage For="@(() => projectModel.EventId)" />
+            </div>
+
+            <div class="form-group">
+                <label>Título del Proyecto *</label>
+                <InputText class="form-control" placeholder="Ej: Votify App" @bind-Value="projectModel.Title" />
+                <ValidationMessage For="@(() => projectModel.Title)" />
+            </div>
+
+            <div class="form-group">
+                <label>Descripción</label>
+                <InputTextArea class="form-control" rows="3" placeholder="¿De qué trata este proyecto?" @bind-Value="projectModel.Description" />
+            </div>
+
+            <hr style="margin: 1.5rem 0; border-top: 1px solid #e5e7eb;" />
+
+            <div class="form-group">
+                <label>Materiales</label>
+
+                <div class="materials-list">
+                    @foreach (var mat in projectModel.Materials)
+                    {
+                        <div class="category-item">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span class="badge">@mat.Type</span>
+                                <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;">
+                                    <strong>@mat.Url</strong>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-delete" @onclick="() => projectModel.Materials.Remove(mat)">X</button>
+                        </div>
+                    }
+                </div>
+
+                @if (!mostrandoFormMaterial)
+                {
+                    <button type="button" class="btn-secondary mt-2" style="border: 2px dashed #d1d5db;" @onclick="MostrarFormMaterial">
+                        + Agregar Foto, Video o Documento
+                    </button>
+                }
+                else
+                {
+                    <div class="add-category-box">
+                        <div class="form-group">
+                            <label>Tipo de archivo</label>
+                            <select class="form-control form-control-sm" @bind="nuevoMaterial.Type">
+                                <option value="@MaterialType.Photo">Foto</option>
+                                <option value="@MaterialType.Video">Vídeo</option>
+                                <option value="@MaterialType.Document">Documento</option>
+                                <option value="@MaterialType.Audio">Audio</option>
+                                <option value="@MaterialType.Other">Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Enlace</label>
+                            <input type="text" class="form-control form-control-sm" placeholder="https://..." @bind="nuevoMaterial.Url" />
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción del material</label>
+                            <input type="text" class="form-control form-control-sm" placeholder="Opcional" @bind="nuevoMaterial.Description" />
+                        </div>
+
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                            <button type="button" class="btn-primary" style="flex: 1;" @onclick="ConfirmarMaterial">Añadir</button>
+                            <button type="button" class="btn-secondary" style="flex: 1;" @onclick="OcultarFormMaterial">Cancelar</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <footer class="modal-footer">
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 1rem;">
+                Crear Proyecto
+            </button>
+        </footer>
+    </EditForm>
+</div>
+
+@code {
+    private CreateProjectModel projectModel = new();
+    private MaterialDraft nuevoMaterial = new();
+    private bool mostrandoFormMaterial = false;
+
+    private void MostrarFormMaterial() { nuevoMaterial = new(); mostrandoFormMaterial = true; }
+    private void OcultarFormMaterial() => mostrandoFormMaterial = false;
+
+    private void ConfirmarMaterial()
+    {
+        if (!string.IsNullOrWhiteSpace(nuevoMaterial.Url))
+        {
+            projectModel.Materials.Add(nuevoMaterial);
+            mostrandoFormMaterial = false;
+        }
+    }
+
+    private async Task ManejarSubmitValido()
+    {
+        try
+        {
+            // Enviamos al endpoint general de proyectos
+            var response = await Http.PostAsJsonAsync("https://localhost:7150/api/projects", projectModel);
+
+            if (response.IsSuccessStatusCode)
+                Navigation.NavigateTo("/"); // O a una lista de proyectos
+            else
+                await JS.InvokeVoidAsync("alert", "Error al crear el proyecto.");
+        }
+        catch (Exception)
+        {
+            await JS.InvokeVoidAsync("alert", "No se pudo conectar con la API.");
+        }
+    }
+
+    private void Cancelar() => Navigation.NavigateTo("/");
+
+    public class CreateProjectModel
+    {
+        [Required(ErrorMessage = "El título es obligatorio")]
+        public string Title { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Debes asignar el proyecto a un evento")]
+        public string EventId { get; set; } = string.Empty;
+
+        public string Description { get; set; } = string.Empty;
+        public List<MaterialDraft> Materials { get; set; } = new();
+    }
+
+    public class MaterialDraft
+    {
+        public MaterialType Type { get; set; } = MaterialType.Photo;
+        public string Url { get; set; } = string.Empty;
+        public string? Description { get; set; }
+    }
+}
