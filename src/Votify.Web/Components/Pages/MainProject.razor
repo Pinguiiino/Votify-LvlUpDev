@@ -4,6 +4,7 @@
 @using Votify.Infrastructure
 @inject NavigationManager Navigation
 @inject IDbContextFactory<VotifyDbContext> DbFactory
+@rendermode InteractiveServer
 
 <PageTitle>Proyectos - Votify</PageTitle>
 
@@ -26,7 +27,7 @@
         <div class="projects-grid">
             @foreach (var proyecto in ProyectosSubidos)
             {
-                <div class="project-card">
+                <div class="project-card" @onclick="() => AbrirPopup(proyecto)">
                     <div class="icon-container">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
                             <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31z" />
@@ -43,8 +44,51 @@
     }
 </div>
 
+@if (proyectoSeleccionado != null)
+{
+    <div class="popup-overlay" @onclick="CerrarPopup">
+        <div class="popup-box" @onclick:stopPropagation="true">
+            <div class="popup-header">
+                <h2>@proyectoSeleccionado.Title</h2>
+                <button class="close-btn" @onclick="CerrarPopup">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                    </svg>
+                </button>
+            </div>
+            <div class="popup-body">
+                <p class="popup-type">@proyectoSeleccionado.ProjectType()</p>
+                <p class="popup-description">@proyectoSeleccionado.Description</p>
+
+                @if (proyectoSeleccionado.Materials.Any())
+                {
+                    <h4>Materiales</h4>
+                    <ul class="popup-materials">
+                        @foreach (var mat in proyectoSeleccionado.Materials)
+                        {
+                            <li>
+                                <span class="badge">@mat.Type</span>
+                                <a href="@mat.Url" target="_blank">@mat.Url</a>
+                                @if (!string.IsNullOrWhiteSpace(mat.Description))
+                                {
+                                    <span class="mat-desc"> — @mat.Description</span>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p style="color: #9ca3af; font-size: 0.9rem;">Sin materiales adjuntos.</p>
+                }
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<Project>? ProyectosSubidos;
+    private Project? proyectoSeleccionado;
 
     protected override async Task OnInitializedAsync()
     {
@@ -55,7 +99,11 @@
     {
         using var context = await DbFactory.CreateDbContextAsync();
         ProyectosSubidos = await context.Projects
+            .Include(p => p.Materials)
             .AsNoTracking()
             .ToListAsync();
     }
+
+    private void AbrirPopup(Project proyecto) => proyectoSeleccionado = proyecto;
+    private void CerrarPopup() => proyectoSeleccionado = null;
 }
