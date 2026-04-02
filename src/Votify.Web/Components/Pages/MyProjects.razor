@@ -1,4 +1,4 @@
-﻿@page "/view-projects"
+﻿@page "/my-projects"
 @rendermode InteractiveServer
 @using Microsoft.EntityFrameworkCore
 @using Votify.Domain.ProjectFolder
@@ -6,12 +6,12 @@
 @inject NavigationManager Navigation
 @inject IDbContextFactory<VotifyDbContext> DbFactory
 
-<PageTitle>Proyectos - Votify</PageTitle>
+<PageTitle>Tus proyectos - Votify</PageTitle>
 
-<div class="mainproject-container">
+<div class="myprojects-container">
     <header class="hero-section">
         <h1 class="main-title">Proyectos</h1>
-        <p class="subtitle">Explora los proyectos y vota los tres mejores</p>
+        <p class="subtitle">Visualiza tus proyectos y sus comentarios</p>
     </header>
 
     @if (ProyectosSubidos == null)
