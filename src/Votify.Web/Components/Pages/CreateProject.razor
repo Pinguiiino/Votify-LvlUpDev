@@ -24,6 +24,15 @@
         </header>
 
         <div class="modal-body">
+
+            <div class="form-group">
+                <label>Tipo de Proyecto *</label>
+                <select class="form-control" @bind="projectModel.ProjectType">
+                    <option value="AI">AI</option>
+                    <option value="Sustainability">Sostenibilidad</option>
+                </select>
+            </div>
+
             <div class="form-group">
                 <label>Vincular a Evento (ID) * - PROVISIONAL</label>
                 <InputText class="form-control" placeholder="Introduce el ID del evento" @bind-Value="projectModel.EventId" />
@@ -82,7 +91,16 @@
                         </div>
                         <div class="form-group">
                             <label>Enlace</label>
-                            <input type="text" class="form-control form-control-sm" placeholder="https://..." @bind="nuevoMaterial.Url" />
+                            <input type="text"
+                                   class="form-control form-control-sm @(errorUrl ? "is-invalid" : "")"
+                                placeholder="https://..."
+                                @bind="nuevoMaterial.Url" />
+                            @if (errorUrl)
+                            {
+                                <div class="validation-error">
+                                    Introduce una URL válida (debe empezar por http:// o https://)
+                                </div>
+                            }
                         </div>
                         <div class="form-group">
                             <label>Descripción del material</label>
@@ -110,30 +128,61 @@
     private CreateProjectModel projectModel = new();
     private MaterialDraft nuevoMaterial = new();
     private bool mostrandoFormMaterial = false;
+    private bool errorUrl = false;
 
-    private void MostrarFormMaterial() { nuevoMaterial = new(); mostrandoFormMaterial = true; }
+    private void MostrarFormMaterial() {
+        nuevoMaterial = new();
+        errorUrl = false;
+        mostrandoFormMaterial = true;
+    }
     private void OcultarFormMaterial() => mostrandoFormMaterial = false;
 
     private void ConfirmarMaterial()
     {
-        if (!string.IsNullOrWhiteSpace(nuevoMaterial.Url))
+        if (string.IsNullOrWhiteSpace(nuevoMaterial.Url))
         {
-            projectModel.Materials.Add(nuevoMaterial);
-            mostrandoFormMaterial = false;
+            errorUrl = true;
+            return;
         }
+
+        if (!Uri.TryCreate(nuevoMaterial.Url, UriKind.Absolute, out var uri)
+            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+        {
+            errorUrl = true;
+            return;
+        }
+        errorUrl = false;
+        projectModel.Materials.Add(nuevoMaterial);
+        mostrandoFormMaterial = false;
     }
 
     private async Task ManejarSubmitValido()
     {
         try
         {
-            // Enviamos al endpoint general de proyectos
-            var response = await Http.PostAsJsonAsync("https://localhost:7150/api/projects", projectModel);
+            var payload = new
+            {
+                projectModel.Title,
+                projectModel.EventId,
+                projectModel.Description,
+                projectModel.ProjectType,
+                Materials = projectModel.Materials.Select(m => new
+                {
+                    Type = m.Type.ToString(),
+                    m.Url,
+                    m.Description
+                })
+            };
+
+            var response = await Http.PostAsJsonAsync("https://localhost:7150/api/projects", payload);
 
             if (response.IsSuccessStatusCode)
-                Navigation.NavigateTo("/"); // O a una lista de proyectos
+                Navigation.NavigateTo("/");
             else
-                await JS.InvokeVoidAsync("alert", "Error al crear el proyecto.");
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                await JS.InvokeVoidAsync("alert", $"Error: {error}");
+            }
         }
         catch (Exception)
         {
@@ -152,6 +201,9 @@
         public string EventId { get; set; } = string.Empty;
 
         public string Description { get; set; } = string.Empty;
+
+        public string ProjectType { get; set; } = "AI";
+
         public List<MaterialDraft> Materials { get; set; } = new();
     }
 
