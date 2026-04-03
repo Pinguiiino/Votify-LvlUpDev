@@ -41,7 +41,7 @@
         <div class="events-grid">
             @foreach (var evento in EventosActivos)
             {
-                <div class="event-card">
+                <a href="/event/@evento.Id/categories" class="event-card">
                     <div class="icon-container">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
                             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
@@ -52,10 +52,9 @@
                         <h2 class="card-title">@evento.Name</h2>
                         <span class="card-date">@evento.StartDate.ToString("dd 'de' MMMM, yyyy")</span>
                         <p class="card-description">@evento.Description</p>
-                        @* Modality() es un método abstracto, se invoca con () *@
-                        <span class="card-modality" style="font-weight: bold; color: #4b5563;">@evento.Modality()</span>
+                        <span class="card-modality">@evento.Modality()</span>
                     </div>
-                </div>
+                </a>
             }
         </div>
     }

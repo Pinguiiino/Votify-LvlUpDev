@@ -1,4 +1,4 @@
-﻿/* Contenedor principal */
+/* Contenedor principal */
 .mainevent-container {
     max-width: 1000px;
     margin: 0 auto;
@@ -23,7 +23,7 @@
     background-color: #f3f4f6;
     color: #4b5563;
     padding: 0.5rem 1rem;
-    border-radius: 9999px; /* Aspecto de píldora */
+    border-radius: 9999px;
     font-size: 0.875rem;
     font-weight: 600;
     margin-bottom: 1rem;
@@ -45,7 +45,9 @@
 .toolbar {
     display: flex;
     justify-content: flex-end;
+    gap: 0.5rem;
     margin-bottom: 1.5rem;
+    flex-wrap: wrap;
 }
 
 .btn-dark {
@@ -78,11 +80,15 @@
     border-radius: 1rem;
     padding: 1.5rem;
     background-color: #ffffff;
-    transition: box-shadow 0.2s;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
 }
 
 .event-card:hover {
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border-color: #d1d5db;
 }
 
 .icon-container {
@@ -101,6 +107,7 @@
 .card-info {
     display: flex;
     flex-direction: column;
+    flex: 1;
 }
 
 .card-title {
@@ -118,18 +125,13 @@
 .card-description {
     font-size: 0.9rem;
     color: #4b5563;
-    margin: 0 0 1.25rem 0;
+    margin: 0 0 0.5rem 0;
     line-height: 1.4;
 }
 
-.card-link {
-    font-size: 0.9rem;
-    color: #111827;
-    font-weight: 600;
-    text-decoration: none;
-    margin-top: auto; /* Empuja el enlace al fondo si las tarjetas tienen alturas distintas */
+.card-modality {
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
 }
 
-.card-link:hover {
-    text-decoration: underline;
-}
+
