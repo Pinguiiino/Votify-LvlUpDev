@@ -2,8 +2,9 @@
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using Votify.Domain.ProjectFolder
+@using Microsoft.AspNetCore.WebUtilities
 @inject NavigationManager Navigation
-@inject HttpClient Http
+@inject IHttpClientFactory HttpClientFactory
 @inject IJSRuntime JS
 
 <PageTitle>Crear Proyecto - Votify</PageTitle>
@@ -34,12 +35,6 @@
             </div>
 
             <div class="form-group">
-                <label>Vincular a Evento (ID) * - PROVISIONAL</label>
-                <InputText class="form-control" placeholder="Introduce el ID del evento" @bind-Value="projectModel.EventId" />
-                <ValidationMessage For="@(() => projectModel.EventId)" />
-            </div>
-
-            <div class="form-group">
                 <label>Título del Proyecto *</label>
                 <InputText class="form-control" placeholder="Ej: Votify App" @bind-Value="projectModel.Title" />
                 <ValidationMessage For="@(() => projectModel.Title)" />
@@ -48,6 +43,45 @@
             <div class="form-group">
                 <label>Descripción</label>
                 <InputTextArea class="form-control" rows="3" placeholder="¿De qué trata este proyecto?" @bind-Value="projectModel.Description" />
+            </div>
+
+            <div class="form-group">
+                <label>Categorías</label>
+                @if (cargandoCategorias)
+                {
+                    <p style="font-size: 0.85rem; color: #6b7280;">Cargando categorías...</p>
+                }
+                else if (!categoriasDisponibles.Any())
+                {
+                    <p style="font-size: 0.85rem; color: #9ca3af; font-style: italic;">No hay categorías disponibles.</p>
+                }
+                else
+                {
+                    <div class="cp-checklist">
+                        @foreach (var cat in categoriasDisponibles)
+                        {
+                            var isSelected = categoriasSeleccionadas.Contains(cat.Id);
+                            <div class="cp-check-item @(isSelected ? "selected" : "")"
+                                 @onclick="() => ToggleCategoria(cat.Id)">
+                                <div class="cp-check-box">
+                                    @if (isSelected)
+                                    {
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z" />
+                                        </svg>
+                                    }
+                                </div>
+                                <div class="cp-check-info">
+                                    <span class="cp-check-name">@cat.Name</span>
+                                    @if (!string.IsNullOrWhiteSpace(cat.Description))
+                                    {
+                                        <span class="cp-check-desc">@cat.Description</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
             </div>
 
             <hr style="margin: 1.5rem 0; border-top: 1px solid #e5e7eb;" />
@@ -93,8 +127,8 @@
                             <label>Enlace</label>
                             <input type="text"
                                    class="form-control form-control-sm @(errorUrl ? "is-invalid" : "")"
-                                placeholder="https://..."
-                                @bind="nuevoMaterial.Url" />
+                                   placeholder="https://..."
+                                   @bind="nuevoMaterial.Url" />
                             @if (errorUrl)
                             {
                                 <div class="validation-error">
@@ -129,28 +163,66 @@
     private MaterialDraft nuevoMaterial = new();
     private bool mostrandoFormMaterial = false;
     private bool errorUrl = false;
+    private bool cargandoCategorias = false;
+    private List<CategorySimpleDto> categoriasDisponibles = new();
+    private HashSet<string> categoriasSeleccionadas = new();
 
-    private void MostrarFormMaterial() {
+    private bool yaInicializado = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || yaInicializado) return;
+        yaInicializado = true;
+
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+        var eventId = query.TryGetValue("eventId", out var val) ? val.ToString() : null;
+
+        if (!string.IsNullOrWhiteSpace(eventId))
+        {
+            projectModel.EventId = eventId;
+            cargandoCategorias = true;
+            StateHasChanged();
+            try
+            {
+                var http = HttpClientFactory.CreateClient("API");
+                var resultado = await http.GetFromJsonAsync<List<CategorySimpleDto>>(
+                    $"/api/categories/by-event/{eventId}");
+                categoriasDisponibles = resultado ?? new();
+            }
+            catch
+            {
+                categoriasDisponibles = new();
+            }
+            finally
+            {
+                cargandoCategorias = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void ToggleCategoria(string catId)
+    {
+        if (!categoriasSeleccionadas.Remove(catId))
+            categoriasSeleccionadas.Add(catId);
+    }
+
+    private void MostrarFormMaterial()
+    {
         nuevoMaterial = new();
         errorUrl = false;
         mostrandoFormMaterial = true;
     }
+
     private void OcultarFormMaterial() => mostrandoFormMaterial = false;
 
     private void ConfirmarMaterial()
     {
-        if (string.IsNullOrWhiteSpace(nuevoMaterial.Url))
-        {
-            errorUrl = true;
-            return;
-        }
-
+        if (string.IsNullOrWhiteSpace(nuevoMaterial.Url)) { errorUrl = true; return; }
         if (!Uri.TryCreate(nuevoMaterial.Url, UriKind.Absolute, out var uri)
             || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
-        {
-            errorUrl = true;
-            return;
-        }
+        { errorUrl = true; return; }
         errorUrl = false;
         projectModel.Materials.Add(nuevoMaterial);
         mostrandoFormMaterial = false;
@@ -166,6 +238,7 @@
                 projectModel.EventId,
                 projectModel.Description,
                 projectModel.ProjectType,
+                CategoryIds = categoriasSeleccionadas.ToList(),
                 Materials = projectModel.Materials.Select(m => new
                 {
                     Type = m.Type.ToString(),
@@ -173,8 +246,8 @@
                     m.Description
                 })
             };
-
-            var response = await Http.PostAsJsonAsync("https://localhost:7150/api/projects", payload);
+            var http = HttpClientFactory.CreateClient("API");
+            var response = await http.PostAsJsonAsync("/api/projects", payload);
 
             if (response.IsSuccessStatusCode)
                 Navigation.NavigateTo("/");
@@ -190,7 +263,10 @@
         }
     }
 
-    private void Cancelar() => Navigation.NavigateTo("/");
+    private void Cancelar()
+    {
+        Navigation.NavigateTo($"/event/{projectModel.EventId}/categories");
+    }
 
     public class CreateProjectModel
     {
@@ -201,9 +277,7 @@
         public string EventId { get; set; } = string.Empty;
 
         public string Description { get; set; } = string.Empty;
-
         public string ProjectType { get; set; } = "AI";
-
         public List<MaterialDraft> Materials { get; set; } = new();
     }
 
@@ -211,6 +285,13 @@
     {
         public MaterialType Type { get; set; } = MaterialType.Photo;
         public string Url { get; set; } = string.Empty;
+        public string? Description { get; set; }
+    }
+
+    public class CategorySimpleDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
     }
 }

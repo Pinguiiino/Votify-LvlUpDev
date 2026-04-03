@@ -42,6 +42,12 @@ namespace Votify.Api.Controllers
                 proyecto.Materials.Add(material);
             }
 
+            foreach (var categoryId in request.CategoryIds)
+            {
+                var projectCategory = new ProjectCategory(proyecto.Id, categoryId);
+                proyecto.ProjectCategories.Add(projectCategory);
+            }
+
             this.Context.Projects.Add(proyecto);
             await this.Context.SaveChangesAsync();
 
@@ -55,6 +61,7 @@ namespace Votify.Api.Controllers
         public string EventId { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string ProjectType { get; set; } = "AI";
+        public List<string> CategoryIds { get; set; } = new();
         public List<MaterialDto> Materials { get; set; } = new();
     }
 

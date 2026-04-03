@@ -12,6 +12,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("API", c => c.BaseAddress = new Uri("https://localhost:7150"));
 
 var app = builder.Build();
 

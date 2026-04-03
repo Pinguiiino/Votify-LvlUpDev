@@ -101,3 +101,68 @@
         box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
         border-color: #ef4444;
     }
+
+.cp-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.cp-check-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    background-color: #ffffff;
+    user-select: none;
+}
+
+    .cp-check-item:hover {
+        border-color: #9ca3af;
+        background-color: #f9fafb;
+    }
+
+    .cp-check-item.selected {
+        border-color: #111827;
+        background-color: #f8fafc;
+    }
+
+.cp-check-box {
+    width: 1.1rem;
+    height: 1.1rem;
+    border: 2px solid #d1d5db;
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+}
+
+.cp-check-item.selected .cp-check-box {
+    background-color: #111827;
+    border-color: #111827;
+    color: #ffffff;
+}
+
+.cp-check-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.cp-check-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.cp-check-desc {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
