@@ -45,7 +45,7 @@
             </div>
 
             <div class="form-group">
-                <label>Categorías</label>
+                <label>Categorías *</label>
                 @if (cargandoCategorias)
                 {
                     <p style="font-size: 0.85rem; color: #6b7280;">Cargando categorías...</p>
@@ -80,6 +80,10 @@
                             </div>
                         }
                     </div>
+                }
+                @if (errorCategorias)
+                {
+                    <div class="validation-error">Debes seleccionar al menos una categoría.</div>
                 }
             </div>
 
@@ -162,6 +166,7 @@
     private MaterialDraft nuevoMaterial = new();
     private bool mostrandoFormMaterial = false;
     private bool errorUrl = false;
+    private bool errorCategorias = false;
     private bool cargandoCategorias = false;
     private List<CategorySimpleDto> categoriasDisponibles = new();
     private HashSet<string> categoriasSeleccionadas = new();
@@ -195,6 +200,9 @@
     {
         if (!categoriasSeleccionadas.Remove(catId))
             categoriasSeleccionadas.Add(catId);
+
+        if (categoriasSeleccionadas.Any())
+            errorCategorias = false;
     }
 
     private void MostrarFormMaterial()
@@ -219,6 +227,12 @@
 
     private async Task ManejarSubmitValido()
     {
+        if (!categoriasSeleccionadas.Any())
+        {
+            errorCategorias = true;
+            return;
+        }
+        errorCategorias = false;
         try
         {
             var payload = new
