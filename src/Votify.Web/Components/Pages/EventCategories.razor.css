@@ -431,3 +431,26 @@
     color: #9ca3af;
     text-align: center;
 }
+
+.btn-explore {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background-color: transparent;
+    color: #111827;
+    border: 1.5px solid #d1d5db;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+    .btn-explore:hover {
+        background-color: #111827;
+        color: #ffffff;
+        border-color: #111827;
+        text-decoration: none;
+    }

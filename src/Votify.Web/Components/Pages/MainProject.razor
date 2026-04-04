@@ -1,7 +1,8 @@
-﻿@page "/view-projects"
+﻿@page "/event/{EventId}/categories/{CategoryId}/projects"
 @rendermode InteractiveServer
 @using Microsoft.EntityFrameworkCore
 @using Votify.Domain.ProjectFolder
+@using Votify.Domain.CategoryFolder
 @using Votify.Infrastructure
 @inject NavigationManager Navigation
 @inject IDbContextFactory<VotifyDbContext> DbFactory
@@ -10,7 +11,15 @@
 
 <div class="mainproject-container">
     <header class="hero-section">
-        <h1 class="main-title">Proyectos</h1>
+        <button class="back-btn" style="align-self: flex-start;" @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories")'>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
+            </svg>
+            Volver
+        </button>
+        <h1 class="main-title">
+            Proyectos de @(categoria?.Name ?? "la categoría")
+        </h1>
         <p class="subtitle">Explora los proyectos y vota a los mejores</p>
     </header>
 
@@ -89,17 +98,23 @@
 @code {
     private List<Project>? ProyectosSubidos;
     private Project? proyectoSeleccionado;
+    private Category? categoria;
+
+    [Parameter] public string EventId { get; set; } = string.Empty;
+    [Parameter] public string CategoryId { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        await CargarProyectos();
-    }
-
-    private async Task CargarProyectos()
-    {
         using var context = await DbFactory.CreateDbContextAsync();
+
+        categoria = await context.Categories
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == CategoryId);
+
         ProyectosSubidos = await context.Projects
             .Include(p => p.Materials)
+            .Include(p => p.ProjectCategories)
+            .Where(p => p.ProjectCategories.Any(pc => pc.CategoryId == CategoryId))
             .AsNoTracking()
             .ToListAsync();
     }
