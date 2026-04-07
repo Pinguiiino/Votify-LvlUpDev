@@ -1,9 +1,7 @@
 @page "/"
-@using Microsoft.EntityFrameworkCore
-@using Votify.Domain.EventFolder
-@using Votify.Infrastructure
+@rendermode InteractiveServer
 @inject NavigationManager Navigation
-@inject IDbContextFactory<VotifyDbContext> DbFactory
+@inject HttpClient Http
 
 <PageTitle>Inicio - Votify</PageTitle>
 
@@ -14,17 +12,15 @@
     </header>
 
     <div class="toolbar">
-        <a href="/create-event" class="btn-dark" style="text-decoration: none;">
-            + Crear Evento
-        </a>
-        <a href="/my-projects" class="btn-dark" style="text-decoration: none;">
-            Mis Proyectos
-        </a>
+        <a href="/create-event" class="btn-dark" style="text-decoration: none;">+ Crear Evento</a>
+        <a href="/create-project" class="btn-dark" style="text-decoration: none;">+ Subir Proyecto</a>
+        <a href="/view-projects" class="btn-dark" style="text-decoration: none;">Ver Proyectos</a>
+        <a href="/my-projects" class="btn-dark" style="text-decoration: none;">Mis Proyectos</a>
     </div>
 
     @if (EventosActivos == null)
     {
-        <p><em>Cargando eventos desde la base de datos...</em></p>
+        <p><em>Cargando eventos...</em></p>
     }
     else if (!EventosActivos.Any())
     {
@@ -35,7 +31,7 @@
         <div class="events-grid">
             @foreach (var evento in EventosActivos)
             {
-                <a href="/event/@evento.Id/categories" class="event-card">
+                <div class="event-card">
                     <div class="icon-container">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
                             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
@@ -46,28 +42,30 @@
                         <h2 class="card-title">@evento.Name</h2>
                         <span class="card-date">@evento.StartDate.ToString("dd 'de' MMMM, yyyy")</span>
                         <p class="card-description">@evento.Description</p>
-                        <span class="card-modality">@evento.Modality()</span>
+                        <span class="card-modality" style="font-weight: bold; color: #4b5563;">@evento.Modality</span>
                     </div>
-                </a>
+                </div>
             }
         </div>
     }
 </div>
 
 @code {
-    private List<Event>? EventosActivos;
+    private List<EventDto>? EventosActivos;
 
     protected override async Task OnInitializedAsync()
     {
-        await CargarEventos();
+        EventosActivos = await Http.GetFromJsonAsync<List<EventDto>>("https://localhost:5294/api/events");
     }
 
-    private async Task CargarEventos()
+    public class EventDto
     {
-        using var context = await DbFactory.CreateDbContextAsync();
-        EventosActivos = await context.Events
-            .OfType<Event>()
-            .AsNoTracking()
-            .ToListAsync();
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public int MaxProjects { get; set; }
+        public DateTime StartDate { get; set; }
+        public int TopNProjectsAllowed { get; set; }
+        public string Modality { get; set; } = string.Empty;
     }
 }

@@ -53,6 +53,8 @@ namespace Votify.Api.Controllers
 
             return Ok(new { message = "Proyecto creado con éxito", id = proyecto.Id });
         }
+
+
     }
 
     public class CreateProjectDto

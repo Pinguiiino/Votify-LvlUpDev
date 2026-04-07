@@ -133,7 +133,48 @@ namespace Votify.Api.Controllers
 
             return Ok(new { message = "Evento creado con éxito", id = nuevoEvento.Id });
         }
+
+        // GET api/events/{id}
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetEvent(string id)
+        {
+            var e = await this.Context.Events.AsNoTracking().FirstOrDefaultAsync(ev => ev.Id == id);
+            if (e == null) return NotFound();
+
+            var categorias = await this.Context.Categories
+                .Include(c => c.Criteria)
+                .Include(c => c.Prizes)
+                .Where(c => c.EventId == id)
+                .AsNoTracking()
+                .ToListAsync();
+
+            var result = new
+            {
+                e.Id,
+                e.Name,
+                e.Description,
+                e.MaxProjects,
+                e.StartDate,
+                e.EndDate,
+                e.TopNProjectsAllowed,
+                Modality = e.Modality(),
+                Categories = categorias.Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    c.Description,
+                    c.AllowSelfVoting,
+                    Criteria = c.Criteria.Select(cr => new { cr.Id, cr.Name, cr.Type, cr.Weight, cr.Description }),
+                    Prizes = c.Prizes.Select(p => new { p.Id, p.Position, p.Name, p.Description })
+                })
+            };
+            return Ok(result);
+        }
+
+
     }
+
+
 
     // ── DTOs ────────────────────────────────────────────────────────────────
 

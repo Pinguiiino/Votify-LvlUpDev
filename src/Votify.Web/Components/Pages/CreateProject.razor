@@ -18,7 +18,8 @@
             </div>
             <button type="button" class="close-btn" @onclick="Cancelar">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                    <path
+                    d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
                 </svg>
             </button>
         </header>
@@ -41,7 +42,8 @@
 
             <div class="form-group">
                 <label>Descripción</label>
-                <InputTextArea class="form-control" rows="3" placeholder="¿De qué trata este proyecto?" @bind-Value="projectModel.Description" />
+                <InputTextArea class="form-control" rows="3" placeholder="¿De qué trata este proyecto?"
+                               @bind-Value="projectModel.Description" />
             </div>
 
             <div class="form-group">
@@ -60,13 +62,14 @@
                         @foreach (var cat in categoriasDisponibles)
                         {
                             var isSelected = categoriasSeleccionadas.Contains(cat.Id);
-                            <div class="cp-check-item @(isSelected ? "selected" : "")"
-                                 @onclick="() => ToggleCategoria(cat.Id)">
+                            <div class="cp-check-item @(isSelected ? "selected" : "")" @onclick="() => ToggleCategoria(cat.Id)">
                                 <div class="cp-check-box">
                                     @if (isSelected)
                                     {
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                                            <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z" />
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
+                                             viewBox="0 0 16 16">
+                                            <path
+                                            d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z" />
                                         </svg>
                                     }
                                 </div>
@@ -98,18 +101,21 @@
                         <div class="category-item">
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <span class="badge">@mat.Type</span>
-                                <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;">
+                                <div
+                                    style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;">
                                     <strong>@mat.Url</strong>
                                 </div>
                             </div>
-                            <button type="button" class="btn-delete" @onclick="() => projectModel.Materials.Remove(mat)">X</button>
+                            <button type="button" class="btn-delete"
+                                    @onclick="() => projectModel.Materials.Remove(mat)">X</button>
                         </div>
                     }
                 </div>
 
                 @if (!mostrandoFormMaterial)
                 {
-                    <button type="button" class="btn-secondary mt-2" style="border: 2px dashed #d1d5db;" @onclick="MostrarFormMaterial">
+                    <button type="button" class="btn-secondary mt-2" style="border: 2px dashed #d1d5db;"
+                            @onclick="MostrarFormMaterial">
                         + Agregar Foto, Video o Documento
                     </button>
                 }
@@ -128,10 +134,8 @@
                         </div>
                         <div class="form-group">
                             <label>Enlace</label>
-                            <input type="text"
-                                   class="form-control form-control-sm @(errorUrl ? "is-invalid" : "")"
-                                   placeholder="https://..."
-                                   @bind="nuevoMaterial.Url" />
+                            <input type="text" class="form-control form-control-sm @(errorUrl ? "is-invalid" : "")"
+                                   placeholder="https://..." @bind="nuevoMaterial.Url" />
                             @if (errorUrl)
                             {
                                 <div class="validation-error">
@@ -141,12 +145,15 @@
                         </div>
                         <div class="form-group">
                             <label>Descripción del material</label>
-                            <input type="text" class="form-control form-control-sm" placeholder="Opcional" @bind="nuevoMaterial.Description" />
+                            <input type="text" class="form-control form-control-sm" placeholder="Opcional"
+                                   @bind="nuevoMaterial.Description" />
                         </div>
 
                         <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                            <button type="button" class="btn-primary" style="flex: 1;" @onclick="ConfirmarMaterial">Añadir</button>
-                            <button type="button" class="btn-secondary" style="flex: 1;" @onclick="OcultarFormMaterial">Cancelar</button>
+                            <button type="button" class="btn-primary" style="flex: 1;"
+                                    @onclick="ConfirmarMaterial">Añadir</button>
+                            <button type="button" class="btn-secondary" style="flex: 1;"
+                                    @onclick="OcultarFormMaterial">Cancelar</button>
                         </div>
                     </div>
                 }
