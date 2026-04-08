@@ -3,10 +3,6 @@
     "Name": "Nuevo perfil",
     "Projects": [
       {
-        "Path": "src\\Votify.Api\\Votify.Api.csproj",
-        "Action": "Start"
-      },
-      {
         "Path": "src\\Votify.Web\\Votify.Web.csproj",
         "Action": "Start"
       }

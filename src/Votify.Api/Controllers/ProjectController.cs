@@ -82,6 +82,33 @@ namespace Votify.Api.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAllProjects()
+        {
+            var proyectos = await Context.Projects
+                .Include(p => p.Materials)
+                .Include(p => p.ProjectCategories)
+                .AsNoTracking()
+                .ToListAsync();
+
+            var result = proyectos.Select(p => new
+            {
+                p.Id,
+                p.Title,
+                p.Description,
+                ProjectType = p.ProjectType(),
+                Materials = p.Materials.Select(m => new
+                {
+                    m.Id,
+                    Type = m.Type.ToString(),
+                    m.Url,
+                    m.Description
+                })
+            });
+
+            return Ok(result);
+        }
+
 
     }
 
