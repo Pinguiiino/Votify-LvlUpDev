@@ -2,6 +2,7 @@
 using Votify.Domain.Factory;
 using Votify.Domain.ProjectFolder;
 using Votify.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 
 namespace Votify.Api.Controllers
 {
@@ -52,6 +53,33 @@ namespace Votify.Api.Controllers
             await this.Context.SaveChangesAsync();
 
             return Ok(new { message = "Proyecto creado con éxito", id = proyecto.Id });
+        }
+        [HttpGet("by-category/{categoryId}")]
+        public async Task<IActionResult> GetByCategory(string categoryId)
+        {
+            var proyectos = await Context.Projects
+                .Include(p => p.Materials)
+                .Include(p => p.ProjectCategories)
+                .Where(p => p.ProjectCategories.Any(pc => pc.CategoryId == categoryId))
+                .AsNoTracking()
+                .ToListAsync();
+
+            var result = proyectos.Select(p => new
+            {
+                p.Id,
+                p.Title,
+                p.Description,
+                ProjectType = p.ProjectType(),
+                Materials = p.Materials.Select(m => new
+                {
+                    m.Id,
+                    Type = m.Type.ToString(),
+                    m.Url,
+                    m.Description
+                })
+            });
+
+            return Ok(result);
         }
 
 

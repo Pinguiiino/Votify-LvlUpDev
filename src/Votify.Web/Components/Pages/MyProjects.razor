@@ -1,10 +1,7 @@
 ﻿@page "/my-projects"
 @rendermode InteractiveServer
-@using Microsoft.EntityFrameworkCore
-@using Votify.Domain.ProjectFolder
-@using Votify.Infrastructure
 @inject NavigationManager Navigation
-@inject IDbContextFactory<VotifyDbContext> DbFactory
+@inject IHttpClientFactory HttpClientFactory
 
 <PageTitle>Tus proyectos - Votify</PageTitle>
 
@@ -12,7 +9,8 @@
     <header class="hero-section">
         <button class="back-btn" style="align-self: flex-start;" @onclick='() => Navigation.NavigateTo($"/")'>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
+                <path fill-rule="evenodd"
+                      d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
             </svg>
             Volver
         </button>
@@ -36,13 +34,14 @@
                 <div class="project-card" @onclick="() => AbrirPopup(proyecto)">
                     <div class="icon-container">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31z" />
+                            <path
+                            d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31z" />
                         </svg>
                     </div>
                     <div class="card-info">
                         <h2 class="card-title">@proyecto.Title</h2>
                         <p class="card-description">@proyecto.Description</p>
-                        <span class="card-modality" style="font-weight: bold; color: #4b5563;">@proyecto.ProjectType()</span>
+                        <span class="card-modality" style="font-weight: bold; color: #4b5563;">@proyecto.ProjectType</span>
                     </div>
                 </div>
             }
@@ -58,12 +57,13 @@
                 <h2>@proyectoSeleccionado.Title</h2>
                 <button class="close-btn" @onclick="CerrarPopup">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                        <path
+                        d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
                     </svg>
                 </button>
             </div>
             <div class="popup-body">
-                <p class="popup-type">@proyectoSeleccionado.ProjectType()</p>
+                <p class="popup-type">@proyectoSeleccionado.ProjectType</p>
                 <p class="popup-description">@proyectoSeleccionado.Description</p>
 
                 @if (proyectoSeleccionado.Materials.Any())
@@ -93,23 +93,32 @@
 }
 
 @code {
-    private List<Project>? ProyectosSubidos;
-    private Project? proyectoSeleccionado;
+    private List<ProjectDto>? ProyectosSubidos;
+    private ProjectDto? proyectoSeleccionado;
 
     protected override async Task OnInitializedAsync()
     {
-        await CargarProyectos();
+        var http = HttpClientFactory.CreateClient("API");
+        ProyectosSubidos = await http.GetFromJsonAsync<List<ProjectDto>>("api/projects");
     }
 
-    private async Task CargarProyectos()
-    {
-        using var context = await DbFactory.CreateDbContextAsync();
-        ProyectosSubidos = await context.Projects
-            .Include(p => p.Materials)
-            .AsNoTracking()
-            .ToListAsync();
-    }
-
-    private void AbrirPopup(Project proyecto) => proyectoSeleccionado = proyecto;
+    private void AbrirPopup(ProjectDto proyecto) => proyectoSeleccionado = proyecto;
     private void CerrarPopup() => proyectoSeleccionado = null;
+
+    public class ProjectDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string ProjectType { get; set; } = string.Empty;
+        public List<MaterialDto> Materials { get; set; } = new();
+    }
+
+    public class MaterialDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public string Url { get; set; } = string.Empty;
+        public string? Description { get; set; }
+    }
 }
