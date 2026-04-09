@@ -1,11 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using Votify.Infrastructure;
+using Votify.Infrastructure.Repositories;
+using Votify.Domain.ProjectFolder;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<VotifyDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddScoped<ProjectService>();
 
 builder.Services.AddCors(options =>
 {

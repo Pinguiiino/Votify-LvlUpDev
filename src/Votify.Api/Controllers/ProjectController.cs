@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Votify.Domain.Factory;
 using Votify.Domain.ProjectFolder;
-using Votify.Infrastructure;
-using Microsoft.EntityFrameworkCore;
 
 namespace Votify.Api.Controllers
 {
@@ -10,106 +7,67 @@ namespace Votify.Api.Controllers
     [Route("api/[controller]")]
     public class ProjectsController : ControllerBase
     {
-        private readonly VotifyDbContext Context;
+        private readonly ProjectService _service;
 
-        public ProjectsController(VotifyDbContext context)
+        public ProjectsController(ProjectService service)
         {
-            this.Context = context;
+            _service = service;
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateProject([FromBody] CreateProjectDto request)
+        public async Task<IActionResult> CreateProject([FromBody] CreateProjectDto dto)
         {
-            ProjectCreator? creator = request.ProjectType switch
+            try
             {
-                "AI" => new AiProjectCreator(),
-                "Sustainability" => new SustainabilityProjectCreator(),
-                _ => null
-            };
-
-            if (creator == null)
-                return BadRequest($"Tipo de proyecto desconocido: {request.ProjectType}");
-
-            var proyecto = creator.Create(request.Title, request.EventId, request.Description);
-
-            foreach (var matDto in request.Materials)
-            {
-                var material = new ProjectMaterial(
-                    projectId: proyecto.Id,
-                    type: Enum.TryParse<MaterialType>(matDto.Type, out var mt) ? mt : MaterialType.Other,
-                    url: matDto.Url,
-                    description: matDto.Description
-                );
-                proyecto.Materials.Add(material);
-            }
-
-            foreach (var categoryId in request.CategoryIds)
-            {
-                var projectCategory = new ProjectCategory(proyecto.Id, categoryId);
-                proyecto.ProjectCategories.Add(projectCategory);
-            }
-
-            this.Context.Projects.Add(proyecto);
-            await this.Context.SaveChangesAsync();
-
-            return Ok(new { message = "Proyecto creado con éxito", id = proyecto.Id });
-        }
-        [HttpGet("by-category/{categoryId}")]
-        public async Task<IActionResult> GetByCategory(string categoryId)
-        {
-            var proyectos = await Context.Projects
-                .Include(p => p.Materials)
-                .Include(p => p.ProjectCategories)
-                .Where(p => p.ProjectCategories.Any(pc => pc.CategoryId == categoryId))
-                .AsNoTracking()
-                .ToListAsync();
-
-            var result = proyectos.Select(p => new
-            {
-                p.Id,
-                p.Title,
-                p.Description,
-                ProjectType = p.ProjectType(),
-                Materials = p.Materials.Select(m => new
-                {
-                    m.Id,
-                    Type = m.Type.ToString(),
+                var materials = dto.Materials.Select(m => (
+                    Enum.TryParse<MaterialType>(m.Type, out var mt) ? mt : MaterialType.Other,
                     m.Url,
                     m.Description
-                })
-            });
+                )).ToList();
 
-            return Ok(result);
+                var project = await _service.CreateProjectAsync(
+                    dto.Title, dto.EventId, dto.Description,
+                    dto.ProjectType, dto.CategoryIds, materials);
+
+                return Ok(new { message = "Proyecto creado", id = project.Id });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllProjects()
+        public async Task<IActionResult> GetAll()
         {
-            var proyectos = await Context.Projects
-                .Include(p => p.Materials)
-                .Include(p => p.ProjectCategories)
-                .AsNoTracking()
-                .ToListAsync();
-
-            var result = proyectos.Select(p => new
-            {
-                p.Id,
-                p.Title,
-                p.Description,
-                ProjectType = p.ProjectType(),
-                Materials = p.Materials.Select(m => new
-                {
-                    m.Id,
-                    Type = m.Type.ToString(),
-                    m.Url,
-                    m.Description
-                })
-            });
-
-            return Ok(result);
+            var projects = await _service.GetAllAsync();
+            return Ok(projects.Select(ToDto));
         }
 
+        [HttpGet("by-category/{categoryId}")]
+        public async Task<IActionResult> GetByCategory(string categoryId)
+        {
+            var projects = await _service.GetByCategoryAsync(categoryId);
+            return Ok(projects.Select(ToDto));
+        }
 
+        private static object ToDto(Project p) => new
+        {
+            p.Id,
+            p.Title,
+            p.Description,
+            ProjectType = p.ProjectType(),
+            Materials = p.Materials.Select(m => new
+            { m.Id, Type = m.Type.ToString(), m.Url, m.Description })
+        };
+
+        [HttpGet("project-types")]
+        public IActionResult GetProjectTypes()
+            => Ok(_service.GetProjectTypes());
+
+        [HttpGet("material-types")]
+        public IActionResult GetMaterialTypes()
+            => Ok(_service.GetMaterialTypes());
     }
 
     public class CreateProjectDto

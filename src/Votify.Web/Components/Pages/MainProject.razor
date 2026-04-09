@@ -1,5 +1,6 @@
 ﻿@page "/event/{EventId}/categories/{CategoryId}/projects"
 @rendermode InteractiveServer
+@using Votify.Web.Helpers
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
 <PageTitle>Proyectos - Votify</PageTitle>
@@ -43,7 +44,7 @@
                     <div class="card-info">
                         <h2 class="card-title">@proyecto.Title</h2>
                         <p class="card-description">@proyecto.Description</p>
-                        <span class="card-modality" style="font-weight: bold; color: #4b5563;">@proyecto.ProjectType</span>
+                        <span class="card-modality" style="font-weight: bold; color: #4b5563;">@(Translations.TipoProyecto.GetValueOrDefault(proyecto.ProjectType, proyecto.ProjectType))</span>
                     </div>
                 </div>
             }
@@ -65,7 +66,7 @@
                 </button>
             </div>
             <div class="popup-body">
-                <p class="popup-type">@proyectoSeleccionado.ProjectType</p>
+                <p class="popup-type">@(Translations.TipoProyecto.GetValueOrDefault(proyectoSeleccionado.ProjectType, proyectoSeleccionado.ProjectType))</p>
                 <p class="popup-description">@proyectoSeleccionado.Description</p>
 
                 @if (proyectoSeleccionado.Materials.Any())
@@ -75,7 +76,7 @@
                         @foreach (var mat in proyectoSeleccionado.Materials)
                         {
                             <li>
-                                <span class="badge">@mat.Type</span>
+                                <span class="badge">@(Translations.TipoMaterial.GetValueOrDefault(mat.Type, mat.Type))</span>
                                 <a href="@mat.Url" target="_blank">@mat.Url</a>
                                 @if (!string.IsNullOrWhiteSpace(mat.Description))
                                 {
