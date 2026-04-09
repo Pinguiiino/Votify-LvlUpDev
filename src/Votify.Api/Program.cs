@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Votify.Domain.CategoryFolder;
+using Votify.Domain.ProjectFolder;
 using Votify.Infrastructure;
 using Votify.Infrastructure.Repositories;
-using Votify.Domain.ProjectFolder;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,9 @@ builder.Services.AddDbContext<VotifyDbContext>(options =>
 
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<ProjectService>();
+
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<CategoryService>();
 
 builder.Services.AddCors(options =>
 {
