@@ -96,21 +96,75 @@
 
             <div class="form-group">
                 <label>Materiales</label>
-
                 <div class="materials-list">
                     @foreach (var mat in projectModel.Materials)
                     {
-                        <div class="category-item">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span class="badge">@(Translations.TipoMaterial.GetValueOrDefault(mat.Type, mat.Type))</span>
-                                <div
-                                    style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;">
-                                    <strong>@mat.Url</strong>
+                        @if (materialEditando == mat)
+                        {
+                            <div class="add-category-box">
+                                <div class="form-group">
+                                    <label>Tipo de archivo</label>
+                                    <select class="form-control form-control-sm" @bind="mat.Type">
+                                        @foreach (var tipo in tiposMaterial)
+                                        {
+                                            <option value="@tipo">@(Translations.TipoMaterial.GetValueOrDefault(tipo, tipo))</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Enlace</label>
+                                    <input type="text" class="form-control form-control-sm @(errorUrlEdicion ? "is-invalid" : "")"
+                                           placeholder="https://..." @bind="mat.Url" />
+                                    @if (errorUrlEdicion)
+                                    {
+                                        <div class="validation-error">
+                                            Introduce una URL válida (debe empezar por http:// o https://)
+                                        </div>
+                                    }
+                                </div>
+                                <div class="form-group">
+                                    <label>Descripción del material</label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="Opcional"
+                                           @bind="mat.Description" />
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                                    <button type="button" class="btn-primary" style="flex: 1;"
+                                            @onclick="() => ConfirmarEdicionMaterial(mat)">
+                                        Guardar
+                                    </button>
+                                    <button type="button" class="btn-secondary" style="flex: 1;"
+                                            @onclick="CancelarEdicionMaterial">
+                                        Cancelar
+                                    </button>
                                 </div>
                             </div>
-                            <button type="button" class="btn-delete"
-                                    @onclick="() => projectModel.Materials.Remove(mat)">X</button>
-                        </div>
+                        }
+                        else
+                        {
+                            <div class="category-item">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span class="badge">@(Translations.TipoMaterial.GetValueOrDefault(mat.Type, mat.Type))</span>
+                                    <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;">
+                                        <strong>@mat.Url</strong>
+                                        @if (!string.IsNullOrWhiteSpace(mat.Description))
+                                        {
+                                            <span style="display: block; font-size: 0.78rem; color: #6b7280;">@mat.Description</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 0.25rem;">
+                                    <button type="button" class="btn-edit" @onclick="() => IniciarEdicionMaterial(mat)">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="btn-delete"
+                                            @onclick="() => projectModel.Materials.Remove(mat)">
+                                        ✕
+                                    </button>
+                                </div>
+                            </div>
+                        }
                     }
                 </div>
 
@@ -173,6 +227,8 @@
     private CreateProjectModel projectModel = new();
     private MaterialDraft nuevoMaterial = new();
     private bool mostrandoFormMaterial = false;
+    private MaterialDraft? materialEditando = null;
+    private bool errorUrlEdicion = false;
     private bool errorUrl = false;
     private bool errorCategorias = false;
     private bool cargandoCategorias = false;
@@ -238,6 +294,26 @@
         projectModel.Materials.Add(nuevoMaterial);
         mostrandoFormMaterial = false;
     }
+
+    private void IniciarEdicionMaterial(MaterialDraft mat)
+    {
+        materialEditando = mat;
+        errorUrlEdicion = false;
+        mostrandoFormMaterial = false;
+    }
+
+    private void ConfirmarEdicionMaterial(MaterialDraft mat)
+    {
+        if (string.IsNullOrWhiteSpace(mat.Url)) { errorUrlEdicion = true; return; }
+        if (!Uri.TryCreate(mat.Url, UriKind.Absolute, out var uri)
+            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+        { errorUrlEdicion = true; return; }
+
+        errorUrlEdicion = false;
+        materialEditando = null;
+    }
+
+    private void CancelarEdicionMaterial() => materialEditando = null;
 
     private async Task ManejarSubmitValido()
     {
