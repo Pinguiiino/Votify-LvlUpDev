@@ -2,7 +2,7 @@
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @inject NavigationManager Navigation
-@inject HttpClient Http
+@inject IHttpClientFactory HttpClientFactory
 @inject IJSRuntime JS
 
 <PageTitle>Crear Nuevo Evento - Votify</PageTitle>
@@ -298,7 +298,8 @@
                 })
             };
 
-            var respuesta = await Http.PostAsJsonAsync("https://localhost:7150/api/events", payload);
+            var http = HttpClientFactory.CreateClient("API");
+            var respuesta = await http.PostAsJsonAsync("/api/events", payload);
 
             if (respuesta.IsSuccessStatusCode)
                 Navigation.NavigateTo("/");
