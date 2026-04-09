@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Votify.Domain.CategoryFolder;
 using Votify.Domain.EventFolder;
 using Votify.Domain.ProjectFolder;
+using Votify.Domain.VoteFolder;
 using Votify.Infrastructure;
 using Votify.Infrastructure.Repositories;
 
@@ -19,6 +20,10 @@ builder.Services.AddScoped<CategoryService>();
 
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<EventService>();
+
+builder.Services.AddScoped<IVoteRepository, VoteRepository>();
+builder.Services.AddScoped<IVotingSessionRepository, VotingSessionRepository>();
+builder.Services.AddScoped<VoteService>();
 
 builder.Services.AddCors(options =>
 {
