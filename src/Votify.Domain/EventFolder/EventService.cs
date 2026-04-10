@@ -53,6 +53,7 @@ public class EventService
         }
 
         await _repository.AddAsync(evento, categorias);
+        await _repository.SaveChangesAsync();
         return evento;
     }
 }
