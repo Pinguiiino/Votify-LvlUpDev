@@ -1,0 +1,187 @@
+﻿@page "/event/{EventId}/categories/{CategoryId}/vote"
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
+@inject Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage.ProtectedSessionStorage SessionStorage
+@inject IJSRuntime JS
+
+<PageTitle>Emitir Voto - Votify</PageTitle>
+
+<div class="ranking-container">
+    <header class="ranking-header">
+        <button class="back-btn" @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories/{CategoryId}/projects")'>
+            ← Volver a proyectos
+        </button>
+        <h1>Establece tu Top @TopN</h1>
+        <p>Selecciona los proyectos en orden de preferencia (1º, 2º, 3º...)</p>
+    </header>
+
+    @if (ProyectosDisponibles == null)
+    {
+        <p>Cargando proyectos...</p>
+    }
+    else
+    {
+        <div class="ranking-layout">
+            <div class="projects-pool">
+                <h3>Proyectos Disponibles</h3>
+                <div class="pool-list">
+                    @foreach (var p in ProyectosDisponibles.Where(x => !ProyectosSeleccionados.Contains(x)))
+                    {
+                        <div class="pool-card" @onclick="() => SeleccionarProyecto(p)">
+                            <strong>@p.Title</strong>
+                            <span class="add-icon">+</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="top-n-slots">
+                <h3>Tu Voto</h3>
+                <div class="slots-list">
+                    @for (int i = 0; i < TopN; i++)
+                    {
+                        int index = i;
+                        var p = ProyectosSeleccionados.Count > index ? ProyectosSeleccionados[index] : null;
+
+                        <div class="slot-card @(p != null ? "filled" : "empty")" @onclick="() => QuitarProyecto(p)">
+                            <div class="slot-number">@(index + 1)º</div>
+                            <div class="slot-content">
+                                @if (p != null)
+                                {
+                                    <strong>@p.Title</strong>
+                                    <span class="remove-icon">✕</span>
+                                }
+                                else
+                                {
+                                    <span class="empty-text">Haz clic en un proyecto para añadirlo aquí</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <button class="btn-primary submit-vote-btn" disabled="@(!ProyectosSeleccionados.Any())" @onclick="EnviarVoto">
+                    Confirmar Mi Voto
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .ranking-container { max-width: 900px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .ranking-header { margin-bottom: 2rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 1rem; }
+    .back-btn { background: none; border: 1px solid #d1d5db; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; margin-bottom: 1rem; }
+    .ranking-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+    
+    .pool-list, .slots-list { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
+    
+    .pool-card { padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; display: flex; justify-content: space-between; cursor: pointer; transition: background 0.2s; }
+    .pool-card:hover { background: #f3f4f6; border-color: #3b82f6; }
+    .add-icon { color: #3b82f6; font-weight: bold; }
+
+    .slot-card { display: flex; align-items: center; border: 2px dashed #d1d5db; border-radius: 0.5rem; overflow: hidden; cursor: pointer; }
+    .slot-card.filled { border-style: solid; border-color: #10b981; background: #ecfdf5; }
+    .slot-number { padding: 1rem; background: #f3f4f6; font-weight: bold; color: #4b5563; min-width: 3rem; text-align: center; }
+    .slot-card.filled .slot-number { background: #10b981; color: white; }
+    .slot-content { padding: 1rem; flex: 1; display: flex; justify-content: space-between; }
+    .empty-text { color: #9ca3af; font-size: 0.9rem; }
+    .remove-icon { color: #ef4444; font-weight: bold; }
+
+    .submit-vote-btn { width: 100%; margin-top: 2rem; padding: 1rem; font-size: 1.1rem; border-radius: 0.5rem; }
+    .submit-vote-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+</style>
+
+@code {
+    [Parameter] public string EventId { get; set; } = "";
+    [Parameter] public string CategoryId { get; set; } = "";
+
+    private int TopN = 3;
+    private string SessionId = "temp-session-id"; // Ajusta esto con la sesión real de tu API
+    private string UserId = "";
+
+    private List<ProjectDto>? ProyectosDisponibles;
+    private List<ProjectDto> ProyectosSeleccionados = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var http = HttpClientFactory.CreateClient("API");
+        
+        var evento = await http.GetFromJsonAsync<EventDetailDto>($"api/events/{EventId}");
+        if (evento != null) TopN = evento.TopNProjectsAllowed;
+
+        ProyectosDisponibles = await http.GetFromJsonAsync<List<ProjectDto>>($"api/projects/by-category/{CategoryId}");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var result = await SessionStorage.GetAsync<string>("votify_uid");
+            UserId = result.Success ? result.Value! : Guid.NewGuid().ToString();
+
+            // Cargar votos previos si ya había votado
+            var http = HttpClientFactory.CreateClient("API");
+            var votosPrevios = await http.GetFromJsonAsync<List<VoteResultDto>>($"api/votes/by-user?userId={UserId}&categoryId={CategoryId}");
+            
+            if (votosPrevios != null && votosPrevios.Any() && ProyectosDisponibles != null)
+            {
+                foreach (var voto in votosPrevios.OrderBy(v => v.TopPosition))
+                {
+                    var proj = ProyectosDisponibles.FirstOrDefault(p => p.Id == voto.VotedProjectId);
+                    if (proj != null) ProyectosSeleccionados.Add(proj);
+                }
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void SeleccionarProyecto(ProjectDto p)
+    {
+        if (ProyectosSeleccionados.Count < TopN && !ProyectosSeleccionados.Contains(p))
+        {
+            ProyectosSeleccionados.Add(p);
+        }
+    }
+
+    private void QuitarProyecto(ProjectDto? p)
+    {
+        if (p != null) ProyectosSeleccionados.Remove(p);
+    }
+
+    private async Task EnviarVoto()
+    {
+        var http = HttpClientFactory.CreateClient("API");
+
+        // Construir el paquete de votos con las posiciones (1º, 2º, 3º...)
+        var rankedProjects = ProyectosSeleccionados
+            .Select((p, index) => new { ProjectId = p.Id, Position = index + 1 })
+            .ToList();
+
+        var payload = new
+        {
+            CategoryId = CategoryId,
+            EventId = EventId,
+            UserId = UserId,
+            VotingSessionId = SessionId,
+            RankedProjects = rankedProjects
+        };
+
+        var response = await http.PostAsJsonAsync("api/votes/batch", payload);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await JS.InvokeVoidAsync("alert", "¡Tus votos han sido registrados con éxito!");
+            Navigation.NavigateTo($"/event/{EventId}/categories/{CategoryId}/projects");
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "Hubo un error al guardar los votos.");
+        }
+    }
+
+    public class ProjectDto { public string Id { get; set; } = ""; public string Title { get; set; } = ""; }
+    public class EventDetailDto { public int TopNProjectsAllowed { get; set; } }
+    public class VoteResultDto { public string VotedProjectId { get; set; } = ""; public int TopPosition { get; set; } }
+}

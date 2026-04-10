@@ -6,8 +6,8 @@ namespace Votify.Domain.Factory
     {
         public override Vote Create(string votingSessionId, string projectId,
                                     string userId, string categoryId,
-                                    double rawScore, string? comment = null)
-            => new PublicVote(votingSessionId, projectId, userId, categoryId, rawScore, comment);
+                                    int topPosition, string? comment = null)
+            => new PublicVote(votingSessionId, projectId, userId, categoryId, topPosition, comment);
     }
 }
 

@@ -16,46 +16,82 @@
         <a href="/my-projects" class="btn-dark" style="text-decoration: none;">Mis Proyectos</a>
     </div>
 
-    @if (EventosActivos == null)
+    @if (isLoading)
     {
-        <p><em>Cargando eventos...</em></p>
-    }
-    else if (!EventosActivos.Any())
-    {
-        <p>No hay eventos disponibles en este momento.</p>
-    }
-    else
-    {
-        <div class="events-grid">
-            @foreach (var evento in EventosActivos)
-            {
-                <div class="event-card" style="cursor: pointer;"
-                     @onclick='() => Navigation.NavigateTo($"/event/{evento.Id}/categories")'>
-                    <div class="icon-container">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                            <path d="M11.354 4.646a.5.5 0 0 0-.708 0l-6 6a.5.5 0 0 0 .708.708l6-6a.5.5 0 0 0 0-.708z" />
-                        </svg>
+        <div style="padding: 2rem; text-align: center; color: #4b5563;">
+            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="animation: spin 1s linear infinite; margin-bottom: 1rem;">
+                <path d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity=".25" fill="currentColor" />
+                <path d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z" fill="currentColor" />
+            </svg>
+            <p><em>@mensajeEstado</em></p>
+            <style>
+                        @@keyframes spin {
+                            100% {
+                                transform: rotate(360deg);
+                            }
+                }</style>
+            </div>
+        }
+    else if (EventosActivos == null || !EventosActivos.Any())
+        {
+            <p>No hay eventos disponibles en este momento.</p>
+        }
+        else
+        {
+            <div class="events-grid">
+                @foreach (var evento in EventosActivos)
+                {
+                    <div class="event-card" style="cursor: pointer;"
+                         @onclick='() => Navigation.NavigateTo($"/event/{evento.Id}/categories")'>
+                        <div class="icon-container">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                <path d="M11.354 4.646a.5.5 0 0 0-.708 0l-6 6a.5.5 0 0 0 .708.708l6-6a.5.5 0 0 0 0-.708z" />
+                            </svg>
+                        </div>
+                        <div class="card-info">
+                            <h2 class="card-title">@evento.Name</h2>
+                            <span class="card-date">@evento.StartDate.ToString("dd 'de' MMMM, yyyy")</span>
+                            <p class="card-description">@evento.Description</p>
+                            <span class="card-modality" style="font-weight: bold; color: #4b5563;">@evento.Modality</span>
+                        </div>
                     </div>
-                    <div class="card-info">
-                        <h2 class="card-title">@evento.Name</h2>
-                        <span class="card-date">@evento.StartDate.ToString("dd 'de' MMMM, yyyy")</span>
-                        <p class="card-description">@evento.Description</p>
-                        <span class="card-modality" style="font-weight: bold; color: #4b5563;">@evento.Modality</span>
-                    </div>
-                </div>
-            }
-        </div>
-    }
-</div>
+                }
+            </div>
+        }
+    </div>
 
 @code {
     private List<EventDto>? EventosActivos;
+    private bool isLoading = true;
+    private string mensajeEstado = "Conectando con el servidor...";
 
     protected override async Task OnInitializedAsync()
     {
         var http = HttpClientFactory.CreateClient("API");
-        EventosActivos = await http.GetFromJsonAsync<List<EventDto>>("api/events");
+        int intentos = 0;
+        int maxIntentos = 5;
+
+        while (intentos < maxIntentos)
+        {
+            try
+            {
+                EventosActivos = await http.GetFromJsonAsync<List<EventDto>>("api/events");
+                isLoading = false;
+                return;
+            }
+            catch (HttpRequestException)
+            {
+                intentos++;
+                mensajeEstado = $"La API se está iniciando... Reintentando ({intentos}/{maxIntentos})";
+                StateHasChanged();
+                
+                await Task.Delay(2000);
+            }
+        }
+
+        isLoading = false;
+        mensajeEstado = "No se pudo conectar con el servidor.";
     }
 
     public class EventDto

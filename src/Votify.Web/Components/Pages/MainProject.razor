@@ -4,27 +4,50 @@
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
 @inject Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage.ProtectedSessionStorage SessionStorage
+
 <PageTitle>Proyectos - Votify</PageTitle>
 
-<div class="mainproject-container">
-    <header class="hero-section">
-        <button class="back-btn" style="align-self: flex-start;"
-                @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories")'>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path fill-rule="evenodd"
-                      d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
-            </svg>
-            Volver
-        </button>
-        <h1 class="main-title">
-            Proyectos de @(categoriaNombre ?? "la categoría")
-        </h1>
-        <p class="subtitle">Explora los proyectos y vota a los mejores</p>
+<div class="mainproject-container" style="position: relative;">
+    <header class="hero-section" style="display: flex; justify-content: space-between; align-items: flex-start; text-align: left;">
+        <div>
+            <button class="back-btn" style="align-self: flex-start; margin-bottom: 1rem;"
+                    @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories")'>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
+                </svg>
+                Volver
+            </button>
+            
+            <h1 class="main-title" style="margin-bottom: 0.5rem;">Proyectos de @(categoriaNombre ?? "la categoría")</h1>
+            <p class="subtitle" style="margin: 0;">Explora los proyectos y decide tu Top @maxVotosPermitidos</p>
+        </div>
+
+        @if (votacionActiva)
+        {
+            <button class="btn-dark" style="margin-top: 2.5rem; padding: 0.6rem 1.2rem; font-size: 0.95rem; border-radius: 0.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer;"
+                    @onclick="IrAVotar">
+                @if (haVotado)
+                {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
+                    </svg>
+                    <span>Ver mi Voto</span>
+                }
+                else
+                {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                        <path d="M10.97 4.97a.75.75 0 0 0-1.071-1.05l-3.992 4.99a.75.75 0 0 0-1.08.02L4.324 8.384a.75.75 0 1 0-1.06 1.06l2.094 2.093 3.473-4.425a.235.235 0 0 0 .02-.022z" />
+                    </svg>
+                    <span>Votar Ahora</span>
+                }
+            </button>
+        }
     </header>
 
     @if (ProyectosSubidos == null)
     {
-        <p><em>Cargando proyectos desde la base de datos...</em></p>
+        <p><em>Cargando proyectos...</em></p>
     }
     else if (!ProyectosSubidos.Any())
     {
@@ -38,19 +61,14 @@
                 <div class="project-card" @onclick="() => AbrirPopup(proyecto)">
                     <div class="icon-container">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                            <path
-                            d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31z" />
+                            <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31z" />
                         </svg>
                     </div>
                     <div class="card-info">
                         <h2 class="card-title">@proyecto.Title</h2>
-                        <p class="card-description">@proyecto.Description</p>                  
+                        <p class="card-description">@proyecto.Description</p>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span class="card-modality" style="font-weight: bold; color: #4b5563;">@(Translations.TipoProyecto.GetValueOrDefault(proyecto.ProjectType, proyecto.ProjectType))</span>
-                            @if (proyectosVotadosIds.Contains(proyecto.Id))
-                            {
-                                <span style="color: #10b981; font-size: 0.75rem; font-weight: bold;">VOTADO</span>
-                            }
                         </div>
                     </div>
                 </div>
@@ -65,12 +83,7 @@
         <div class="popup-box" @onclick:stopPropagation="true">
             <div class="popup-header">
                 <h2>@proyectoSeleccionado.Title</h2>
-                <button class="close-btn" @onclick="CerrarPopup">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                        <path
-                        d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
-                    </svg>
-                </button>
+                <button class="close-btn" @onclick="CerrarPopup">X</button>
             </div>
             <div class="popup-body">
                 <p class="popup-type">@(Translations.TipoProyecto.GetValueOrDefault(proyectoSeleccionado.ProjectType, proyectoSeleccionado.ProjectType))</p>
@@ -98,42 +111,6 @@
                     <p style="color: #9ca3af; font-size: 0.9rem;">Sin materiales adjuntos.</p>
                 }
             </div>
-            <div class="popup-footer">
-                @if (votacionActiva)
-                {
-                    @if (proyectosVotadosIds.Contains(proyectoSeleccionado.Id))
-                    {
-                        <span class="badge-voted">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l2.552 2.55 5.92-5.904z" />
-                            </svg>
-                            Proyecto Votado
-                        </span>
-                    }
-                    else if (proyectosVotadosIds.Count < maxVotosPermitidos)
-                    {
-                        <button class="vote-btn"
-                                @onclick="() => EjecutarVoto(proyectoSeleccionado.Id)">
-                            Votar Proyecto
-                        </button>
-                    }
-                    else
-                    {
-                        <span class="limit-reached">
-                            Has alcanzado tu límite de @maxVotosPermitidos votos.
-                        </span>
-                    }
-                }
-                else
-                {
-                    <span class="status-msg">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 5px;">
-                            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.5-4.5a.5.5 0 0 1-1 0v-5a.5.5 0 0 1 1 0v5zm0-7a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z" />
-                        </svg>
-                        La votación no está disponible en este momento.
-                    </span>
-                }
-            </div>
         </div>
     </div>
 }
@@ -147,8 +124,7 @@
     private string categoriaNombre = "la categoría";
 
     private bool votacionActiva = false;
-    private string? activeSessionId;
-    private List<string> proyectosVotadosIds = new();
+    private bool haVotado = false;
     private int maxVotosPermitidos = 1;
     private string _sessionUserId = string.Empty;
 
@@ -156,58 +132,23 @@
     {
         var http = HttpClientFactory.CreateClient("API");
 
-        var cats = await http.GetFromJsonAsync<List<CategorySimpleDto>>(
-            $"api/categories/by-event/{EventId}");
+        var cats = await http.GetFromJsonAsync<List<CategorySimpleDto>>($"api/categories/by-event/{EventId}");
         categoriaNombre = cats?.FirstOrDefault(c => c.Id == CategoryId)?.Name ?? "la categoría";
 
-        ProyectosSubidos = await http.GetFromJsonAsync<List<ProjectDto>>(
-            $"api/projects/by-category/{CategoryId}");
+        ProyectosSubidos = await http.GetFromJsonAsync<List<ProjectDto>>($"api/projects/by-category/{CategoryId}");
 
         var evento = await http.GetFromJsonAsync<EventDetailDto>($"api/events/{EventId}");
-        VotingSessionDto? sesion = null;
+        
         try
         {
-            sesion = await http.GetFromJsonAsync<VotingSessionDto>($"api/votingsessions/active/{EventId}");
+            var sesion = await http.GetFromJsonAsync<VotingSessionDto>($"api/votingsessions/active/{EventId}");
+            if (sesion != null && evento != null)
+            {
+                maxVotosPermitidos = evento.TopNProjectsAllowed;
+                votacionActiva = sesion.IsActive; // Asegúrate de que tu API devuelve este booleano bien
+            }
         }
-        catch {}
-
-        if (sesion != null && evento != null)
-        {
-            maxVotosPermitidos = evento.TopNProjectsAllowed;
-            votacionActiva = DateTime.UtcNow >= sesion.StartDate && DateTime.UtcNow <= sesion.EndDate;
-        }
-        else
-        {
-            votacionActiva = false;
-        }
-    }
-
-    private async Task EjecutarVoto(string projectId)
-    {
-        if (proyectosVotadosIds.Count >= maxVotosPermitidos) return;
-
-        var http = HttpClientFactory.CreateClient("API");
-        var response = await http.PostAsJsonAsync("api/votes", new
-        {
-            ProjectId = projectId,
-            CategoryId = CategoryId,
-            EventId = EventId,
-            UserId = _sessionUserId
-        });
-
-        if (response.IsSuccessStatusCode)
-        {
-            proyectosVotadosIds.Add(projectId);
-            StateHasChanged();
-        }
-    }
-
-    private async Task CargarVotosDelUsuario()
-    {
-        var http = HttpClientFactory.CreateClient("API");
-        var ids = await http.GetFromJsonAsync<List<string>>(
-            $"api/votes/by-user?userId={_sessionUserId}&categoryId={CategoryId}");
-        proyectosVotadosIds = ids ?? new();
+        catch { votacionActiva = false; }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -215,61 +156,31 @@
         if (firstRender)
         {
             var result = await SessionStorage.GetAsync<string>("votify_uid");
+            _sessionUserId = result.Success ? result.Value! : Guid.NewGuid().ToString();
+            if (!result.Success) await SessionStorage.SetAsync("votify_uid", _sessionUserId);
 
-            if (result.Success)
-            {
-                _sessionUserId = result.Value!;
-            }
-            else
-            {
-                _sessionUserId = Guid.NewGuid().ToString();
-                await SessionStorage.SetAsync("votify_uid", _sessionUserId);
-            }
-
-            await CargarVotosDelUsuario();
+            // Comprobar si ya ha votado
+            var http = HttpClientFactory.CreateClient("API");
+            var votosPrevios = await http.GetFromJsonAsync<List<VoteResultDto>>($"api/votes/by-user?userId={_sessionUserId}&categoryId={CategoryId}");
+            haVotado = votosPrevios != null && votosPrevios.Any();
+            
             StateHasChanged();
         }
+    }
+
+    private void IrAVotar()
+    {
+        Navigation.NavigateTo($"/event/{EventId}/categories/{CategoryId}/vote");
     }
 
     private void AbrirPopup(ProjectDto proyecto) => proyectoSeleccionado = proyecto;
     private void CerrarPopup() => proyectoSeleccionado = null;
 
-    public class ProjectDto
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Title { get; set; } = string.Empty;
-        public string? Description { get; set; }
-        public string ProjectType { get; set; } = string.Empty;
-        public List<MaterialDto> Materials { get; set; } = new();
-    }
-
-    public class MaterialDto
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Type { get; set; } = string.Empty;
-        public string Url { get; set; } = string.Empty;
-        public string? Description { get; set; }
-    }
-
-    public class CategorySimpleDto
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
-    }
-
-    public class EventDetailDto
-    {
-        public int TopNProjectsAllowed { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-    }
-
-    public class VotingSessionDto
-    {
-        public string Id { get; set; } = string.Empty;
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-        public bool IsActive { get; set; }
-    }
+    // DTOs
+    public class ProjectDto { public string Id { get; set; } = ""; public string Title { get; set; } = ""; public string? Description { get; set; } public string ProjectType { get; set; } = ""; public List<MaterialDto> Materials { get; set; } = new(); }
+    public class MaterialDto { public string Id { get; set; } = ""; public string Type { get; set; } = ""; public string Url { get; set; } = ""; public string? Description { get; set; } }
+    public class CategorySimpleDto { public string Id { get; set; } = ""; public string Name { get; set; } = ""; }
+    public class EventDetailDto { public int TopNProjectsAllowed { get; set; } }
+    public class VotingSessionDto { public string Id { get; set; } = ""; public bool IsActive { get; set; } }
+    public class VoteResultDto { public string VotedProjectId { get; set; } = ""; public int TopPosition { get; set; } }
 }

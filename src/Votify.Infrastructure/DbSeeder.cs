@@ -10,10 +10,6 @@ namespace Votify.Infrastructure.Data;
 
 public static class DbSeeder
 {
-    private static readonly Random _rnd = new(42);
-    private static double RawScore(double min, double max)
-        => Math.Round(min + _rnd.NextDouble() * (max - min), 1);
-
     public static async Task SeedAsync(VotifyDbContext context)
     {
         await context.Database.MigrateAsync();
@@ -56,8 +52,6 @@ public static class DbSeeder
             topNProjectsAllowed: 3,
             description: "El hackathon más grande de la UPC.");
 
-        // ModalityEventCreator guarda una sola modalidad en su estado interno;
-        // creamos uno nuevo para el segundo evento con modalidad diferente.
         EventCreator hybridCreator = new ModalityEventCreator("Híbrido");
 
         var fibFair = hybridCreator.Create(
@@ -73,55 +67,59 @@ public static class DbSeeder
 
         // ── 3. CATEGORÍAS + CRITERIOS + PREMIOS ───────────────────────────
 
-        // HackUPC — Proyectos de IA  (pesos: innovación 65 %, impacto 35 %)
-        var catIA = new Category(hackUPC.Id, "Proyectos de IA",
-                                 "Proyectos que aplican IA o machine learning.");
-        var crIA1 = new Criterion(catIA.Id, "Innovación técnica", CriterionType.Numeric, 0.65,
-                                  "Nivel de novedad y complejidad técnica.");
-        var crIA2 = new Criterion(catIA.Id, "Impacto potencial", CriterionType.Numeric, 0.35,
-                                  "Alcance e impacto esperado del proyecto.");
-        var prIA1 = new Prize(catIA.Id, 1, "Premio IA — 1er lugar",
-                              "1.000€ + mentoría de 6 meses en startup de IA.");
+        // HackUPC — Proyectos de IA
+        var catIA = new Category(hackUPC.Id, "Proyectos de IA", "Proyectos que aplican IA o machine learning.");
+        var crIA1 = new Criterion(catIA.Id, "Innovación técnica", CriterionType.Numeric, 0.65, "Nivel de novedad y complejidad técnica.");
+        var crIA2 = new Criterion(catIA.Id, "Impacto potencial", CriterionType.Numeric, 0.35, "Alcance e impacto esperado del proyecto.");
+        var prIA1 = new Prize(catIA.Id, 1, "Premio IA — 1er lugar", "1.000€ + mentoría de 6 meses en startup de IA.");
 
-        // HackUPC — Proyectos Sociales  (pesos: 50 / 50)
-        var catSocial = new Category(hackUPC.Id, "Proyectos Sociales",
-                                     "Proyectos con impacto social directo.");
-        var crSoc1 = new Criterion(catSocial.Id, "Impacto social", CriterionType.Numeric, 0.50,
-                                   "Mejora real en la vida de personas.");
-        var crSoc2 = new Criterion(catSocial.Id, "Viabilidad", CriterionType.Numeric, 0.50,
-                                   "Posibilidad de implantación real.");
-        var prSoc1 = new Prize(catSocial.Id, 1, "Premio Social — 1er lugar",
-                               "500€ + acceso a incubadora universitaria.");
+        // Asignamos a la categoría
+        catIA.Criteria.Add(crIA1);
+        catIA.Criteria.Add(crIA2);
+        catIA.Prizes.Add(prIA1);
 
-        // HackUPC — Sostenibilidad  (pesos: 55 / 45)
-        var catSost = new Category(hackUPC.Id, "Sostenibilidad",
-                                   "Proyectos enfocados en medioambiente y economía circular.");
-        var crSost1 = new Criterion(catSost.Id, "Reducción de huella", CriterionType.Numeric, 0.55,
-                                    "Impacto medioambiental medible.");
-        var crSost2 = new Criterion(catSost.Id, "Escalabilidad", CriterionType.Numeric, 0.45,
-                                    "Capacidad de crecer y replicarse.");
-        var prSost1 = new Prize(catSost.Id, 1, "Premio Sostenibilidad — 1er lugar",
-                                "750€ + presentación en COP31.");
+        // HackUPC — Proyectos Sociales
+        var catSocial = new Category(hackUPC.Id, "Proyectos Sociales", "Proyectos con impacto social directo.");
+        var crSoc1 = new Criterion(catSocial.Id, "Impacto social", CriterionType.Numeric, 0.50, "Mejora real en la vida de personas.");
+        var crSoc2 = new Criterion(catSocial.Id, "Viabilidad", CriterionType.Numeric, 0.50, "Posibilidad de implantación real.");
+        var prSoc1 = new Prize(catSocial.Id, 1, "Premio Social — 1er lugar", "500€ + acceso a incubadora universitaria.");
 
-        // FIB Fair — Startups Tecnológicas  (pesos: 60 / 40)
-        var catStartup = new Category(fibFair.Id, "Startups Tecnológicas",
-                                      "Proyectos con modelo de negocio escalable y base tecnológica.");
-        var crStu1 = new Criterion(catStartup.Id, "Modelo de negocio", CriterionType.Numeric, 0.60,
-                                   "Claridad y solidez del plan de negocio.");
-        var crStu2 = new Criterion(catStartup.Id, "Tecnología base", CriterionType.Numeric, 0.40,
-                                   "Madurez y diferenciación tecnológica.");
-        var prStu1 = new Prize(catStartup.Id, 1, "Premio Startup — 1er lugar",
-                               "2.000€ + ronda de presentaciones a inversores.");
+        catSocial.Criteria.Add(crSoc1);
+        catSocial.Criteria.Add(crSoc2);
+        catSocial.Prizes.Add(prSoc1);
 
-        // FIB Fair — Impacto Social  (pesos: 45 / 55)
-        var catImpacto = new Category(fibFair.Id, "Impacto Social",
-                                      "Proyectos que priorizan el bienestar social.");
-        var crImp1 = new Criterion(catImpacto.Id, "Alcance social", CriterionType.Numeric, 0.45,
-                                   "Número de personas beneficiadas.");
-        var crImp2 = new Criterion(catImpacto.Id, "Sostenibilidad", CriterionType.Numeric, 0.55,
-                                   "Continuidad del proyecto en el tiempo.");
-        var prImp1 = new Prize(catImpacto.Id, 1, "Premio Impacto — 1er lugar",
-                               "1.000€ + colaboración con ONG partner.");
+        // HackUPC — Sostenibilidad
+        var catSost = new Category(hackUPC.Id, "Sostenibilidad", "Proyectos enfocados en medioambiente y economía circular.");
+        var crSost1 = new Criterion(catSost.Id, "Reducción de huella", CriterionType.Numeric, 0.55, "Impacto medioambiental medible.");
+        var crSost2 = new Criterion(catSost.Id, "Escalabilidad", CriterionType.Numeric, 0.45, "Capacidad de crecer y replicarse.");
+        var prSost1 = new Prize(catSost.Id, 1, "Premio Sostenibilidad — 1er lugar", "750€ + presentación en COP31.");
+
+        catSost.Criteria.Add(crSost1);
+        catSost.Criteria.Add(crSost2);
+        catSost.Prizes.Add(prSost1);
+
+        // FIB Fair — Startups Tecnológicas
+        var catStartup = new Category(fibFair.Id, "Startups Tecnológicas", "Proyectos con modelo de negocio escalable y base tecnológica.");
+        var crStu1 = new Criterion(catStartup.Id, "Modelo de negocio", CriterionType.Numeric, 0.60, "Claridad y solidez del plan de negocio.");
+        var crStu2 = new Criterion(catStartup.Id, "Tecnología base", CriterionType.Numeric, 0.40, "Madurez y diferenciación tecnológica.");
+        var prStu1 = new Prize(catStartup.Id, 1, "Premio Startup — 1er lugar", "2.000€ + ronda de presentaciones a inversores.");
+
+        catStartup.Criteria.Add(crStu1);
+        catStartup.Criteria.Add(crStu2);
+        catStartup.Prizes.Add(prStu1);
+
+        // FIB Fair — Impacto Social
+        var catImpacto = new Category(fibFair.Id, "Impacto Social", "Proyectos que priorizan el bienestar social.");
+        var crImp1 = new Criterion(catImpacto.Id, "Alcance social", CriterionType.Numeric, 0.45, "Número de personas beneficiadas.");
+        var crImp2 = new Criterion(catImpacto.Id, "Sostenibilidad", CriterionType.Numeric, 0.55, "Continuidad del proyecto en el tiempo.");
+        var prImp1 = new Prize(catImpacto.Id, 1, "Premio Impacto — 1er lugar", "1.000€ + colaboración con ONG partner.");
+
+        catImpacto.Criteria.Add(crImp1);
+        catImpacto.Criteria.Add(crImp2);
+        catImpacto.Prizes.Add(prImp1);
+
+        context.Categories.AddRange(catIA, catSocial, catSost, catStartup, catImpacto);
+        await context.SaveChangesAsync();
 
         // ── 4. SESIONES DE VOTACIÓN ───────────────────────────────────────
         var sessionHack = new VotingSession(
@@ -162,11 +160,7 @@ public static class DbSeeder
         await context.SaveChangesAsync();
 
         // ── 6. PROJECTCATEGORIES + CRITERIONSCORES ────────────────────────
-        // Helper para crear un ProjectCategory con sus CriterionScores de una vez.
-        static ProjectCategory MakePC(
-            Project project,
-            Category category,
-            params (Criterion criterion, double score)[] scores)
+        static ProjectCategory MakePC(Project project, Category category, params (Criterion criterion, double score)[] scores)
         {
             var pc = new ProjectCategory(project.Id, category.Id);
             foreach (var (cr, sc) in scores)
@@ -174,79 +168,64 @@ public static class DbSeeder
             return pc;
         }
 
-        var projectCategories = new List<ProjectCategory>
+        var relacionesProyectos = new List<ProjectCategory>
         {
-            // p1 — MediScan AI: IA + Social
-            MakePC(p1, catIA,     (crIA1,  9.0), (crIA2,  7.5)),
-            MakePC(p1, catSocial, (crSoc1, 8.0), (crSoc2, 7.0)),
- 
-            // p2 — EduAdapt: IA
-            MakePC(p2, catIA,     (crIA1,  8.0), (crIA2,  8.5)),
- 
-            // p3 — TrafficFlow: IA
-            MakePC(p3, catIA,     (crIA1,  7.5), (crIA2,  6.0)),
- 
-            // p4 — RefugeeConnect: Social
-            MakePC(p4, catSocial, (crSoc1, 8.5), (crSoc2, 9.0)),
- 
-            // p5 — CuidaMayor: Social
-            MakePC(p5, catSocial, (crSoc1, 7.0), (crSoc2, 8.0)),
- 
-            // p6 — PlastiTrack: Sostenibilidad
-            MakePC(p6, catSost,   (crSost1, 9.5), (crSost2, 8.0)),
- 
-            // p7 — SolarGrid: Sostenibilidad
-            MakePC(p7, catSost,   (crSost1, 8.0), (crSost2, 9.0)),
- 
-            // p8 — QuantumSec: Startup
-            MakePC(p8, catStartup,(crStu1, 9.0), (crStu2, 8.0)),
- 
-            // p9 — BioPrint3D: Startup
-            MakePC(p9, catStartup,(crStu1, 8.5), (crStu2, 7.5)),
- 
-            // p10 — WaterSense: Impacto Social
-            MakePC(p10, catImpacto,(crImp1, 7.5), (crImp2, 9.5)),
+            new ProjectCategory(p1.Id, catIA.Id),
+            new ProjectCategory(p1.Id, catSocial.Id),
+            new ProjectCategory(p2.Id, catIA.Id),
+            new ProjectCategory(p3.Id, catIA.Id),
+            new ProjectCategory(p4.Id, catSocial.Id),
+            new ProjectCategory(p5.Id, catSocial.Id),
+            new ProjectCategory(p6.Id, catSost.Id),
+            new ProjectCategory(p7.Id, catSost.Id),
+            new ProjectCategory(p8.Id, catStartup.Id),
+            new ProjectCategory(p9.Id, catStartup.Id),
+            new ProjectCategory(p10.Id, catImpacto.Id)
         };
 
-        context.ProjectCategories.AddRange(projectCategories);
+        // Guardamos los proyectos
+        context.Projects.AddRange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+        // Guardamos las relaciones
+        context.AddRange(relacionesProyectos);
+
         await context.SaveChangesAsync();
 
-        // ── 7. VOTOS ──────────────────────────────────────────────────────
-        // VoteCreator.Create firma: (votingSessionId, projectId, userId, categoryId, rawScore, comment?)
-
+        // ── 7. VOTOS (ACTUALIZADO A TOP N POSITIONS) ──────────────────────
         VoteCreator expertCreator = new ExpertVoteCreator();
         VoteCreator publicCreator = new PublicVoteCreator();
 
         var votes = new List<Vote>();
 
-        // jury1 y jury2 votan p1, p2, p3 en catIA
-        foreach (var proj in new[] { p1, p2, p3 })
-        {
-            votes.Add(expertCreator.Create(sessionHack.Id, proj.Id, jury1.Id, catIA.Id, RawScore(8.0, 9.5)));
-            votes.Add(expertCreator.Create(sessionHack.Id, proj.Id, jury2.Id, catIA.Id, RawScore(7.0, 9.0)));
-        }
+        // JURY 1 vota su Top 3 en Categoría IA
+        votes.Add(expertCreator.Create(sessionHack.Id, p1.Id, jury1.Id, catIA.Id, 1));
+        votes.Add(expertCreator.Create(sessionHack.Id, p2.Id, jury1.Id, catIA.Id, 2));
+        votes.Add(expertCreator.Create(sessionHack.Id, p3.Id, jury1.Id, catIA.Id, 3));
 
-        // jury3 vota p4, p5 en catSocial y p6, p7 en catSost
-        votes.Add(expertCreator.Create(sessionHack.Id, p4.Id, jury3.Id, catSocial.Id, RawScore(7.5, 9.5)));
-        votes.Add(expertCreator.Create(sessionHack.Id, p5.Id, jury3.Id, catSocial.Id, RawScore(7.5, 9.5)));
-        votes.Add(expertCreator.Create(sessionHack.Id, p6.Id, jury3.Id, catSost.Id, RawScore(7.5, 9.5)));
-        votes.Add(expertCreator.Create(sessionHack.Id, p7.Id, jury3.Id, catSost.Id, RawScore(7.5, 9.5)));
+        // JURY 2 vota su Top 3 en Categoría IA (en distinto orden)
+        votes.Add(expertCreator.Create(sessionHack.Id, p2.Id, jury2.Id, catIA.Id, 1));
+        votes.Add(expertCreator.Create(sessionHack.Id, p3.Id, jury2.Id, catIA.Id, 2));
+        votes.Add(expertCreator.Create(sessionHack.Id, p1.Id, jury2.Id, catIA.Id, 3));
 
-        // jury4 vota p8, p9 en catStartup y p10 en catImpacto
-        votes.Add(expertCreator.Create(sessionFib.Id, p8.Id, jury4.Id, catStartup.Id, RawScore(7.0, 10.0)));
-        votes.Add(expertCreator.Create(sessionFib.Id, p9.Id, jury4.Id, catStartup.Id, RawScore(7.0, 10.0)));
-        votes.Add(expertCreator.Create(sessionFib.Id, p10.Id, jury4.Id, catImpacto.Id, RawScore(7.0, 10.0)));
+        // JURY 3 vota en Sociales y Sostenibilidad
+        votes.Add(expertCreator.Create(sessionHack.Id, p4.Id, jury3.Id, catSocial.Id, 1));
+        votes.Add(expertCreator.Create(sessionHack.Id, p5.Id, jury3.Id, catSocial.Id, 2));
+        votes.Add(expertCreator.Create(sessionHack.Id, p6.Id, jury3.Id, catSost.Id, 1));
+        votes.Add(expertCreator.Create(sessionHack.Id, p7.Id, jury3.Id, catSost.Id, 2));
 
-        // público — votos en sus categorías correspondientes
-        votes.Add(publicCreator.Create(sessionHack.Id, p1.Id, pub1.Id, catIA.Id, RawScore(6.0, 9.0)));
-        votes.Add(publicCreator.Create(sessionHack.Id, p2.Id, pub1.Id, catIA.Id, RawScore(7.0, 8.5)));
-        votes.Add(publicCreator.Create(sessionHack.Id, p4.Id, pub1.Id, catSocial.Id, RawScore(8.0, 9.0)));
-        votes.Add(publicCreator.Create(sessionHack.Id, p1.Id, pub2.Id, catIA.Id, RawScore(7.5, 9.0)));
-        votes.Add(publicCreator.Create(sessionHack.Id, p6.Id, pub2.Id, catSost.Id, RawScore(9.0, 8.0)));  // corregido: catSost
-        votes.Add(publicCreator.Create(sessionFib.Id, p10.Id, pub2.Id, catImpacto.Id, RawScore(8.5, 9.5)));
-        votes.Add(publicCreator.Create(sessionHack.Id, p3.Id, pub3.Id, catIA.Id, RawScore(6.5, 8.0)));
-        votes.Add(publicCreator.Create(sessionHack.Id, p7.Id, pub3.Id, catSost.Id, RawScore(8.0, 7.5)));  // corregido: catSost
-        votes.Add(publicCreator.Create(sessionFib.Id, p8.Id, pub3.Id, catStartup.Id, RawScore(9.0, 8.5)));
+        // PÚBLICO 1
+        votes.Add(publicCreator.Create(sessionHack.Id, p1.Id, pub1.Id, catIA.Id, 1));
+        votes.Add(publicCreator.Create(sessionHack.Id, p2.Id, pub1.Id, catIA.Id, 2));
+        votes.Add(publicCreator.Create(sessionHack.Id, p4.Id, pub1.Id, catSocial.Id, 1));
+
+        // PÚBLICO 2
+        votes.Add(publicCreator.Create(sessionHack.Id, p1.Id, pub2.Id, catIA.Id, 1));
+        votes.Add(publicCreator.Create(sessionHack.Id, p6.Id, pub2.Id, catSost.Id, 1));
+        votes.Add(publicCreator.Create(sessionFib.Id, p10.Id, pub2.Id, catImpacto.Id, 1));
+
+        // PÚBLICO 3
+        votes.Add(publicCreator.Create(sessionHack.Id, p3.Id, pub3.Id, catIA.Id, 1));
+        votes.Add(publicCreator.Create(sessionHack.Id, p7.Id, pub3.Id, catSost.Id, 1));
+        votes.Add(publicCreator.Create(sessionFib.Id, p8.Id, pub3.Id, catStartup.Id, 1));
 
         context.Votes.AddRange(votes);
         await context.SaveChangesAsync();

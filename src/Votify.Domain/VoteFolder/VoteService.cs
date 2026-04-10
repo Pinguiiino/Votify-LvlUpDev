@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Threading.Tasks;
 using Votify.Domain.EventFolder;
 using Votify.Domain.Factory;
 
@@ -19,7 +20,8 @@ namespace Votify.Domain.VoteFolder
             _eventRepo = eventRepo;
         }
 
-        public async Task<Vote> CastVoteAsync(string projectId, string categoryId, string eventId, string userId)
+        // AÑADIDO: int topPosition como parámetro para saber qué posición del ranking le estamos dando
+        public async Task<Vote> CastVoteAsync(string projectId, string categoryId, string eventId, string userId, int topPosition)
         {
             var session = await _sessionRepo.GetActiveSessionByEventAsync(eventId);
             if (session == null)
@@ -38,7 +40,10 @@ namespace Votify.Domain.VoteFolder
                 throw new InvalidOperationException("Ya has votado por este proyecto.");
 
             var factory = new PublicVoteCreator();
-            var vote = factory.Create(session.Id, projectId, userId, categoryId, 1.0);
+
+            // CORREGIDO: Pasamos topPosition (un int) en lugar del 1.0 que daba error
+            var vote = factory.Create(session.Id, projectId, userId, categoryId, topPosition);
+
             return await _repository.AddAsync(vote);
         }
 

@@ -129,15 +129,6 @@ public class VotifyDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         // ── 3. PRECISIÓN NUMÉRICA ─────────────────────────────────────────
-
-        modelBuilder.Entity<ExpertVote>()
-            .Property(e => e.RawScore)
-            .HasPrecision(5, 2);
-
-        modelBuilder.Entity<PublicVote>()
-            .Property(p => p.RawScore)
-            .HasPrecision(5, 2);
-
         modelBuilder.Entity<Criterion>()
             .Property(c => c.Weight)
             .HasPrecision(5, 4);
