@@ -183,11 +183,7 @@ public static class DbSeeder
             new ProjectCategory(p10.Id, catImpacto.Id)
         };
 
-        // Guardamos los proyectos
-        context.Projects.AddRange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
-        // Guardamos las relaciones
-        context.AddRange(relacionesProyectos);
-
+        context.Set<ProjectCategory>().AddRange(relacionesProyectos);
         await context.SaveChangesAsync();
 
         // ── 7. VOTOS (ACTUALIZADO A TOP N POSITIONS) ──────────────────────

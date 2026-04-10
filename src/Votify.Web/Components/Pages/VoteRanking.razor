@@ -98,7 +98,7 @@
     [Parameter] public string CategoryId { get; set; } = "";
 
     private int TopN = 3;
-    private string SessionId = "temp-session-id"; // Ajusta esto con la sesión real de tu API
+    private string SessionId = "";
     private string UserId = "";
 
     private List<ProjectDto>? ProyectosDisponibles;
@@ -110,6 +110,16 @@
         
         var evento = await http.GetFromJsonAsync<EventDetailDto>($"api/events/{EventId}");
         if (evento != null) TopN = evento.TopNProjectsAllowed;
+
+        try 
+        {
+            var sesion = await http.GetFromJsonAsync<VotingSessionDto>($"api/votingsessions/active/{EventId}");
+            if (sesion != null) 
+            {
+                SessionId = sesion.Id;
+            }
+        }
+        catch { }
 
         ProyectosDisponibles = await http.GetFromJsonAsync<List<ProjectDto>>($"api/projects/by-category/{CategoryId}");
     }
@@ -181,7 +191,32 @@
         }
     }
 
-    public class ProjectDto { public string Id { get; set; } = ""; public string Title { get; set; } = ""; }
-    public class EventDetailDto { public int TopNProjectsAllowed { get; set; } }
-    public class VoteResultDto { public string VotedProjectId { get; set; } = ""; public int TopPosition { get; set; } }
+    public class VotingSessionDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public bool IsActive { get; set; }
+    }
+
+    public class EventDetailDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public int TopNProjectsAllowed { get; set; }
+    }
+
+    public class ProjectDto 
+    { 
+        public string Id { get; set; } = ""; 
+        public string Title { get; set; } = ""; 
+        public string? Description { get; set; }
+        public string ProjectType { get; set; } = "";
+    }
+
+    public class VoteResultDto 
+    { 
+        public string VotedProjectId { get; set; } = ""; 
+        public int TopPosition { get; set; } 
+    }
 }

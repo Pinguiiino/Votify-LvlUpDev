@@ -1,23 +1,41 @@
-﻿ using Microsoft.AspNetCore.Mvc;
- using Votify.Domain.VoteFolder;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Votify.Infrastructure;
 
-    namespace Votify.Api.Controllers
+namespace Votify.Api.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class VotingSessionsController : ControllerBase
     {
-        [ApiController]
-        [Route("api/[controller]")]
-        public class VotingSessionsController : ControllerBase
+        private readonly VotifyDbContext _context;
+
+        public VotingSessionsController(VotifyDbContext context)
         {
-            [HttpGet("active/{eventId}")]
-            public IActionResult GetActive(string eventId)
+            _context = context;
+        }
+
+        [HttpGet("active/{eventId}")]
+        public async Task<IActionResult> GetActive(string eventId)
+        {
+            // Buscamos el evento y sus sesiones asociadas
+            var evento = await _context.Events
+                .Include(e => e.VotingSessions)
+                .FirstOrDefaultAsync(e => e.Id == eventId);
+
+            if (evento == null || !evento.VotingSessions.Any())
+                return NotFound("No hay sesión de votación activa");
+
+            // Cogemos la primera sesión de este evento
+            var session = evento.VotingSessions.First();
+
+            return Ok(new
             {
-                // PROVISIONAL: SESION ACTIVA PARA PROBAR VOTOS
-                return Ok(new
-                {
-                    Id = "temp-session-id",
-                    StartDate = DateTime.UtcNow.AddHours(-1),
-                    EndDate = DateTime.UtcNow.AddHours(1),
-                    IsActive = true
-                });
-            }
+                Id = session.Id,
+                StartDate = session.OpenAt,
+                EndDate = session.CloseAt,
+                IsActive = true
+            });
         }
     }
+}
