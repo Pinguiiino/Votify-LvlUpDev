@@ -14,6 +14,7 @@ public static class Translations
     public static readonly Dictionary<string, string> TipoProyecto = new()
     {
         { "AI",             "Inteligencia Artificial" },
-        { "Sustainability", "Sostenibilidad" }
+        { "Sustainability", "Sostenibilidad" },
+        { "General", "General" }
     };
 }

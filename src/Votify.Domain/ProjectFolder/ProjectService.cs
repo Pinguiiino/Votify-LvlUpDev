@@ -20,6 +20,7 @@ public class ProjectService
         {
             "AI" => new AiProjectCreator(),
             "Sustainability" => new SustainabilityProjectCreator(),
+            "General" => new GeneralProjectCreator(),
             _ => throw new ArgumentException($"Tipo desconocido: {projectType}")
         };
 
@@ -42,7 +43,7 @@ public class ProjectService
         => _repository.GetByCategoryAsync(categoryId);
 
     public List<string> GetProjectTypes()
-    => new List<string> { "AI", "Sustainability" };
+    => new List<string> { "AI", "Sustainability", "General" };
 
     public List<string> GetMaterialTypes()
         => Enum.GetNames<MaterialType>().ToList();

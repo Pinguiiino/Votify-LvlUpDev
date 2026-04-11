@@ -36,7 +36,8 @@ public class VotifyDbContext : DbContext
         modelBuilder.Entity<Project>()
             .HasDiscriminator<string>("ProjectType")
             .HasValue<AiProject>("AI")
-            .HasValue<SustainabilityProject>("Sustainability");
+            .HasValue<SustainabilityProject>("Sustainability")
+             .HasValue<GeneralProject>("General");
 
         modelBuilder.Entity<Vote>()
             .HasDiscriminator<string>("VoteType")
