@@ -1,4 +1,4 @@
-﻿@page "/event/{EventId}/categories/{CategoryId}/vote"
+@page "/event/{EventId}/categories/{CategoryId}/vote"
 @rendermode InteractiveServer
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
@@ -13,7 +13,7 @@
             ← Volver a proyectos
         </button>
         <h1>Establece tu Top @TopN</h1>
-        <p>Selecciona los proyectos en orden de preferencia (1º, 2º, 3º...)</p>
+        <p>Selecciona los proyectos en orden de preferencia (1º, 2º, 3º...) y añade un comentario opcional a cada uno.</p>
     </header>
 
     @if (ProyectosDisponibles == null)
@@ -23,19 +23,32 @@
     else
     {
         <div class="ranking-layout">
+
+            <!-- ── Columna izquierda: pool de proyectos ── -->
             <div class="projects-pool">
                 <h3>Proyectos Disponibles</h3>
                 <div class="pool-list">
                     @foreach (var p in ProyectosDisponibles.Where(x => !ProyectosSeleccionados.Contains(x)))
                     {
                         <div class="pool-card" @onclick="() => SeleccionarProyecto(p)">
-                            <strong>@p.Title</strong>
+                            <div class="pool-card-info">
+                                <strong>@p.Title</strong>
+                                @if (!string.IsNullOrWhiteSpace(p.Description))
+                                {
+                                    <span class="pool-card-desc">@p.Description</span>
+                                }
+                            </div>
                             <span class="add-icon">+</span>
                         </div>
+                    }
+                    @if (!ProyectosDisponibles.Any(x => !ProyectosSeleccionados.Contains(x)))
+                    {
+                        <p class="pool-empty">Todos los proyectos están en tu ranking.</p>
                     }
                 </div>
             </div>
 
+            <!-- ── Columna derecha: slots del ranking ── -->
             <div class="top-n-slots">
                 <h3>Tu Voto</h3>
                 <div class="slots-list">
@@ -44,13 +57,29 @@
                         int index = i;
                         var p = ProyectosSeleccionados.Count > index ? ProyectosSeleccionados[index] : null;
 
-                        <div class="slot-card @(p != null ? "filled" : "empty")" @onclick="() => QuitarProyecto(p)">
+                        <div class="slot-card @(p != null ? "filled" : "empty")">
+                            <!-- Número de posición -->
                             <div class="slot-number">@(index + 1)º</div>
-                            <div class="slot-content">
+
+                            <!-- Contenido del slot -->
+                            <div class="slot-body">
                                 @if (p != null)
                                 {
-                                    <strong>@p.Title</strong>
-                                    <span class="remove-icon">✕</span>
+                                    <!-- Fila título + quitar -->
+                                    <div class="slot-title-row">
+                                        <strong class="slot-title">@p.Title</strong>
+                                        <button class="remove-btn" @onclick="() => QuitarProyecto(p)" title="Quitar">✕</button>
+                                    </div>
+                                    <!-- Textarea de comentario -->
+                                    <textarea
+                                        class="comment-textarea"
+                                        placeholder="Comentario anónimo opcional..."
+                                        rows="2"
+                                        maxlength="500"
+                                        @bind="comentarios[p.Id]"
+                                        @bind:event="oninput">
+                                    </textarea>
+                                    <div class="char-count">@((comentarios.TryGetValue(p.Id, out var txt) ? txt?.Length : 0) ?? 0)/500</div>
                                 }
                                 else
                                 {
@@ -70,54 +99,206 @@
 </div>
 
 <style>
-    .ranking-container { max-width: 900px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-    .ranking-header { margin-bottom: 2rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 1rem; }
-    .back-btn { background: none; border: 1px solid #d1d5db; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; margin-bottom: 1rem; }
-    .ranking-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
-    
-    .pool-list, .slots-list { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
-    
-    .pool-card { padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; display: flex; justify-content: space-between; cursor: pointer; transition: background 0.2s; }
-    .pool-card:hover { background: #f3f4f6; border-color: #3b82f6; }
-    .add-icon { color: #3b82f6; font-weight: bold; }
+    /* ── Layout ── */
+    .ranking-container {
+        max-width: 960px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .ranking-header {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 1rem;
+    }
+    .ranking-header h1 { margin: 0 0 0.25rem 0; font-size: 1.6rem; }
+    .ranking-header p  { margin: 0; color: #6b7280; font-size: 0.9rem; }
 
-    .slot-card { display: flex; align-items: center; border: 2px dashed #d1d5db; border-radius: 0.5rem; overflow: hidden; cursor: pointer; }
-    .slot-card.filled { border-style: solid; border-color: #10b981; background: #ecfdf5; }
-    .slot-number { padding: 1rem; background: #f3f4f6; font-weight: bold; color: #4b5563; min-width: 3rem; text-align: center; }
-    .slot-card.filled .slot-number { background: #10b981; color: white; }
-    .slot-content { padding: 1rem; flex: 1; display: flex; justify-content: space-between; }
-    .empty-text { color: #9ca3af; font-size: 0.9rem; }
-    .remove-icon { color: #ef4444; font-weight: bold; }
+    .back-btn {
+        background: none;
+        border: 1px solid #d1d5db;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        transition: background 0.15s;
+    }
+    .back-btn:hover { background: #f3f4f6; }
 
-    .submit-vote-btn { width: 100%; margin-top: 2rem; padding: 1rem; font-size: 1.1rem; border-radius: 0.5rem; }
+    .ranking-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        align-items: start;
+    }
+
+    /* ── Pool de proyectos ── */
+    .pool-list { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem; }
+
+    .pool-card {
+        padding: 0.85rem 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+        gap: 0.5rem;
+    }
+    .pool-card:hover { background: #f0f9ff; border-color: #3b82f6; }
+    .pool-card-info { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+    .pool-card-desc { font-size: 0.78rem; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .add-icon { color: #3b82f6; font-weight: bold; font-size: 1.2rem; flex-shrink: 0; }
+    .pool-empty { color: #9ca3af; font-size: 0.85rem; font-style: italic; text-align: center; padding: 1rem 0; }
+
+    /* ── Slots del ranking ── */
+    .slots-list { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
+
+    .slot-card {
+        display: flex;
+        border: 2px dashed #d1d5db;
+        border-radius: 0.6rem;
+        overflow: hidden;
+        transition: border-color 0.2s;
+        min-height: 3.5rem;
+    }
+    .slot-card.filled {
+        border-style: solid;
+        border-color: #10b981;
+        background: #f0fdf4;
+    }
+    .slot-card.empty { align-items: center; }
+
+    .slot-number {
+        padding: 0 1rem;
+        background: #f3f4f6;
+        font-weight: 700;
+        color: #4b5563;
+        min-width: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+        align-self: stretch;
+    }
+    .slot-card.filled .slot-number {
+        background: #10b981;
+        color: white;
+    }
+
+    .slot-body {
+        padding: 0.75rem 1rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-width: 0;
+    }
+
+    .slot-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    .slot-title {
+        font-size: 0.9rem;
+        color: #111827;
+        flex: 1;
+    }
+    .remove-btn {
+        background: none;
+        border: none;
+        color: #ef4444;
+        cursor: pointer;
+        font-size: 0.85rem;
+        padding: 0.1rem 0.3rem;
+        border-radius: 0.25rem;
+        line-height: 1;
+        flex-shrink: 0;
+        transition: background 0.15s;
+    }
+    .remove-btn:hover { background: #fee2e2; }
+
+    .empty-text { color: #9ca3af; font-size: 0.85rem; padding: 0.75rem 0; }
+
+    /* ── Textarea de comentario ── */
+    .comment-textarea {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        border-radius: 0.4rem;
+        padding: 0.45rem 0.65rem;
+        font-size: 0.82rem;
+        color: #374151;
+        font-family: inherit;
+        resize: none;
+        background: white;
+        box-sizing: border-box;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        line-height: 1.4;
+    }
+    .comment-textarea:focus {
+        outline: none;
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16,185,129,0.12);
+    }
+    .comment-textarea::placeholder { color: #9ca3af; }
+
+    .char-count {
+        font-size: 0.72rem;
+        color: #9ca3af;
+        text-align: right;
+        line-height: 1;
+    }
+
+    /* ── Botón confirmar ── */
+    .submit-vote-btn {
+        width: 100%;
+        margin-top: 1.5rem;
+        padding: 0.9rem;
+        font-size: 1rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+    }
     .submit-vote-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+
+    @@media (max-width: 640px) {
+        .ranking-layout { grid-template-columns: 1fr; }
+    }
 </style>
 
 @code {
-    [Parameter] public string EventId { get; set; } = "";
+    [Parameter] public string EventId  { get; set; } = "";
     [Parameter] public string CategoryId { get; set; } = "";
 
-    private int TopN = 3;
+    private int    TopN      = 3;
     private string SessionId = "";
-    private string UserId = "";
+    private string UserId    = "";
 
     private List<ProjectDto>? ProyectosDisponibles;
-    private List<ProjectDto> ProyectosSeleccionados = new();
+    private List<ProjectDto>  ProyectosSeleccionados = new();
+
+    // Comentario por projectId
+    private Dictionary<string, string> comentarios = new();
+
+    // ── Inicialización ────────────────────────────────────────────────────
 
     protected override async Task OnInitializedAsync()
     {
         var http = HttpClientFactory.CreateClient("API");
-        
+
         var evento = await http.GetFromJsonAsync<EventDetailDto>($"api/events/{EventId}");
         if (evento != null) TopN = evento.TopNProjectsAllowed;
 
-        try 
+        try
         {
             var sesion = await http.GetFromJsonAsync<VotingSessionDto>($"api/votingsessions/active/{EventId}");
-            if (sesion != null) 
-            {
-                SessionId = sesion.Id;
-            }
+            if (sesion != null) SessionId = sesion.Id;
         }
         catch { }
 
@@ -126,56 +307,74 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            var result = await SessionStorage.GetAsync<string>("votify_uid");
-            UserId = result.Success ? result.Value! : Guid.NewGuid().ToString();
+        if (!firstRender) return;
 
-            // Cargar votos previos si ya había votado
-            var http = HttpClientFactory.CreateClient("API");
-            var votosPrevios = await http.GetFromJsonAsync<List<VoteResultDto>>($"api/votes/by-user?userId={UserId}&categoryId={CategoryId}");
-            
-            if (votosPrevios != null && votosPrevios.Any() && ProyectosDisponibles != null)
+        var result = await SessionStorage.GetAsync<string>("votify_uid");
+        UserId = result.Success ? result.Value! : Guid.NewGuid().ToString();
+        if (!result.Success) await SessionStorage.SetAsync("votify_uid", UserId);
+
+        // Restaurar votos previos (sin comentarios previos — Vote.Comment no se devuelve aún)
+        var http = HttpClientFactory.CreateClient("API");
+        var votosPrevios = await http.GetFromJsonAsync<List<VoteResultDto>>(
+            $"api/votes/by-user?userId={UserId}&categoryId={CategoryId}");
+
+        if (votosPrevios != null && votosPrevios.Any() && ProyectosDisponibles != null)
+        {
+            foreach (var voto in votosPrevios.OrderBy(v => v.TopPosition))
             {
-                foreach (var voto in votosPrevios.OrderBy(v => v.TopPosition))
+                var proj = ProyectosDisponibles.FirstOrDefault(p => p.Id == voto.VotedProjectId);
+                if (proj != null)
                 {
-                    var proj = ProyectosDisponibles.FirstOrDefault(p => p.Id == voto.VotedProjectId);
-                    if (proj != null) ProyectosSeleccionados.Add(proj);
+                    ProyectosSeleccionados.Add(proj);
+                    comentarios[proj.Id] = string.Empty; // comentario vacío al editar
                 }
-                StateHasChanged();
             }
+            StateHasChanged();
         }
     }
+
+    // ── Interacción con el ranking ────────────────────────────────────────
 
     private void SeleccionarProyecto(ProjectDto p)
     {
         if (ProyectosSeleccionados.Count < TopN && !ProyectosSeleccionados.Contains(p))
         {
             ProyectosSeleccionados.Add(p);
+            comentarios[p.Id] = string.Empty;
         }
     }
 
     private void QuitarProyecto(ProjectDto? p)
     {
-        if (p != null) ProyectosSeleccionados.Remove(p);
+        if (p == null) return;
+        ProyectosSeleccionados.Remove(p);
+        comentarios.Remove(p.Id);
     }
+
+    // ── Envío ─────────────────────────────────────────────────────────────
 
     private async Task EnviarVoto()
     {
         var http = HttpClientFactory.CreateClient("API");
 
-        // Construir el paquete de votos con las posiciones (1º, 2º, 3º...)
         var rankedProjects = ProyectosSeleccionados
-            .Select((p, index) => new { ProjectId = p.Id, Position = index + 1 })
+            .Select((p, index) => new
+            {
+                ProjectId = p.Id,
+                Position  = index + 1,
+                Comment   = comentarios.TryGetValue(p.Id, out var c) && !string.IsNullOrWhiteSpace(c)
+                                ? c.Trim()
+                                : (string?)null
+            })
             .ToList();
 
         var payload = new
         {
-            CategoryId = CategoryId,
-            EventId = EventId,
-            UserId = UserId,
+            CategoryId,
+            EventId,
+            UserId,
             VotingSessionId = SessionId,
-            RankedProjects = rankedProjects
+            RankedProjects  = rankedProjects
         };
 
         var response = await http.PostAsJsonAsync("api/votes/batch", payload);
@@ -191,32 +390,34 @@
         }
     }
 
+    // ── DTOs ──────────────────────────────────────────────────────────────
+
     public class VotingSessionDto
     {
-        public string Id { get; set; } = string.Empty;
+        public string   Id        { get; set; } = string.Empty;
         public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-        public bool IsActive { get; set; }
+        public DateTime EndDate   { get; set; }
+        public bool     IsActive  { get; set; }
     }
 
     public class EventDetailDto
     {
-        public string Id { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public int TopNProjectsAllowed { get; set; }
+        public string Id                  { get; set; } = string.Empty;
+        public string Name                { get; set; } = string.Empty;
+        public int    TopNProjectsAllowed { get; set; }
     }
 
-    public class ProjectDto 
-    { 
-        public string Id { get; set; } = ""; 
-        public string Title { get; set; } = ""; 
+    public class ProjectDto
+    {
+        public string  Id          { get; set; } = "";
+        public string  Title       { get; set; } = "";
         public string? Description { get; set; }
-        public string ProjectType { get; set; } = "";
+        public string  ProjectType { get; set; } = "";
     }
 
-    public class VoteResultDto 
-    { 
-        public string VotedProjectId { get; set; } = ""; 
-        public int TopPosition { get; set; } 
+    public class VoteResultDto
+    {
+        public string VotedProjectId { get; set; } = "";
+        public int    TopPosition    { get; set; }
     }
 }

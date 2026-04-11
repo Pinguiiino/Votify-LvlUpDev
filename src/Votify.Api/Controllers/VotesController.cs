@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Votify.Domain.Factory;
 using Votify.Domain.VoteFolder;
@@ -22,14 +22,13 @@ namespace Votify.Api.Controllers
         {
             try
             {
+                // Eliminar votos anteriores del mismo usuario en esta categoría
                 var votosAnteriores = await _context.Votes
                     .Where(v => v.UserId == dto.UserId && v.CategoryId == dto.CategoryId)
                     .ToListAsync();
 
                 if (votosAnteriores.Any())
-                {
                     _context.Votes.RemoveRange(votosAnteriores);
-                }
 
                 VoteCreator voteCreator = new PublicVoteCreator();
 
@@ -40,7 +39,8 @@ namespace Votify.Api.Controllers
                         projectId: rank.ProjectId,
                         userId: dto.UserId,
                         categoryId: dto.CategoryId,
-                        topPosition: rank.Position
+                        topPosition: rank.Position,
+                        comment: rank.Comment   // ← persiste el comentario
                     );
 
                     _context.Votes.Add(nuevoVoto);
@@ -67,6 +67,17 @@ namespace Votify.Api.Controllers
             return Ok(votes);
         }
     }
-    public record BatchVoteRequest(string CategoryId, string EventId, string UserId, string VotingSessionId, List<RankedProjectDto> RankedProjects);
-    public record RankedProjectDto(string ProjectId, int Position);
+
+    public record BatchVoteRequest(
+        string CategoryId,
+        string EventId,
+        string UserId,
+        string VotingSessionId,
+        List<RankedProjectDto> RankedProjects);
+
+    // Comment es opcional, si el votante no escribe nada se envía null
+    public record RankedProjectDto(
+        string ProjectId,
+        int Position,
+        string? Comment = null);
 }

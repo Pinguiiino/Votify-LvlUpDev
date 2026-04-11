@@ -8,12 +8,14 @@
 <PageTitle>Proyectos - Votify</PageTitle>
 
 <div class="mainproject-container" style="position: relative;">
-    <header class="hero-section" style="display: flex; justify-content: space-between; align-items: flex-start; text-align: left;">
+    <header class="hero-section"
+            style="display: flex; justify-content: space-between; align-items: flex-start; text-align: left;">
         <div>
             <button class="back-btn" style="align-self: flex-start; margin-bottom: 1rem;"
                     @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories")'>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
+                    <path fill-rule="evenodd"
+                          d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
                 </svg>
                 Volver
             </button>
@@ -24,12 +26,14 @@
 
         @if (votacionActiva)
         {
-            <button class="btn-dark" style="margin-top: 2.5rem; padding: 0.6rem 1.2rem; font-size: 0.95rem; border-radius: 0.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer;"
+            <button class="btn-dark"
+                    style="margin-top: 2.5rem; padding: 0.6rem 1.2rem; font-size: 0.95rem; border-radius: 0.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer;"
                     @onclick="IrAVotar">
                 @if (haVotado)
                 {
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
+                        <path
+                        d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
                     </svg>
                     <span>Editar mi Voto</span>
                 }
@@ -37,7 +41,8 @@
                 {
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                        <path d="M10.97 4.97a.75.75 0 0 0-1.071-1.05l-3.992 4.99a.75.75 0 0 0-1.08.02L4.324 8.384a.75.75 0 1 0-1.06 1.06l2.094 2.093 3.473-4.425a.235.235 0 0 0 .02-.022z" />
+                        <path
+                        d="M10.97 4.97a.75.75 0 0 0-1.071-1.05l-3.992 4.99a.75.75 0 0 0-1.08.02L4.324 8.384a.75.75 0 1 0-1.06 1.06l2.094 2.093 3.473-4.425a.235.235 0 0 0 .02-.022z" />
                     </svg>
                     <span>Votar Ahora</span>
                 }
@@ -61,59 +66,63 @@
                 <div class="project-card" @onclick="() => AbrirPopup(proyecto)">
                     <div class="icon-container">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31z" />
+                            <path
+                            d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31z" />
                         </svg>
                     </div>
                     <div class="card-info">
                         <h2 class="card-title">@proyecto.Title</h2>
                         <p class="card-description">@proyecto.Description</p>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span class="card-modality" style="font-weight: bold; color: #4b5563;">@(Translations.TipoProyecto.GetValueOrDefault(proyecto.ProjectType, proyecto.ProjectType))</span>
+                            <span class="card-modality"
+                                  style="font-weight: bold; color: #4b5563;">@(Translations.TipoProyecto.GetValueOrDefault(proyecto.ProjectType,
+                                                                                        proyecto.ProjectType))</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            }
-        </div>
-    }
-</div>
-
-@if (proyectoSeleccionado != null)
-{
-    <div class="popup-overlay" @onclick="CerrarPopup">
-        <div class="popup-box" @onclick:stopPropagation="true">
-            <div class="popup-header">
-                <h2>@proyectoSeleccionado.Title</h2>
-                <button class="close-btn" @onclick="CerrarPopup">X</button>
-            </div>
-            <div class="popup-body">
-                <p class="popup-type">@(Translations.TipoProyecto.GetValueOrDefault(proyectoSeleccionado.ProjectType, proyectoSeleccionado.ProjectType))</p>
-                <p class="popup-description">@proyectoSeleccionado.Description</p>
-
-                @if (proyectoSeleccionado.Materials.Any())
-                {
-                    <h4>Materiales</h4>
-                    <ul class="popup-materials">
-                        @foreach (var mat in proyectoSeleccionado.Materials)
-                        {
-                            <li>
-                                <span class="badge">@(Translations.TipoMaterial.GetValueOrDefault(mat.Type, mat.Type))</span>
-                                <a href="@mat.Url" target="_blank">@mat.Url</a>
-                                @if (!string.IsNullOrWhiteSpace(mat.Description))
-                                {
-                                    <span class="mat-desc"> — @mat.Description</span>
-                                }
-                            </li>
-                        }
-                    </ul>
-                }
-                else
-                {
-                    <p style="color: #9ca3af; font-size: 0.9rem;">Sin materiales adjuntos.</p>
                 }
             </div>
-        </div>
+        }
     </div>
-}
+
+    @if (proyectoSeleccionado != null)
+    {
+        <div class="popup-overlay" @onclick="CerrarPopup">
+            <div class="popup-box" @onclick:stopPropagation="true">
+                <div class="popup-header">
+                    <h2>@proyectoSeleccionado.Title</h2>
+                    <button class="close-btn" @onclick="CerrarPopup">X</button>
+                </div>
+                <div class="popup-body">
+                    <p class="popup-type">@(Translations.TipoProyecto.GetValueOrDefault(proyectoSeleccionado.ProjectType,
+                                                                proyectoSeleccionado.ProjectType))</p>
+                        <p class="popup-description">@proyectoSeleccionado.Description</p>
+
+                        @if (proyectoSeleccionado.Materials.Any())
+                        {
+                            <h4>Materiales</h4>
+                            <ul class="popup-materials">
+                                @foreach (var mat in proyectoSeleccionado.Materials)
+                                {
+                                    <li>
+                                        <span class="badge">@(Translations.TipoMaterial.GetValueOrDefault(mat.Type, mat.Type))</span>
+                                        <a href="@mat.Url" target="_blank">@mat.Url</a>
+                                        @if (!string.IsNullOrWhiteSpace(mat.Description))
+                                        {
+                                            <span class="mat-desc"> — @mat.Description</span>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p style="color: #9ca3af; font-size: 0.9rem;">Sin materiales adjuntos.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
 
 @code {
     [Parameter] public string EventId { get; set; } = string.Empty;
@@ -161,7 +170,8 @@
 
             // Comprobar si ya ha votado
             var http = HttpClientFactory.CreateClient("API");
-            var votosPrevios = await http.GetFromJsonAsync<List<VoteResultDto>>($"api/votes/by-user?userId={_sessionUserId}&categoryId={CategoryId}");
+            var votosPrevios = await
+http.GetFromJsonAsync<List<VoteResultDto>>($"api/votes/by-user?userId={_sessionUserId}&categoryId={CategoryId}");
             haVotado = votosPrevios != null && votosPrevios.Any();
             
             StateHasChanged();
@@ -177,8 +187,19 @@
     private void CerrarPopup() => proyectoSeleccionado = null;
 
     // DTOs
-    public class ProjectDto { public string Id { get; set; } = ""; public string Title { get; set; } = ""; public string? Description { get; set; } public string ProjectType { get; set; } = ""; public List<MaterialDto> Materials { get; set; } = new(); }
-    public class MaterialDto { public string Id { get; set; } = ""; public string Type { get; set; } = ""; public string Url { get; set; } = ""; public string? Description { get; set; } }
+    public class ProjectDto
+    {
+        public string Id { get; set; } = ""; public string Title { get; set; } = ""; public string?
+Description
+        { get; set; }
+        public string ProjectType { get; set; } = ""; public List<MaterialDto> Materials { get; set; }
+= new();
+    }
+    public class MaterialDto
+    {
+        public string Id { get; set; } = ""; public string Type { get; set; } = ""; public string Url
+        { get; set; } = ""; public string? Description { get; set; }
+    }
     public class CategorySimpleDto { public string Id { get; set; } = ""; public string Name { get; set; } = ""; }
     public class EventDetailDto { public int TopNProjectsAllowed { get; set; } }
     public class VotingSessionDto { public string Id { get; set; } = ""; public bool IsActive { get; set; } }
