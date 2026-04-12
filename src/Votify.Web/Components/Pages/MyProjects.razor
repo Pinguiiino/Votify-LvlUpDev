@@ -196,12 +196,16 @@
         tabActiva = "info";
         comentariosProyecto = new();
         cargandoComentarios = true;
+        StateHasChanged(); // renderiza el popup con el spinner antes del await
 
         var http = HttpClientFactory.CreateClient("API");
         try
         {
             var resultado = await http.GetFromJsonAsync<List<CommentDto>>($"api/votes/comments/{proyecto.Id}");
             comentariosProyecto = resultado ?? new();
+
+            // Actualiza el badge de la tarjeta con el conteo fresco
+            comentariosPorProyecto[proyecto.Id] = comentariosProyecto.Count;
         }
         catch
         {
@@ -211,8 +215,7 @@
         {
             cargandoComentarios = false;
         }
-
-        StateHasChanged();
+        // StateHasChanged implícito al terminar el Task desde un evento de UI
     }
 
     private void CerrarPopup()

@@ -22,14 +22,13 @@ namespace Votify.Api.Controllers
         {
             try
             {
+                // Borrar votos anteriores del usuario en esta categoría
                 var votosAnteriores = await _context.Votes
                     .Where(v => v.UserId == dto.UserId && v.CategoryId == dto.CategoryId)
                     .ToListAsync();
 
                 if (votosAnteriores.Any())
-                {
                     _context.Votes.RemoveRange(votosAnteriores);
-                }
 
                 VoteCreator voteCreator = new PublicVoteCreator();
 
@@ -40,7 +39,8 @@ namespace Votify.Api.Controllers
                         projectId: rank.ProjectId,
                         userId: dto.UserId,
                         categoryId: dto.CategoryId,
-                        topPosition: rank.Position
+                        topPosition: rank.Position,
+                        comment: string.IsNullOrWhiteSpace(rank.Comment) ? null : rank.Comment.Trim()
                     );
 
                     _context.Votes.Add(nuevoVoto);
@@ -67,28 +67,27 @@ namespace Votify.Api.Controllers
             return Ok(votes);
         }
 
-        /// <summary>
-        /// Devuelve todos los votos con comentario asociados a un proyecto concreto.
-        /// </summary>
         [HttpGet("comments/{projectId}")]
         public async Task<IActionResult> GetCommentsByProject(string projectId)
         {
-            var comments = await _context.Votes
-                .Where(v => v.VotedProjectId == projectId && !string.IsNullOrWhiteSpace(v.Comment))
+            // ToListAsync() primero: EF Core no puede traducir 'v is ExpertVote' a SQL
+            var votes = await _context.Votes
+                .Where(v => v.VotedProjectId == projectId && v.Comment != null && v.Comment != "")
                 .OrderBy(v => v.TopPosition)
-                .Select(v => new
-                {
-                    v.Comment,
-                    v.TopPosition,
-                    // Leemos el discriminador de tipo desde la propia columna de EF
-                    VoteType = v is Votify.Domain.VoteFolder.ExpertVote ? "Expert" : "Public"
-                })
                 .ToListAsync();
+
+            var comments = votes.Select(v => new
+            {
+                v.Comment,
+                v.TopPosition,
+                VoteType = v is ExpertVote ? "Expert" : "Public"
+            });
 
             return Ok(comments);
         }
     }
 
+
+    public record RankedProjectDto(string ProjectId, int Position, string? Comment);
     public record BatchVoteRequest(string CategoryId, string EventId, string UserId, string VotingSessionId, List<RankedProjectDto> RankedProjects);
-    public record RankedProjectDto(string ProjectId, int Position);
 }
