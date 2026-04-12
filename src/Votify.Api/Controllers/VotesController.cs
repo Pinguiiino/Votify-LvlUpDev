@@ -22,13 +22,14 @@ namespace Votify.Api.Controllers
         {
             try
             {
-                // Eliminar votos anteriores del mismo usuario en esta categoría
                 var votosAnteriores = await _context.Votes
                     .Where(v => v.UserId == dto.UserId && v.CategoryId == dto.CategoryId)
                     .ToListAsync();
 
                 if (votosAnteriores.Any())
+                {
                     _context.Votes.RemoveRange(votosAnteriores);
+                }
 
                 VoteCreator voteCreator = new PublicVoteCreator();
 
@@ -39,8 +40,7 @@ namespace Votify.Api.Controllers
                         projectId: rank.ProjectId,
                         userId: dto.UserId,
                         categoryId: dto.CategoryId,
-                        topPosition: rank.Position,
-                        comment: rank.Comment   // ← persiste el comentario
+                        topPosition: rank.Position
                     );
 
                     _context.Votes.Add(nuevoVoto);
@@ -66,18 +66,29 @@ namespace Votify.Api.Controllers
 
             return Ok(votes);
         }
+
+        /// <summary>
+        /// Devuelve todos los votos con comentario asociados a un proyecto concreto.
+        /// </summary>
+        [HttpGet("comments/{projectId}")]
+        public async Task<IActionResult> GetCommentsByProject(string projectId)
+        {
+            var comments = await _context.Votes
+                .Where(v => v.VotedProjectId == projectId && !string.IsNullOrWhiteSpace(v.Comment))
+                .OrderBy(v => v.TopPosition)
+                .Select(v => new
+                {
+                    v.Comment,
+                    v.TopPosition,
+                    // Leemos el discriminador de tipo desde la propia columna de EF
+                    VoteType = v is Votify.Domain.VoteFolder.ExpertVote ? "Expert" : "Public"
+                })
+                .ToListAsync();
+
+            return Ok(comments);
+        }
     }
 
-    public record BatchVoteRequest(
-        string CategoryId,
-        string EventId,
-        string UserId,
-        string VotingSessionId,
-        List<RankedProjectDto> RankedProjects);
-
-    // Comment es opcional, si el votante no escribe nada se envía null
-    public record RankedProjectDto(
-        string ProjectId,
-        int Position,
-        string? Comment = null);
+    public record BatchVoteRequest(string CategoryId, string EventId, string UserId, string VotingSessionId, List<RankedProjectDto> RankedProjects);
+    public record RankedProjectDto(string ProjectId, int Position);
 }
