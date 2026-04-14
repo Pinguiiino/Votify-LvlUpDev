@@ -162,12 +162,16 @@
                                     {
                                         <div class="validation-message" style="margin-top: 0.25rem;">Los pesos de los criterios deben
                                             sumar 1.0.</div>
-                                        }
+                                    }
                                         <button type="button" class="btn-secondary mt-2" style="font-size: 0.8rem;"
-                                                @onclick="() => nuevaCategoria.Criteria.Add(new CriterionDraft())">
+                                            @onclick="() => nuevaCategoria.Criteria.Add(new CriterionDraft())">
                                             + Añadir criterio
                                         </button>
-                                    </div>
+                                        @if (errorSinCriterios)
+                                        {
+                                            <div class="validation-message" style="margin-top: 0.5rem;">Debes añadir al menos 1 criterio de evaluación.</div>
+                                        }
+                                     </div>
 
                                     @* ── Premios ── *@
                                     <div style="margin-top: 0.75rem;">
@@ -187,10 +191,14 @@
                                             </div>
                                         }
                                         <button type="button" class="btn-secondary mt-2" style="font-size: 0.8rem;"
-                                                @onclick="() => nuevaCategoria.Prizes.Add(new PrizeDraft { Position = nuevaCategoria.Prizes.Count + 1 })">
-                                            + Añadir premio
-                                        </button>
-                                    </div>
+                                            @onclick="() => nuevaCategoria.Prizes.Add(new PrizeDraft { Position = nuevaCategoria.Prizes.Count + 1 })">
+                                        + Añadir premio
+                                    </button>
+                                    @if (errorSinPremios)
+                                    {
+                                        <div class="validation-message" style="margin-top: 0.5rem;">Debes añadir al menos 1 premio para esta categoría.</div>
+                                    }
+                                </div>
 
                                     @if (errorNombreCategoria)
                                     {
@@ -222,6 +230,8 @@
     private bool errorCategorias = false;
     private bool errorNombreCategoria = false;
     private bool errorPesos = false;
+    private bool errorSinCriterios = false;
+    private bool errorSinPremios = false;
     private bool mostrandoFormularioCategoria = false;
 
     private const int DefaultMaxProjects = 20;
@@ -238,6 +248,8 @@
         nuevaCategoria = new CategoryDraft();
         errorNombreCategoria = false;
         errorPesos = false;
+        errorSinCriterios = false;
+        errorSinPremios = false;
         mostrandoFormularioCategoria = true;
     }
 
@@ -247,6 +259,8 @@
     {
         errorNombreCategoria = false;
         errorPesos = false;
+        errorSinCriterios = false;
+        errorSinPremios = false;
 
         if (string.IsNullOrWhiteSpace(nuevaCategoria.Name))
         {
@@ -254,14 +268,23 @@
             return;
         }
 
-        if (nuevaCategoria.Criteria.Any())
+        if (!nuevaCategoria.Criteria.Any())
         {
-            var suma = nuevaCategoria.Criteria.Sum(c => c.Weight);
-            if (Math.Abs(suma - 1.0) > 0.01)
-            {
-                errorPesos = true;
-                return;
-            }
+            errorSinCriterios = true;
+            return;
+        }
+
+        var suma = nuevaCategoria.Criteria.Sum(c => c.Weight);
+        if (Math.Abs(suma - 1.0) > 0.01)
+        {
+            errorPesos = true;
+            return;
+        }
+
+        if (!nuevaCategoria.Prizes.Any())
+        {
+            errorSinPremios = true;
+            return;
         }
 
         errorCategorias = false;
