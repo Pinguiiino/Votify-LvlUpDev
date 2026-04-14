@@ -1,5 +1,6 @@
 ﻿using Votify.Domain.CategoryFolder;
 using Votify.Domain.Factory;
+using Votify.Domain.VoteFolder;
 
 namespace Votify.Domain.EventFolder;
 
@@ -27,6 +28,16 @@ public class EventService
     {
         var creator = new ModalityEventCreator(modality);
         var evento = creator.Create(name, maxProjects, startDate, endDate, topNProjectsAllowed, description);
+
+        var votingSession = new VotingSession(
+            eventId: evento.Id,
+            name: $"Votación principal - {evento.Name}",
+            openAt: startDate,
+            closeAt: endDate,
+            description: "Sesión de votación general del evento.",
+            reminderMinutesBeforeClose: 60
+        );
+        evento.VotingSessions.Add(votingSession);
 
         var categorias = new List<Category>();
         foreach (var catData in categoriasData)
