@@ -39,9 +39,7 @@ public class ProjectRepository : IProjectRepository
     public async Task SaveChangesAsync()
         => await _context.SaveChangesAsync();
 
-    public async Task<bool> TitleExistsInCategoriesAsync(string title, List<string> categoryIds)
+    public async Task<bool> TitleExistsInEventAsync(string title, string eventId)
     => await _context.Projects
-        .AnyAsync(p =>
-            p.Title == title &&
-            p.ProjectCategories.Any(pc => categoryIds.Contains(pc.CategoryId!)));
+        .AnyAsync(p => p.Title == title && p.EventId == eventId);
 }

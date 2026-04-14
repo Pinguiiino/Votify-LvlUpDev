@@ -24,10 +24,10 @@ public class ProjectService
             _ => throw new ArgumentException($"Tipo desconocido: {projectType}")
         };
 
-        bool titleTaken = await _repository.TitleExistsInCategoriesAsync(title, categoryIds);
+        bool titleTaken = await _repository.TitleExistsInEventAsync(title, eventId);
         if (titleTaken)
             throw new ArgumentException(
-                $"Ya existe un proyecto con el título \"{title}\" en una de las categorías seleccionadas. Elige otro nombre.");
+                $"Ya existe un proyecto con el título \"{title}\" en este evento. Elige otro nombre.");
 
         var project = creator.Create(title, eventId, description);
 
