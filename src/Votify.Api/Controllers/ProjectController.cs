@@ -56,6 +56,7 @@ namespace Votify.Api.Controllers
             p.Id,
             p.Title,
             p.Description,
+            p.EventId,
             ProjectType = p.ProjectType(),
             Materials = p.Materials.Select(m => new
             { m.Id, Type = m.Type.ToString(), m.Url, m.Description })
