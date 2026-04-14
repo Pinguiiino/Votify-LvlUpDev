@@ -38,8 +38,14 @@
 
             <div class="form-group">
                 <label>Título del Proyecto *</label>
-                <InputText class="form-control" placeholder="Ej: Votify App" @bind-Value="projectModel.Title" />
+                <InputText class="form-control" placeholder="Ej: Votify App"
+                           @bind-Value="projectModel.Title"
+                           @oninput="() => errorTitulo = null" />
                 <ValidationMessage For="@(() => projectModel.Title)" />
+                @if (errorTitulo != null)
+                {
+                    <div class="validation-error">@errorTitulo</div>
+                }
             </div>
 
             <div class="form-group">
@@ -228,6 +234,7 @@
     private MaterialDraft nuevoMaterial = new();
     private bool mostrandoFormMaterial = false;
     private MaterialDraft? materialEditando = null;
+    private string? errorTitulo = null;
     private bool errorUrlEdicion = false;
     private bool errorUrl = false;
     private bool errorCategorias = false;
@@ -347,7 +354,8 @@
             else
             {
                 var error = await response.Content.ReadAsStringAsync();
-                await JS.InvokeVoidAsync("alert", $"Error: {error}");
+                errorTitulo = error.Trim('"');
+
             }
         }
         catch (Exception)

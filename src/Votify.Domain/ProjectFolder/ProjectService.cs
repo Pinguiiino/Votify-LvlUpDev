@@ -24,6 +24,11 @@ public class ProjectService
             _ => throw new ArgumentException($"Tipo desconocido: {projectType}")
         };
 
+        bool titleTaken = await _repository.TitleExistsInCategoriesAsync(title, categoryIds);
+        if (titleTaken)
+            throw new ArgumentException(
+                $"Ya existe un proyecto con el título \"{title}\" en una de las categorías seleccionadas. Elige otro nombre.");
+
         var project = creator.Create(title, eventId, description);
 
         foreach (var (type, url, desc) in materials)

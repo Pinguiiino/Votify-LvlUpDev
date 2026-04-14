@@ -7,4 +7,5 @@ public interface IProjectRepository
     Task<List<Project>> GetByCategoryAsync(string categoryId);
     Task AddAsync(Project project);
     Task SaveChangesAsync();
+    Task<bool> TitleExistsInCategoriesAsync(string title, List<string> categoryIds);
 }
