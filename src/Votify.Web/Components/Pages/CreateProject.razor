@@ -343,7 +343,7 @@
             var response = await http.PostAsJsonAsync("/api/projects", payload);
 
             if (response.IsSuccessStatusCode)
-                Navigation.NavigateTo("/");
+                Navigation.NavigateTo($"/event/{EventId}/categories");
             else
             {
                 var error = await response.Content.ReadAsStringAsync();
