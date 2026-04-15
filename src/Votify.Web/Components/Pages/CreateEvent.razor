@@ -29,7 +29,7 @@
 
             <div class="form-group">
                 <label>Nombre del evento *</label>
-                <InputText class="form-control @(errorNombreRepetido != null ? "is-invalid" : "")"
+                <InputText class="@($"form-control {(errorNombreRepetido != null ? "is-invalid" : "")}")"
                            placeholder="Ej: Hackathon 2026"
                            @bind-Value="eventModel.Name"
                            @oninput="() => errorNombreRepetido = null" />
