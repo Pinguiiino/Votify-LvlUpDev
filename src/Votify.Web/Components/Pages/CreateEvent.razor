@@ -199,12 +199,14 @@
                                         <div class="validation-message" style="margin-top: 0.5rem;">Debes añadir al menos 1 premio para esta categoría.</div>
                                     }
                                 </div>
-
                                     @if (errorNombreCategoria)
                                     {
-                                        <div class="validation-message" style="margin-top: 0.5rem;">El nombre de la categoría es
-                                            obligatorio.</div>
-                                        }
+                                        <div class="validation-message" style="margin-top: 0.5rem;">El nombre de la categoría es obligatorio.</div>
+                                    }
+                                    @if (errorCategoriaDuplicada)
+                                    {
+                                       <div class="validation-message" style="margin-top: 0.5rem; color: #dc2626;">Ya has añadido una categoría con este nombre. Elige otro.</div>
+                                    }
 
                                         <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
                                             <button type="button" class="btn-primary" style="flex: 1; padding: 0.5rem;"
@@ -229,6 +231,7 @@
 
     private bool errorCategorias = false;
     private bool errorNombreCategoria = false;
+    private bool errorCategoriaDuplicada = false;
     private bool errorPesos = false;
     private bool errorSinCriterios = false;
     private bool errorSinPremios = false;
@@ -247,6 +250,7 @@
     {
         nuevaCategoria = new CategoryDraft();
         errorNombreCategoria = false;
+        errorCategoriaDuplicada = false;
         errorPesos = false;
         errorSinCriterios = false;
         errorSinPremios = false;
@@ -261,10 +265,17 @@
         errorPesos = false;
         errorSinCriterios = false;
         errorSinPremios = false;
+        errorCategoriaDuplicada = false;
 
         if (string.IsNullOrWhiteSpace(nuevaCategoria.Name))
         {
             errorNombreCategoria = true;
+            return;
+        }
+
+        if (eventModel.Categories.Any(c => c.Name.Trim().Equals(nuevaCategoria.Name?.Trim(), StringComparison.OrdinalIgnoreCase)))
+        {
+            errorCategoriaDuplicada = true;
             return;
         }
 

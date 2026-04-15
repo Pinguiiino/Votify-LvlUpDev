@@ -40,11 +40,21 @@ public class EventService
         evento.VotingSessions.Add(votingSession);
 
         var categorias = new List<Category>();
+
+        var nombresProcesados = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var catData in categoriasData)
         {
+            var nombreLimpio = catData.Name.Trim();
+
+            if (!nombresProcesados.Add(nombreLimpio))
+            {
+                throw new ArgumentException($"El evento no puede tener dos categorías con el mismo nombre: \"{nombreLimpio}\".");
+            }
+
             var categoria = new Category(
                 eventId: evento.Id,
-                name: catData.Name,
+                name: nombreLimpio,
                 description: catData.Description,
                 allowSelfVoting: catData.AllowSelfVoting
             );
