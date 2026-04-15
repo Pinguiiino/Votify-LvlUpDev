@@ -3,7 +3,7 @@ using Votify.Domain.ProjectFolder;
 using Votify.Domain.UserFolder;
 
 namespace Votify.Domain.VoteFolder;
-public class Vote
+public abstract class Vote
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string VotingSessionId { get; set; }

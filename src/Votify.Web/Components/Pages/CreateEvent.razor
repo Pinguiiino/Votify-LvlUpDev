@@ -134,7 +134,7 @@
 
                         <div class="form-group">
                             <label style="font-size: 0.85rem;">
-                                <input type="checkbox" @bind="nuevaCategoria.AllowSelfVoting" /> Permitir que los participantes voten su propia categoría
+                                <input type="checkbox" @bind="nuevaCategoria.AllowSelfVoting" /> Permitir que los participantes en la categoría en la cual suben proyectos
                             </label>
                         </div>
 
@@ -178,7 +178,7 @@
                             {
                                 <div style="display: grid; grid-template-columns: auto 2fr 2fr auto; gap: 0.5rem; margin-top: 0.4rem; align-items: center;">
                                     <input type="number" class="form-control form-control-sm" placeholder="Pos." min="1" @bind="pr.Position" style="width: 4rem;" />
-                                    <input type="text" class="form-control form-control-sm" placeholder="Nombre (Ej: 1.000€)" @bind="pr.Name" />
+                                    <input type="text" class="form-control form-control-sm" placeholder="Recompensa (Ej: 1.000€)" @bind="pr.Name" />
                                     <input type="text" class="form-control form-control-sm" placeholder="Descripción" @bind="pr.Description" />
                                     <button type="button" class="btn-delete" @onclick="() => nuevaCategoria.Prizes.Remove(pr)">X</button>
                                 </div>
