@@ -14,7 +14,7 @@ public abstract class Vote
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public string? Comment { get; set; }
 
-    public string IntegrityHash { get; private set; }
+    public string IntegrityHash { get; set; }
 
     public void GenerateIntegrityHash()
     {

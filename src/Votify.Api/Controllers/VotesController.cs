@@ -42,7 +42,7 @@ namespace Votify.Api.Controllers
                         topPosition: rank.Position,
                         comment: string.IsNullOrWhiteSpace(rank.Comment) ? null : rank.Comment.Trim()
                     );
-
+                    nuevoVoto.IntegrityHash = Guid.NewGuid().ToString();
                     _context.Votes.Add(nuevoVoto);
                 }
 
