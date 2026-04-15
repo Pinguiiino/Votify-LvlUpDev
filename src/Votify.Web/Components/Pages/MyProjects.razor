@@ -4,6 +4,8 @@
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
 @inject HttpClient Http
+@inject IJSRuntime JS
+
 <PageTitle>Tus proyectos - Votify</PageTitle>
 
 <div class="myprojects-container">
@@ -53,10 +55,18 @@
                             <div class="card-info">
                                 <h2 class="card-title">@proyecto.Title</h2>
                                 <p class="card-description">@proyecto.Description</p>
-
-                                <button class="btn btn-primary btn-sm w-100 mt-2" @onclick="() => PedirAuditoria(proyecto.Id)" @onclick:stopPropagation="true">
-                                    Pedir Auditoría
-                                </button>
+                                @if (proyectosAuditados.Contains(proyecto.Id))
+                                {
+                                    <div class="alert alert-info mt-2 p-1 text-center" style="font-size: 0.8rem;">
+                                        <i class="bi bi-envelope-check-fill"></i> Reclamación enviada al Organizador
+                                    </div>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-primary btn-sm w-100 mt-2" @onclick="() => PedirAuditoria(proyecto)" @onclick:stopPropagation="true">
+                                        <i class="bi bi-shield-lock-fill"></i> Solicitar Auditoría
+                                    </button>
+                                }
                                   <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <span class="card-modality" style="font-weight: bold; color: #4b5563;">@(Translations.TipoProyecto.GetValueOrDefault(proyecto.ProjectType, proyecto.ProjectType))</span>
                                     @if (comentariosPorProyecto.TryGetValue(proyecto.Id, out var count) && count > 0)
@@ -184,16 +194,25 @@
     }
 
 @code {
-    private async Task PedirAuditoria(string id)
+    private List<string> proyectosAuditados = new();
+
+    private async Task PedirAuditoria(ProjectDto proyecto)
     {
+        // Usamos JS (C# Interop) para lanzar el mensaje en el navegador
+        bool confirmar = await JS.InvokeAsync<bool>("confirm",
+            $"¿Enviar reclamación de '{proyecto.Title}' al Organizador?");
+
+        if (!confirmar) return;
+
         try
         {
-            var response = await Http.GetFromJsonAsync<List<object>>($"https://localhost:7150/api/audit/project/{id}");
-            Console.WriteLine($"¡ÉXITO! Auditoría completada. Se verificaron {response.Count} votos para el proyecto {id}.");
+            var response = await Http.GetFromJsonAsync<List<object>>($"https://localhost:7150/api/audit/project/{proyecto.Id}");
+            proyectosAuditados.Add(proyecto.Id);
+            await JS.InvokeVoidAsync("alert", "Enviado al Organizador.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al auditar: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", "Error en el envío.");
         }
     }
 
