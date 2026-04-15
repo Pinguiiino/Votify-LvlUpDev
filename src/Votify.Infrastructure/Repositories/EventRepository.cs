@@ -33,6 +33,12 @@ public class EventRepository : IEventRepository
         await _context.Categories.AddRangeAsync(categorias);
     }
 
+    public async Task<bool> ExistsByNameAsync(string name)
+    {
+        var nombreLimpio = name.Trim().ToLower();
+        return await _context.Events.AnyAsync(e => e.Name.ToLower() == nombreLimpio);
+    }
+
     public async Task SaveChangesAsync()
         => await _context.SaveChangesAsync();
 }

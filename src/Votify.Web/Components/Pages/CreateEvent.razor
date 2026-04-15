@@ -14,15 +14,13 @@
         <header class="modal-header">
             <div class="header-title">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                    <path
-                    d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
+                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
                 </svg>
                 <h1>Crear Nuevo Evento</h1>
             </div>
             <button type="button" class="close-btn" @onclick="Cancelar">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                    <path
-                    d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
                 </svg>
             </button>
         </header>
@@ -31,8 +29,18 @@
 
             <div class="form-group">
                 <label>Nombre del evento *</label>
-                <InputText class="form-control" placeholder="Ej: Hackathon 2026" @bind-Value="eventModel.Name" />
+                <InputText class="form-control @(errorNombreRepetido != null ? "is-invalid" : "")"
+                           placeholder="Ej: Hackathon 2026"
+                           @bind-Value="eventModel.Name"
+                           @oninput="() => errorNombreRepetido = null" />
                 <ValidationMessage For="@(() => eventModel.Name)" />
+
+                @if (errorNombreRepetido != null)
+                {
+                    <div class="validation-error" style="color: #dc2626; font-size: 0.85rem; margin-top: 0.25rem;">
+                        @errorNombreRepetido
+                    </div>
+                }
             </div>
 
             <div class="form-group">
@@ -76,154 +84,138 @@
             <hr style="margin: 1rem 0; border: 0; border-top: 1px solid #e5e7eb;" />
 
             <div class="form-group">
-                <label>Categorías del Evento * <span
-                    style="font-weight: normal; font-size: 0.85rem; color: #6b7280;">(Añade al menos
-                    una)</span></label>
+                <label>Categorías del Evento * <span style="font-weight: normal; font-size: 0.85rem; color: #6b7280;">(Añade al menos una)</span></label>
 
-                    @if (eventModel.Categories.Any())
-                    {
-                        <div class="categories-list">
-                            @foreach (var cat in eventModel.Categories)
+                @if (eventModel.Categories.Any())
+                {
+                    <div class="categories-list">
+                        @foreach (var cat in eventModel.Categories)
+                        {
+                            <div class="category-item">
+                                <div>
+                                    <strong>@cat.Name</strong>
+                                    <span style="font-size: 0.8rem; color: #6b7280; display: block;">
+                                        @cat.Description
+                                        | Criterios: @cat.Criteria.Count | Premios: @cat.Prizes.Count
+                                    </span>
+                                </div>
+                                <button type="button" class="btn-delete" @onclick="() => eventModel.Categories.Remove(cat)">X</button>
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (errorCategorias)
+                {
+                    <div class="validation-message">Debes añadir al menos una categoría para crear el evento.</div>
+                }
+
+                @if (!mostrandoFormularioCategoria)
+                {
+                    <button type="button" class="btn-secondary mt-2" style="border: 2px dashed #d1d5db; color: #4b5563;"
+                            @onclick="MostrarFormulario">
+                        + Añadir Categoría
+                    </button>
+                }
+                else
+                {
+                    <div class="add-category-box">
+                        <h4 style="margin-top: 0; margin-bottom: 1rem; font-size: 0.95rem; color: #374151;">Configurar categoría</h4>
+
+                        <div class="form-group">
+                            <input type="text" class="form-control form-control-sm"
+                                   placeholder="Nombre (Ej: Proyectos de IA)" @bind="nuevaCategoria.Name" />
+                        </div>
+
+                        <div class="form-group">
+                            <textarea class="form-control form-control-sm" rows="2"
+                                      placeholder="Descripción de la categoría..." @bind="nuevaCategoria.Description"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label style="font-size: 0.85rem;">
+                                <input type="checkbox" @bind="nuevaCategoria.AllowSelfVoting" /> Permitir que los participantes voten su propia categoría
+                            </label>
+                        </div>
+
+                        @* ── Criterios ── *@
+                        <div style="margin-top: 0.75rem;">
+                            <label style="font-size: 0.85rem; font-weight: 600;">Criterios de evaluación</label>
+                            @foreach (var cr in nuevaCategoria.Criteria)
                             {
-                                <div class="category-item">
-                                    <div>
-                                        <strong>@cat.Name</strong>
-                                        <span style="font-size: 0.8rem; color: #6b7280; display: block;">
-                                            @cat.Description
-                                            | Criterios: @cat.Criteria.Count | Premios: @cat.Prizes.Count
-                                        </span>
-                                    </div>
-                                    <button type="button" class="btn-delete"
-                                            @onclick="() => eventModel.Categories.Remove(cat)">X</button>
+                                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 0.5rem; margin-top: 0.4rem; align-items: center;">
+                                    <input type="text" class="form-control form-control-sm" placeholder="Nombre criterio" @bind="cr.Name" />
+                                    <select class="form-control form-control-sm" @bind="cr.Type">
+                                        <option value="Numeric">Numérico</option>
+                                        <option value="Checklist">Checklist</option>
+                                        <option value="Rubric">Rúbrica</option>
+                                        <option value="Comment">Comentario</option>
+                                        <option value="Audio">Audio</option>
+                                        <option value="Video">Vídeo</option>
+                                    </select>
+                                    <input type="number" class="form-control form-control-sm" step="0.05" min="0" max="1" placeholder="Peso" @bind="cr.Weight" />
+                                    <button type="button" class="btn-delete" @onclick="() => nuevaCategoria.Criteria.Remove(cr)">X</button>
                                 </div>
                             }
-                        </div>
-                    }
-
-                    @if (errorCategorias)
-                    {
-                        <div class="validation-message">Debes añadir al menos una categoría para crear el evento.</div>
-                    }
-
-                    @if (!mostrandoFormularioCategoria)
-                    {
-                        <button type="button" class="btn-secondary mt-2" style="border: 2px dashed #d1d5db; color: #4b5563;"
-                                @onclick="MostrarFormulario">
-                            + Añadir Categoría
-                        </button>
-                    }
-                    else
-                    {
-                        <div class="add-category-box">
-                            <h4 style="margin-top: 0; margin-bottom: 1rem; font-size: 0.95rem; color: #374151;">Configurar
-                                categoría</h4>
-
-                                <div class="form-group">
-                                    <input type="text" class="form-control form-control-sm"
-                                           placeholder="Nombre (Ej: Proyectos de IA)" @bind="nuevaCategoria.Name" />
-                                </div>
-
-                                <div class="form-group">
-                                    <textarea class="form-control form-control-sm" rows="2"
-                                              placeholder="Descripción de la categoría..." @bind="nuevaCategoria.Description"></textarea>
-                                </div>
-
-                                <div class="form-group">
-                                    <label style="font-size: 0.85rem;">
-                                        <input type="checkbox" @bind="nuevaCategoria.AllowSelfVoting" /> Permitir que los
-                                        participantes voten su propia categoría
-                                    </label>
-                                </div>
-
-                                @* ── Criterios ── *@
-                                <div style="margin-top: 0.75rem;">
-                                    <label style="font-size: 0.85rem; font-weight: 600;">Criterios de evaluación</label>
-                                    @foreach (var cr in nuevaCategoria.Criteria)
-                                    {
-                                        <div
-                                            style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 0.5rem; margin-top: 0.4rem; align-items: center;">
-                                            <input type="text" class="form-control form-control-sm" placeholder="Nombre criterio"
-                                                   @bind="cr.Name" />
-                                            <select class="form-control form-control-sm" @bind="cr.Type">
-                                                <option value="Numeric">Numérico</option>
-                                                <option value="Checklist">Checklist</option>
-                                                <option value="Rubric">Rúbrica</option>
-                                                <option value="Comment">Comentario</option>
-                                                <option value="Audio">Audio</option>
-                                                <option value="Video">Vídeo</option>
-                                            </select>
-                                            <input type="number" class="form-control form-control-sm" step="0.05" min="0" max="1"
-                                                   placeholder="Peso" @bind="cr.Weight" />
-                                            <button type="button" class="btn-delete"
-                                                    @onclick="() => nuevaCategoria.Criteria.Remove(cr)">X</button>
-                                        </div>
-                                    }
-                                    @if (errorPesos)
-                                    {
-                                        <div class="validation-message" style="margin-top: 0.25rem;">Los pesos de los criterios deben
-                                            sumar 1.0.</div>
-                                    }
-                                        <button type="button" class="btn-secondary mt-2" style="font-size: 0.8rem;"
-                                            @onclick="() => nuevaCategoria.Criteria.Add(new CriterionDraft())">
-                                            + Añadir criterio
-                                        </button>
-                                        @if (errorSinCriterios)
-                                        {
-                                            <div class="validation-message" style="margin-top: 0.5rem;">Debes añadir al menos 1 criterio de evaluación.</div>
-                                        }
-                                     </div>
-
-                                    @* ── Premios ── *@
-                                    <div style="margin-top: 0.75rem;">
-                                        <label style="font-size: 0.85rem; font-weight: 600;">Premios</label>
-                                        @foreach (var pr in nuevaCategoria.Prizes)
-                                        {
-                                            <div
-                                                style="display: grid; grid-template-columns: auto 2fr 2fr auto; gap: 0.5rem; margin-top: 0.4rem; align-items: center;">
-                                                <input type="number" class="form-control form-control-sm" placeholder="Pos." min="1"
-                                                       @bind="pr.Position" style="width: 4rem;" />
-                                                <input type="text" class="form-control form-control-sm" placeholder="Nombre (Ej: 1.000€)"
-                                                       @bind="pr.Name" />
-                                                <input type="text" class="form-control form-control-sm" placeholder="Descripción"
-                                                       @bind="pr.Description" />
-                                                <button type="button" class="btn-delete"
-                                                        @onclick="() => nuevaCategoria.Prizes.Remove(pr)">X</button>
-                                            </div>
-                                        }
-                                        <button type="button" class="btn-secondary mt-2" style="font-size: 0.8rem;"
-                                            @onclick="() => nuevaCategoria.Prizes.Add(new PrizeDraft { Position = nuevaCategoria.Prizes.Count + 1 })">
-                                        + Añadir premio
-                                    </button>
-                                    @if (errorSinPremios)
-                                    {
-                                        <div class="validation-message" style="margin-top: 0.5rem;">Debes añadir al menos 1 premio para esta categoría.</div>
-                                    }
-                                </div>
-                                    @if (errorNombreCategoria)
-                                    {
-                                        <div class="validation-message" style="margin-top: 0.5rem;">El nombre de la categoría es obligatorio.</div>
-                                    }
-                                    @if (errorCategoriaDuplicada)
-                                    {
-                                       <div class="validation-message" style="margin-top: 0.5rem; color: #dc2626;">Ya has añadido una categoría con este nombre. Elige otro.</div>
-                                    }
-
-                                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                                            <button type="button" class="btn-primary" style="flex: 1; padding: 0.5rem;"
-                                                    @onclick="ConfirmarCategoria">Confirmar</button>
-                                            <button type="button" class="btn-secondary" style="flex: 1; padding: 0.5rem;"
-                                                    @onclick="OcultarFormulario">Cancelar</button>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
+                            @if (errorPesos)
+                            {
+                                <div class="validation-message" style="margin-top: 0.25rem;">Los pesos de los criterios deben sumar 1.0.</div>
+                            }
+                            <button type="button" class="btn-secondary mt-2" style="font-size: 0.8rem;"
+                                    @onclick="() => nuevaCategoria.Criteria.Add(new CriterionDraft())">
+                                + Añadir criterio
+                            </button>
+                            @if (errorSinCriterios)
+                            {
+                                <div class="validation-message" style="margin-top: 0.5rem;">Debes añadir al menos 1 criterio de evaluación.</div>
+                            }
                         </div>
 
-                        <footer class="modal-footer">
-                            <button type="submit" class="btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;">Crear Evento</button>
-                            </footer>
-                        </EditForm>
+                        @* ── Premios ── *@
+                        <div style="margin-top: 0.75rem;">
+                            <label style="font-size: 0.85rem; font-weight: 600;">Premios</label>
+                            @foreach (var pr in nuevaCategoria.Prizes)
+                            {
+                                <div style="display: grid; grid-template-columns: auto 2fr 2fr auto; gap: 0.5rem; margin-top: 0.4rem; align-items: center;">
+                                    <input type="number" class="form-control form-control-sm" placeholder="Pos." min="1" @bind="pr.Position" style="width: 4rem;" />
+                                    <input type="text" class="form-control form-control-sm" placeholder="Nombre (Ej: 1.000€)" @bind="pr.Name" />
+                                    <input type="text" class="form-control form-control-sm" placeholder="Descripción" @bind="pr.Description" />
+                                    <button type="button" class="btn-delete" @onclick="() => nuevaCategoria.Prizes.Remove(pr)">X</button>
+                                </div>
+                            }
+                            <button type="button" class="btn-secondary mt-2" style="font-size: 0.8rem;"
+                                    @onclick="() => nuevaCategoria.Prizes.Add(new PrizeDraft { Position = nuevaCategoria.Prizes.Count + 1 })">
+                                + Añadir premio
+                            </button>
+                            @if (errorSinPremios)
+                            {
+                                <div class="validation-message" style="margin-top: 0.5rem;">Debes añadir al menos 1 premio para esta categoría.</div>
+                            }
+                        </div>
+
+                        @if (errorNombreCategoria)
+                        {
+                            <div class="validation-message" style="margin-top: 0.5rem;">El nombre de la categoría es obligatorio.</div>
+                        }
+                        @if (errorCategoriaDuplicada)
+                        {
+                            <div class="validation-message" style="margin-top: 0.5rem; color: #dc2626;">Ya has añadido una categoría con este nombre. Elige otro.</div>
+                        }
+
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                            <button type="button" class="btn-primary" style="flex: 1; padding: 0.5rem;" @onclick="ConfirmarCategoria">Confirmar</button>
+                            <button type="button" class="btn-secondary" style="flex: 1; padding: 0.5rem;" @onclick="OcultarFormulario">Cancelar</button>
+                        </div>
                     </div>
+                }
+            </div>
+        </div>
+
+        <footer class="modal-footer">
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;">Crear Evento</button>
+        </footer>
+    </EditForm>
+</div>
 
 @code {
     private CreateEventModel eventModel = new();
@@ -236,6 +228,7 @@
     private bool errorSinCriterios = false;
     private bool errorSinPremios = false;
     private bool mostrandoFormularioCategoria = false;
+    private string? errorNombreRepetido = null;
 
     private const int DefaultMaxProjects = 20;
 
@@ -336,11 +329,13 @@
             var respuesta = await http.PostAsJsonAsync("/api/events", payload);
 
             if (respuesta.IsSuccessStatusCode)
+            {
                 Navigation.NavigateTo("/");
+            }
             else
             {
                 var errorMsg = await respuesta.Content.ReadAsStringAsync();
-                await JS.InvokeVoidAsync("alert", $"Error del servidor: {errorMsg}");
+                errorNombreRepetido = errorMsg.Trim('"');
             }
         }
         catch (Exception)

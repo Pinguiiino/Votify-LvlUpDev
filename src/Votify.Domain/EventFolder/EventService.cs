@@ -26,6 +26,13 @@ public class EventService
         string? description,
         List<CreateCategoryData> categoriasData)
     {
+        bool nombreOcupado = await _repository.ExistsByNameAsync(name);
+
+        if (nombreOcupado)
+        {
+            throw new ArgumentException($"Ya existe un evento con el nombre \"{name}\". Elige un nombre diferente.");
+        }
+
         var creator = new ModalityEventCreator(modality);
         var evento = creator.Create(name, maxProjects, startDate, endDate, topNProjectsAllowed, description);
 
