@@ -10,6 +10,7 @@ namespace Votify.Domain.VoteFolder
         Task<List<Vote>> GetByUserIdAndCategoryAsync(string userId, string categoryId);
         Task<int> CountVotesByUserInCategoryAsync(string userId, string categoryId);
         Task<bool> HasUserVotedForProjectAsync(string userId, string projectId);
+        Task<List<Vote>> GetByProjectAsync(string projectId);
 
     }
 }

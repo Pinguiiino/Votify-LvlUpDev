@@ -36,5 +36,14 @@ namespace Votify.Infrastructure.Repositories
             return await _context.Votes
                 .AnyAsync(v => v.UserId == userId && v.VotedProjectId == projectId);
         }
+
+        public async Task<List<Vote>> GetByProjectAsync(string projectId)
+        {
+            
+            return await _context.Votes
+                                 .Where(v => v.VotedProjectId == projectId)
+                                 .ToListAsync();
+        }
+
     }
 }
