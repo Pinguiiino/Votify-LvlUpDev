@@ -122,24 +122,37 @@
 
                     @if (proyectoSeleccionado.Materials.Any())
                     {
-                        <h4>Materiales</h4>
-                        <ul class="popup-materials">
+                        <h4 style="margin: 1.25rem 0 0.75rem; font-size: 0.95rem; color: #374151;">Materiales adjuntos</h4>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                             @foreach (var mat in proyectoSeleccionado.Materials)
                             {
-                                <li>
-                                    <span class="badge">@(Translations.TipoMaterial.GetValueOrDefault(mat.Type, mat.Type))</span>
-                                    <a href="@mat.Url" target="_blank">@mat.Url</a>
+                                <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 0.85rem 1rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+                                        <span style="font-size: 0.75rem; font-weight: 600; background: #dbeafe; color: #1e40af; padding: 0.15rem 0.55rem; border-radius: 1rem;">
+                                            @(Translations.TipoMaterial.GetValueOrDefault(mat.Type, mat.Type))
+                                        </span>
+                                    </div>
+
                                     @if (!string.IsNullOrWhiteSpace(mat.Description))
                                     {
-                                        <span class="mat-desc"> — @mat.Description</span>
+                                        <p style="margin: 0 0 0.5rem; font-size: 0.875rem; color: #4b5563;">@mat.Description</p>
                                     }
-                                </li>
+
+                                    <a href="@mat.Url" target="_blank"
+                                           style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; color: #2563eb; word-break: break-all;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1.002 1.002 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4.018 4.018 0 0 1-.128-1.287z" />
+                                            <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243z" />
+                                        </svg>
+                                        @mat.Url
+                                    </a>
+                                </div>
                             }
-                        </ul>
+                        </div>
                     }
                     else
                     {
-                        <p style="color: #9ca3af; font-size: 0.9rem;">Sin materiales adjuntos.</p>
+                        <p style="color: #9ca3af; font-size: 0.9rem; margin-top: 1rem;">Sin materiales adjuntos.</p>
                     }
                 }
                 else
