@@ -71,12 +71,16 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                 <div class="form-group">
                     <label>Fecha de inicio *</label>
-                    <InputDate class="form-control" @bind-Value="eventModel.StartDate" />
+                    <InputDate class="form-control"
+                               min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                               @bind-Value="eventModel.StartDate" />
                     <ValidationMessage For="@(() => eventModel.StartDate)" />
                 </div>
                 <div class="form-group">
                     <label>Fecha de fin *</label>
-                    <InputDate class="form-control" @bind-Value="eventModel.EndDate" />
+                    <InputDate class="form-control"
+                               min="@(eventModel.StartDate.HasValue ? eventModel.StartDate.Value.ToString("yyyy-MM-dd") : DateTime.Today.ToString("yyyy-MM-dd"))"
+                               @bind-Value="eventModel.EndDate" />
                     <ValidationMessage For="@(() => eventModel.EndDate)" />
                 </div>
             </div>
@@ -348,7 +352,7 @@
 
     // ── Modelos locales del formulario ───────────────────────────────────────
 
-    public class CreateEventModel
+    public class CreateEventModel : IValidatableObject
     {
         [Required(ErrorMessage = "Requerido")]
         public string Name { get; set; } = string.Empty;
@@ -364,10 +368,26 @@
         [Range(1, 100, ErrorMessage = "Debe permitir votar al menos 1 proyecto")]
         public int TopNProjectsAllowed { get; set; } = 3;
 
-        [Required] public DateTime? StartDate { get; set; }
-        [Required] public DateTime? EndDate { get; set; }
+        [Required(ErrorMessage = "La fecha de inicio es obligatoria.")]
+        public DateTime? StartDate { get; set; }
+
+        [Required(ErrorMessage = "La fecha de fin es obligatoria.")]
+        public DateTime? EndDate { get; set; }
 
         public List<CategoryDraft> Categories { get; set; } = new();
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (StartDate.HasValue && StartDate.Value.Date < DateTime.Today)
+                yield return new ValidationResult(
+                    "La fecha de inicio no puede ser anterior a hoy.",
+                    new[] { nameof(StartDate) });
+
+            if (EndDate.HasValue && StartDate.HasValue && EndDate.Value.Date < StartDate.Value.Date)
+                yield return new ValidationResult(
+                    "La fecha de fin debe ser posterior a la de inicio.",
+                    new[] { nameof(EndDate) });
+        }
     }
 
     public class CategoryDraft
