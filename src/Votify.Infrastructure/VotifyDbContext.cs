@@ -4,6 +4,7 @@ using Votify.Domain.EventFolder;
 using Votify.Domain.ProjectFolder;
 using Votify.Domain.UserFolder;
 using Votify.Domain.VoteFolder;
+using Votify.Domain.AuditFolder;
 
 namespace Votify.Infrastructure;
 
@@ -22,6 +23,7 @@ public class VotifyDbContext : DbContext
     public DbSet<CriterionScore> CriterionScores { get; set; }
     public DbSet<VotingSession> VotingSessions { get; set; }
     public DbSet<Vote> Votes { get; set; }
+    public DbSet<AuditRequest> AuditRequests { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -128,6 +130,9 @@ public class VotifyDbContext : DbContext
             .WithMany(vs => vs.Votes)
             .HasForeignKey(v => v.VotingSessionId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AuditRequest>()
+            .HasIndex(a => a.ProjectId);
 
         // ── 3. PRECISIÓN NUMÉRICA ─────────────────────────────────────────
         modelBuilder.Entity<Criterion>()
