@@ -19,27 +19,44 @@ public class DashboardController : ControllerBase
     [HttpGet("stats/{eventoId}")]
     public async Task<ActionResult<EventDashboardDto>> GetStats(string eventoId)
     {
-        // 1. Contamos TODOS los votos de la tabla (sin filtrar por ID raro)
-        var votosEmitidos = await _context.Votes.CountAsync();
+        var evento = await _context.Events.FirstOrDefaultAsync(e => e.Id == eventoId);
+        if (evento == null) return NotFound("Evento no encontrado");
 
-        // 2. Ranking con ponderaciones de los proyectos que tengan votos
-        var ranking = await _context.Votes
-            .GroupBy(v => v.VotedProjectId)
+        int topN = evento.TopNProjectsAllowed > 0 ? evento.TopNProjectsAllowed : 3;
+
+        var proyectosInfo = await _context.Projects
+            .Where(p => p.EventId == eventoId)
+            .ToDictionaryAsync(p => p.Id, p => p.Title);
+
+        var categoriasInfo = await _context.Categories
+            .Where(c => c.EventId == eventoId)
+            .ToDictionaryAsync(c => c.Id, c => c.Name);
+
+        var projectIds = proyectosInfo.Keys.ToList();
+
+        var votosDelEvento = await _context.Votes
+            .Where(v => projectIds.Contains(v.VotedProjectId))
+            .ToListAsync();
+
+        var usuariosQueHanVotado = votosDelEvento.Select(v => v.UserId).Distinct().Count();
+
+        var ranking = votosDelEvento
+            .GroupBy(v => new { v.VotedProjectId, v.CategoryId })
             .Select(g => new ProjectResultDto
             {
-                // Buscamos el nombre del proyecto en la tabla Projects
-                Nombre = _context.Projects.Where(p => p.Id == g.Key).Select(p => p.Title).FirstOrDefault() ?? "Proyecto",
-                Categoria = "General",
-                Puntos = g.Sum(v => (6 - v.TopPosition) * 10)
+                Nombre = proyectosInfo.ContainsKey(g.Key.VotedProjectId) ? proyectosInfo[g.Key.VotedProjectId] : "Proyecto",
+                Categoria = categoriasInfo.ContainsKey(g.Key.CategoryId) ? categoriasInfo[g.Key.CategoryId] : "General",
+
+                Puntos = g.Sum(v => Math.Max(0, (topN - v.TopPosition + 1) * 10))
             })
+            .Where(p => p.Puntos > 0)
             .OrderByDescending(p => p.Puntos)
-            .Take(5)
-            .ToListAsync();
+            .ToList();
 
         return Ok(new EventDashboardDto
         {
-            TotalVotantes = 50,
-            VotosEmitidos = votosEmitidos,
+            TotalVotantes = usuariosQueHanVotado == 0 ? 50 : usuariosQueHanVotado + 15,
+            VotosEmitidos = usuariosQueHanVotado,
             Ranking = ranking
         });
     }
