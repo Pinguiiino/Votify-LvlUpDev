@@ -28,7 +28,10 @@ namespace Votify.Api.Controllers
                     .ToListAsync();
 
                 if (votosAnteriores.Any())
+                {
                     _context.Votes.RemoveRange(votosAnteriores);
+                    await _context.SaveChangesAsync();
+                }
 
                 VoteCreator voteCreator = new PublicVoteCreator();
 

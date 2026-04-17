@@ -23,17 +23,22 @@ namespace Votify.Api.Controllers
         [HttpGet("project/{projectId}")]
         public async Task<IActionResult> GetProjectAudit(string projectId)
         {
-            var votes = await _voteRepository.GetByProjectAsync(projectId);
+            var votes = await _context.Votes
+                .AsNoTracking()
+                .Where(v => v.VotedProjectId == projectId)
+                .ToListAsync();
 
             var auditTrail = votes.Select(v => new
             {
-                v.Id,
-                Voter = v.UserId,
-                Date = v.CreatedAt,
-                Hash = v.IntegrityHash
-            });
+                voter = v.UserId,
+                date = v.CreatedAt,
+                hash = v.IntegrityHash,
+                topPosition = v.TopPosition,
+                comment = v.Comment
+            }).ToList();
 
             return Ok(auditTrail);
+   
         }
 
 
@@ -62,6 +67,27 @@ namespace Votify.Api.Controllers
                 .ToListAsync();
 
             return Ok(ids);
+        }
+
+        [HttpGet("dashboard/{eventId}")]
+        public async Task<IActionResult> GetAuditDashboardByEvent(string eventId)
+        {
+            var requests = await _context.AuditRequests
+                .Join(_context.Projects,
+                    audit => audit.ProjectId,
+                    project => project.Id,
+                    (audit, project) => new { audit, project })
+                .Where(x => x.project.EventId == eventId)
+                .Select(x => new {
+                    AuditId = x.audit.Id,
+                    ProjectId = x.project.Id,
+                    ProjectTitle = x.project.Title,
+                    RequestedAt = x.audit.RequestedAt
+                })
+                .OrderByDescending(x => x.RequestedAt)
+                .ToListAsync();
+
+            return Ok(requests);
         }
     }
 }

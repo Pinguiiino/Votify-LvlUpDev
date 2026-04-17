@@ -1,0 +1,179 @@
+﻿@page "/event/{EventId}/audit"
+@using System.Text.Json.Serialization
+@rendermode InteractiveServer
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+
+<PageTitle>Auditoría del Evento - Votify</PageTitle>
+
+<div class="categories-page-container">
+    <header class="page-header">
+        <button class="back-btn" style="margin-bottom: 1rem;" @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories")'>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
+            </svg>
+            Volver a categorías
+        </button>
+
+        <div class="header-content">
+            <h1 class="page-title">Centro de Auditoría</h1>
+            <p class="page-subtitle">Proyectos con solicitudes de revisión de integridad para este evento.</p>
+        </div>
+    </header>
+
+    @if (isLoading)
+    {
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Cargando auditorías...</p>
+        </div>
+    }
+    else if (!Solicitudes.Any())
+    {
+        <div class="empty-state">
+            <p>No hay proyectos con solicitudes de auditoría en este evento.</p>
+        </div>
+    }
+    else
+    {
+        <div class="audit-grid">
+            @foreach (var solicitud in Solicitudes)
+            {
+                <div class="audit-card">
+                    <div class="audit-card-content">
+                        <div class="icon-box">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+                                <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8z"/>
+                            </svg>
+                        </div>
+                        <div class="info-box">
+                            <h3 class="audit-project-title">@solicitud.ProjectTitle</h3>
+                            <span class="audit-meta">ID: @solicitud.ProjectId.Substring(0, 8)...</span>
+                        </div>
+                        <button class="btn-inspect" @onclick="() => CargarVotos(solicitud.ProjectId, solicitud.ProjectTitle)">
+                            Ver Votos
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    @if (mostrandoVotos)
+    {
+        <div class="audit-modal-overlay">
+            <div class="audit-modal">
+                <div class="modal-header">
+                    <div>
+                        <h2 class="modal-title">Detalle de Votos</h2>
+                        <p class="modal-subtitle">@proyectoActualNombre</p>
+                    </div>
+                    <button class="close-x-btn" @onclick="() => mostrandoVotos = false" title="Cerrar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="votes-stack">
+                        @foreach (var voto in VotosActuales)
+                        {
+                            <div class="vote-entry">
+                                <div class="vote-header">
+                                    <span class="top-badge">Top @voto.TopPosition</span>
+                                    <span class="vote-id">Votante: @voto.Voter.Substring(0, 8)</span>
+                                    <span class="vote-date">@voto.Date.ToString("g")</span>
+                                </div>
+                                <div class="hash-container">
+                                    <span class="hash-label">INTEGRITY HASH (SHA256)</span>
+                                    <code class="hash-code">@voto.Hash</code>
+                                </div>
+                                @if (!string.IsNullOrEmpty(voto.Comment))
+                                {
+                                    <p class="vote-comment">"@voto.Comment"</p>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string EventId { get; set; } = "";
+    private List<AuditRequestView> Solicitudes = new();
+    private List<VoteAuditView> VotosActuales = new();
+    private bool isLoading = true;
+    private bool mostrandoVotos = false;
+    private string proyectoActualNombre = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try {
+            var http = HttpClientFactory.CreateClient("API");
+            Solicitudes = await http.GetFromJsonAsync<List<AuditRequestView>>($"api/audit/dashboard/{EventId}") ?? new();
+        } finally {
+            isLoading = false;
+        }
+    }
+
+    private async Task CargarVotos(string projectId, string title)
+    {
+        mostrandoVotos = false;
+        VotosActuales = new();
+        proyectoActualNombre = title;
+        StateHasChanged();
+
+        var http = HttpClientFactory.CreateClient("API");
+    
+        var options = new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        var resultado = await http.GetFromJsonAsync<List<VoteAuditView>>(
+            $"api/audit/project/{projectId}", options);
+
+        if (resultado != null)
+        {
+            VotosActuales = resultado;
+        }
+
+        mostrandoVotos = true;
+        StateHasChanged();
+    }
+
+    public class AuditRequestView
+    {
+        [JsonPropertyName("projectId")]
+        public string ProjectId { get; set; } = "";
+        
+        [JsonPropertyName("projectTitle")]
+        public string ProjectTitle { get; set; } = "";
+        
+        [JsonPropertyName("requestedAt")]
+        public DateTime RequestedAt { get; set; }
+    }
+
+    public class VoteAuditView
+    {
+        [JsonPropertyName("voter")]
+        public string Voter { get; set; } = "";
+        
+        [JsonPropertyName("date")]
+        public DateTime Date { get; set; }
+        
+        [JsonPropertyName("hash")]
+        public string Hash { get; set; } = "";
+        
+        [JsonPropertyName("comment")]
+        public string? Comment { get; set; }
+        
+        [JsonPropertyName("topPosition")]
+        public int TopPosition { get; set; }
+    }
+}
