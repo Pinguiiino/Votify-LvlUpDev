@@ -19,45 +19,54 @@ public class DashboardController : ControllerBase
     [HttpGet("stats/{eventoId}")]
     public async Task<ActionResult<EventDashboardDto>> GetStats(string eventoId)
     {
-        var evento = await _context.Events.FirstOrDefaultAsync(e => e.Id == eventoId);
-        if (evento == null) return NotFound("Evento no encontrado");
-
-        int topN = evento.TopNProjectsAllowed > 0 ? evento.TopNProjectsAllowed : 3;
-
-        var proyectosInfo = await _context.Projects
-            .Where(p => p.EventId == eventoId)
-            .ToDictionaryAsync(p => p.Id, p => p.Title);
-
-        var categoriasInfo = await _context.Categories
-            .Where(c => c.EventId == eventoId)
-            .ToDictionaryAsync(c => c.Id, c => c.Name);
-
-        var projectIds = proyectosInfo.Keys.ToList();
-
-        var votosDelEvento = await _context.Votes
-            .Where(v => projectIds.Contains(v.VotedProjectId))
-            .ToListAsync();
-
-        var usuariosQueHanVotado = votosDelEvento.Select(v => v.UserId).Distinct().Count();
-
-        var ranking = votosDelEvento
-            .GroupBy(v => new { v.VotedProjectId, v.CategoryId })
-            .Select(g => new ProjectResultDto
-            {
-                Nombre = proyectosInfo.ContainsKey(g.Key.VotedProjectId) ? proyectosInfo[g.Key.VotedProjectId] : "Proyecto",
-                Categoria = categoriasInfo.ContainsKey(g.Key.CategoryId) ? categoriasInfo[g.Key.CategoryId] : "General",
-
-                Puntos = g.Sum(v => Math.Max(0, (topN - v.TopPosition + 1) * 10))
-            })
-            .Where(p => p.Puntos > 0)
-            .OrderByDescending(p => p.Puntos)
-            .ToList();
-
-        return Ok(new EventDashboardDto
+        try
         {
-            TotalVotantes = usuariosQueHanVotado == 0 ? 50 : usuariosQueHanVotado + 15,
-            VotosEmitidos = usuariosQueHanVotado,
-            Ranking = ranking
-        });
+            var evento = await _context.Events.FirstOrDefaultAsync(e => e.Id == eventoId);
+            if (evento == null) return NotFound("Evento no encontrado");
+
+            int topN = evento.TopNProjectsAllowed > 0 ? evento.TopNProjectsAllowed : 3;
+
+            var proyectosInfo = await _context.Projects
+                .Where(p => p.EventId == eventoId)
+                .ToDictionaryAsync(p => p.Id, p => p.Title);
+
+            var categoriasInfo = await _context.Categories
+                .Where(c => c.EventId == eventoId)
+                .ToDictionaryAsync(c => c.Id, c => c.Name);
+
+            var projectIds = proyectosInfo.Keys.ToList();
+
+            var votosDelEvento = await _context.Votes
+                .Where(v => projectIds.Contains(v.VotedProjectId))
+                .ToListAsync();
+
+            var usuariosQueHanVotado = votosDelEvento.Select(v => v.UserId).Distinct().Count();
+
+            var totalRegistrados = await _context.Usuarios.CountAsync();
+
+            var ranking = votosDelEvento
+                .GroupBy(v => new { v.VotedProjectId, v.CategoryId })
+                .Select(g => new ProjectResultDto
+                {
+                    Nombre = proyectosInfo.ContainsKey(g.Key.VotedProjectId) ? proyectosInfo[g.Key.VotedProjectId] : "Proyecto",
+                    Categoria = categoriasInfo.ContainsKey(g.Key.CategoryId) ? categoriasInfo[g.Key.CategoryId] : "General",
+
+                    Puntos = g.Sum(v => Math.Max(0, (topN - v.TopPosition + 1) * 10))
+                })
+                .Where(p => p.Puntos > 0)
+                .OrderByDescending(p => p.Puntos)
+                .ToList();
+
+            return Ok(new EventDashboardDto
+            {
+                TotalVotantes = totalRegistrados,
+                VotosEmitidos = usuariosQueHanVotado,
+                Ranking = ranking
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Error al obtener estadísticas: {ex.Message}");
+        }
     }
 }
