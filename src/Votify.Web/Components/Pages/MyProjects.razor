@@ -63,7 +63,7 @@
                                 @if (proyectosAuditados.Contains(proyecto.Id))
                                 {
                                     <div class="alert alert-info mt-2 p-1 text-center" style="font-size: 0.8rem;">
-                                        <i class="bi bi-envelope-check-fill"></i> Reclamación enviada al Organizador
+                                        <i class="bi bi-envelope-check-fill"></i> Reclamación enviada al Auditor
                                     </div>
                                 }
                                 else
@@ -251,7 +251,7 @@
     private async Task PedirAuditoria(ProjectDto proyecto)
     {
         bool confirmar = await JS.InvokeAsync<bool>("confirm",
-            $"¿Enviar reclamación de '{proyecto.Title}' al Organizador?");
+            $"¿Enviar reclamación de '{proyecto.Title}' al Auditor?");
 
         if (!confirmar) return;
 
@@ -267,7 +267,7 @@
             await http.GetFromJsonAsync<List<object>>($"api/audit/project/{proyecto.Id}");
 
             proyectosAuditados.Add(proyecto.Id);
-            await JS.InvokeVoidAsync("alert", "Enviado al Organizador.");
+            await JS.InvokeVoidAsync("alert", "Enviado al Auditor.");
         }
         catch
         {
