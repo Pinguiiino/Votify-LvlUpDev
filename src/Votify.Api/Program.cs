@@ -47,6 +47,10 @@ var app = builder.Build();
 
 app.UseCors("AllowBlazor");
 
+// Servir archivos estáticos (wwwroot/uploads/...) para que las imágenes
+// subidas sean accesibles desde el navegador.
+app.UseStaticFiles();
+
 app.MapGet("/", () => "API funcionando");
 
 app.MapControllers();

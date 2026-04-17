@@ -1,6 +1,7 @@
-﻿namespace Votify.Domain.CategoryFolder;
+namespace Votify.Domain.CategoryFolder;
 
 public interface ICategoryRepository
 {
     Task<List<Category>> GetByEventAsync(string eventId);
+    Task<Category?> GetByIdAsync(string categoryId);
 }

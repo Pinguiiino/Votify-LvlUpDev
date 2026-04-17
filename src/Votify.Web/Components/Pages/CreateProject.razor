@@ -1,4 +1,4 @@
-﻿@page "/event/{EventId}/create-project"
+@page "/event/{EventId}/create-project"
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using Votify.Web.Helpers
@@ -52,6 +52,30 @@
                 <label>Descripción</label>
                 <InputTextArea class="form-control" rows="3" placeholder="¿De qué trata este proyecto?"
                                @bind-Value="projectModel.Description" />
+            </div>
+
+            <div class="form-group">
+                <label>Imagen del proyecto</label>
+                <InputFile class="form-control" OnChange="OnImagenSeleccionada" accept="image/*" />
+                @if (subiendoImagen)
+                {
+                    <div style="font-size: 0.85rem; color: #6b7280; margin-top: 0.25rem;">Subiendo imagen...</div>
+                }
+                @if (errorImagen != null)
+                {
+                    <div class="validation-error" style="color: #dc2626; font-size: 0.85rem; margin-top: 0.25rem;">
+                        @errorImagen
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(projectModel.ImageUrl))
+                {
+                    <div style="margin-top: 0.5rem;">
+                        <img src="@(apiBaseUrl + projectModel.ImageUrl)" alt="Vista previa"
+                             style="max-width: 200px; max-height: 150px; border-radius: 0.5rem; border: 1px solid #e5e7eb;" />
+                        <button type="button" class="btn-delete" style="margin-left: 0.5rem;"
+                                @onclick="() => projectModel.ImageUrl = null">Quitar</button>
+                    </div>
+                }
             </div>
 
             <div class="form-group">
@@ -245,6 +269,10 @@
     private List<string> tiposMaterial = new();
     private List<string> tiposProyecto = new();
 
+    private bool subiendoImagen = false;
+    private string? errorImagen = null;
+    private string apiBaseUrl = string.Empty;
+
     protected override async Task OnInitializedAsync()
     {
         if (string.IsNullOrWhiteSpace(EventId)) return;
@@ -255,6 +283,7 @@
         try
         {
             var http = HttpClientFactory.CreateClient("API");
+            apiBaseUrl = http.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
 
             tiposMaterial = await http.GetFromJsonAsync<List<string>>("/api/projects/material-types") ?? new();
             tiposProyecto = await http.GetFromJsonAsync<List<string>>("/api/projects/project-types") ?? new();
@@ -271,6 +300,56 @@
         {
             cargandoCategorias = false;
         }
+    }
+
+    private async Task OnImagenSeleccionada(InputFileChangeEventArgs e)
+    {
+        errorImagen = null;
+        var archivo = e.File;
+        if (archivo == null) return;
+
+        const long maxBytes = 5 * 1024 * 1024; // 5 MB
+        if (archivo.Size > maxBytes)
+        {
+            errorImagen = "La imagen excede el tamaño máximo de 5 MB.";
+            return;
+        }
+
+        try
+        {
+            subiendoImagen = true;
+            var http = HttpClientFactory.CreateClient("API");
+
+            using var content = new MultipartFormDataContent();
+            var streamContent = new StreamContent(archivo.OpenReadStream(maxBytes));
+            streamContent.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue(archivo.ContentType);
+            content.Add(streamContent, "file", archivo.Name);
+
+            var respuesta = await http.PostAsync("/api/projects/upload-image", content);
+            if (respuesta.IsSuccessStatusCode)
+            {
+                var json = await respuesta.Content.ReadFromJsonAsync<UploadResponse>();
+                projectModel.ImageUrl = json?.Url;
+            }
+            else
+            {
+                errorImagen = await respuesta.Content.ReadAsStringAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorImagen = $"No se pudo subir la imagen: {ex.Message}";
+        }
+        finally
+        {
+            subiendoImagen = false;
+        }
+    }
+
+    private class UploadResponse
+    {
+        public string? Url { get; set; }
     }
 
     private void ToggleCategoria(string catId)
@@ -338,6 +417,7 @@
                 projectModel.EventId,
                 projectModel.Description,
                 projectModel.ProjectType,
+                projectModel.ImageUrl,
                 CategoryIds = categoriasSeleccionadas.ToList(),
                 Materials = projectModel.Materials.Select(m => new
                 {
@@ -379,6 +459,7 @@
 
         public string Description { get; set; } = string.Empty;
         public string ProjectType { get; set; } = "AI";
+        public string? ImageUrl { get; set; }
         public List<MaterialDraft> Materials { get; set; } = new();
     }
 

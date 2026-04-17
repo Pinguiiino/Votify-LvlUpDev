@@ -292,8 +292,10 @@
     {
         var http = HttpClientFactory.CreateClient("API");
 
-        var evento = await http.GetFromJsonAsync<EventDetailDto>($"api/events/{EventId}");
-        if (evento != null) TopN = evento.TopNProjectsAllowed;
+        // El TopN ahora pertenece a la categoría, no al evento
+        var cats = await http.GetFromJsonAsync<List<CategorySimpleDto>>($"api/categories/by-event/{EventId}");
+        var categoriaActual = cats?.FirstOrDefault(c => c.Id == CategoryId);
+        if (categoriaActual != null) TopN = categoriaActual.TopNProjectsAllowed;
 
         try
         {
@@ -400,10 +402,12 @@
         public bool     IsActive  { get; set; }
     }
 
-    public class EventDetailDto
+    public class CategorySimpleDto
     {
         public string Id                  { get; set; } = string.Empty;
         public string Name                { get; set; } = string.Empty;
+        public string? Description        { get; set; }
+        public bool   AllowSelfVoting     { get; set; }
         public int    TopNProjectsAllowed { get; set; }
     }
 

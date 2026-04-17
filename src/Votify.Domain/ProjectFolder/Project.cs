@@ -40,18 +40,20 @@ public abstract class Project
     public string Title { get; set; }
     public string? Description { get; set; }
     public string EventId { get; set; }
+    public string? ImageUrl { get; set; }
 
     public virtual List<ProjectCategory> ProjectCategories { get; set; } = new();
     public virtual List<ProjectMaterial> Materials { get; set; } = new();
 
     protected Project() { }
 
-    protected Project(string title, string eventId, string? description = null)
+    protected Project(string title, string eventId, string? description = null, string? imageUrl = null)
     {
         Id = Guid.NewGuid().ToString();
         Title = title;
         EventId = eventId;
         Description = description;
+        ImageUrl = imageUrl;
     }
 
     public abstract string ProjectType();

@@ -48,7 +48,7 @@
                                   d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z" />
                             <path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" />
                         </svg>
-                        Máx. @evento.MaxProjects proyectos · Top @evento.TopNProjectsAllowed
+                        Máx. @evento.MaxProjects proyectos
                     </span>
                 </div>
             </div>
@@ -120,6 +120,7 @@
                                     {
                                         <span class="pill pill-amber">@cat.Prizes.Count premio@(cat.Prizes.Count != 1 ? "s" : "")</span>
                                     }
+                                    <span class="pill pill-blue">Top @cat.TopNProjectsAllowed</span>
                                     @if (cat.AllowSelfVoting)
                                     {
                                         <span class="pill pill-green">Autovoto permitido</span>
@@ -244,7 +245,6 @@
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public int MaxProjects { get; set; }
-        public int TopNProjectsAllowed { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public string Modality { get; set; } = string.Empty;
@@ -257,6 +257,7 @@
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public bool AllowSelfVoting { get; set; }
+        public int TopNProjectsAllowed { get; set; }
         public List<CriterionDetailDto> Criteria { get; set; } = new();
         public List<PrizeDetailDto> Prizes { get; set; } = new();
     }

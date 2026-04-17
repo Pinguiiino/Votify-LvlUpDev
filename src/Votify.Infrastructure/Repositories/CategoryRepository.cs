@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Votify.Domain.CategoryFolder;
 
 namespace Votify.Infrastructure.Repositories;
@@ -17,4 +17,9 @@ public class CategoryRepository : ICategoryRepository
             .Where(c => c.EventId == eventId)
             .AsNoTracking()
             .ToListAsync();
+
+    public async Task<Category?> GetByIdAsync(string categoryId)
+        => await _context.Categories
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == categoryId);
 }

@@ -1,4 +1,4 @@
-﻿using Votify.Domain.Factory;
+using Votify.Domain.Factory;
 
 namespace Votify.Domain.ProjectFolder;
 
@@ -13,7 +13,8 @@ public class ProjectService
 
     public async Task<Project> CreateProjectAsync(
         string title, string eventId, string? description,
-        string projectType, List<string> categoryIds,
+        string projectType, string? imageUrl,
+        List<string> categoryIds,
         List<(MaterialType type, string url, string? desc)> materials)
     {
         ProjectCreator creator = projectType switch
@@ -29,7 +30,7 @@ public class ProjectService
             throw new ArgumentException(
                 $"Ya existe un proyecto con el título \"{title}\" en este evento. Elige otro nombre.");
 
-        var project = creator.Create(title, eventId, description);
+        var project = creator.Create(title, eventId, description, imageUrl);
 
         foreach (var (type, url, desc) in materials)
             project.Materials.Add(new ProjectMaterial(project.Id, type, url, desc));

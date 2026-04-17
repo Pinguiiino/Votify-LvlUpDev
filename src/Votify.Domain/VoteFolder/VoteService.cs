@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Votify.Domain.EventFolder;
+using Votify.Domain.CategoryFolder;
 using Votify.Domain.Factory;
 
 namespace Votify.Domain.VoteFolder
@@ -11,29 +11,32 @@ namespace Votify.Domain.VoteFolder
     {
         private readonly IVoteRepository _repository;
         private readonly IVotingSessionRepository _sessionRepo;
-        private readonly IEventRepository _eventRepo;
+        private readonly ICategoryRepository _categoryRepo;
 
-        public VoteService(IVoteRepository repository, IVotingSessionRepository sessionRepo, IEventRepository eventRepo)
+        public VoteService(IVoteRepository repository,
+                           IVotingSessionRepository sessionRepo,
+                           ICategoryRepository categoryRepo)
         {
             _repository = repository;
             _sessionRepo = sessionRepo;
-            _eventRepo = eventRepo;
+            _categoryRepo = categoryRepo;
         }
 
-        // AÑADIDO: int topPosition como parámetro para saber qué posición del ranking le estamos dando
+        // topPosition: posición del ranking (1 = mejor proyecto, 2 = siguiente, etc.)
         public async Task<Vote> CastVoteAsync(string projectId, string categoryId, string eventId, string userId, int topPosition)
         {
             var session = await _sessionRepo.GetActiveSessionByEventAsync(eventId);
             if (session == null)
                 throw new InvalidOperationException("No hay una sesión de votación abierta.");
 
-            var eventData = await _eventRepo.GetByIdAsync(eventId);
-            if (eventData == null)
-                throw new InvalidOperationException("Evento no encontrado.");
+            // El límite de votos depende de la categoría (ya no del evento)
+            var category = await _categoryRepo.GetByIdAsync(categoryId);
+            if (category == null)
+                throw new InvalidOperationException("Categoría no encontrada.");
 
             var currentVotes = await _repository.CountVotesByUserInCategoryAsync(userId, categoryId);
-            if (currentVotes >= eventData.TopNProjectsAllowed)
-                throw new InvalidOperationException("Límite de votos alcanzado.");
+            if (currentVotes >= category.TopNProjectsAllowed)
+                throw new InvalidOperationException("Límite de votos alcanzado en esta categoría.");
 
             var alreadyVoted = await _repository.HasUserVotedForProjectAsync(userId, projectId);
             if (alreadyVoted)
@@ -41,7 +44,6 @@ namespace Votify.Domain.VoteFolder
 
             var factory = new PublicVoteCreator();
 
-            // CORREGIDO: Pasamos topPosition (un int) en lugar del 1.0 que daba error
             var vote = factory.Create(session.Id, projectId, userId, categoryId, topPosition);
 
             return await _repository.AddAsync(vote);

@@ -1,4 +1,4 @@
-﻿.mainproject-container {
+.mainproject-container {
     max-width: 1000px;
     margin: 0 auto;
     padding: 2rem 1rem;
@@ -55,6 +55,16 @@
     justify-content: center;
     margin-right: 1.25rem;
     flex-shrink: 0;
+}
+
+.card-image {
+    width: 5rem;
+    height: 5rem;
+    border-radius: 0.75rem;
+    object-fit: cover;
+    margin-right: 1.25rem;
+    flex-shrink: 0;
+    border: 1px solid #e5e7eb;
 }
 
 .card-info {

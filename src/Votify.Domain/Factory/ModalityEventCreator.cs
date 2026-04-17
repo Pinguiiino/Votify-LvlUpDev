@@ -14,8 +14,8 @@ namespace Votify.Domain.Factory
 
         public override Event Create(string name, int maxProjects,
                                      DateTime startDate, DateTime endDate,
-                                     int topNProjectsAllowed, string? description = null)
-            => new ModalityEvent(name, maxProjects, startDate, endDate, this.Modality, topNProjectsAllowed, description);
+                                     string? description = null, string? imageUrl = null)
+            => new ModalityEvent(name, maxProjects, startDate, endDate, this.Modality, description, imageUrl);
     }
 }
 

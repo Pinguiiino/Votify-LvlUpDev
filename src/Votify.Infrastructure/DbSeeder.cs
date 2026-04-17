@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Votify.Domain.CategoryFolder;
 using Votify.Domain.EventFolder;
 using Votify.Domain.Factory;
@@ -49,7 +49,6 @@ public static class DbSeeder
             maxProjects: 30,
             startDate: new DateTime(2026, 4, 10, 0, 0, 0, DateTimeKind.Utc),
             endDate: new DateTime(2026, 4, 12, 0, 0, 0, DateTimeKind.Utc),
-            topNProjectsAllowed: 3,
             description: "El hackathon más grande de la UPC.");
 
         EventCreator hybridCreator = new ModalityEventCreator("Híbrido");
@@ -59,7 +58,6 @@ public static class DbSeeder
             maxProjects: 20,
             startDate: new DateTime(2026, 5, 22, 0, 0, 0, DateTimeKind.Utc),
             endDate: new DateTime(2026, 5, 23, 0, 0, 0, DateTimeKind.Utc),
-            topNProjectsAllowed: 2,
             description: "Feria de innovación anual de la FIB.");
 
         context.Events.AddRange(hackUPC, fibFair);
@@ -68,7 +66,7 @@ public static class DbSeeder
         // ── 3. CATEGORÍAS + CRITERIOS + PREMIOS ───────────────────────────
 
         // HackUPC — Proyectos de IA
-        var catIA = new Category(hackUPC.Id, "Proyectos de IA", "Proyectos que aplican IA o machine learning.");
+        var catIA = new Category(hackUPC.Id, "Proyectos de IA", "Proyectos que aplican IA o machine learning.", topNProjectsAllowed: 3);
         var crIA1 = new Criterion(catIA.Id, "Innovación técnica", CriterionType.Numeric, 0.65, "Nivel de novedad y complejidad técnica.");
         var crIA2 = new Criterion(catIA.Id, "Impacto potencial", CriterionType.Numeric, 0.35, "Alcance e impacto esperado del proyecto.");
         var prIA1 = new Prize(catIA.Id, 1, "Premio IA — 1er lugar", "1.000€ + mentoría de 6 meses en startup de IA.");
@@ -79,7 +77,7 @@ public static class DbSeeder
         catIA.Prizes.Add(prIA1);
 
         // HackUPC — Proyectos Sociales
-        var catSocial = new Category(hackUPC.Id, "Proyectos Sociales", "Proyectos con impacto social directo.");
+        var catSocial = new Category(hackUPC.Id, "Proyectos Sociales", "Proyectos con impacto social directo.", topNProjectsAllowed: 3);
         var crSoc1 = new Criterion(catSocial.Id, "Impacto social", CriterionType.Numeric, 0.50, "Mejora real en la vida de personas.");
         var crSoc2 = new Criterion(catSocial.Id, "Viabilidad", CriterionType.Numeric, 0.50, "Posibilidad de implantación real.");
         var prSoc1 = new Prize(catSocial.Id, 1, "Premio Social — 1er lugar", "500€ + acceso a incubadora universitaria.");
@@ -89,7 +87,7 @@ public static class DbSeeder
         catSocial.Prizes.Add(prSoc1);
 
         // HackUPC — Sostenibilidad
-        var catSost = new Category(hackUPC.Id, "Sostenibilidad", "Proyectos enfocados en medioambiente y economía circular.");
+        var catSost = new Category(hackUPC.Id, "Sostenibilidad", "Proyectos enfocados en medioambiente y economía circular.", topNProjectsAllowed: 3);
         var crSost1 = new Criterion(catSost.Id, "Reducción de huella", CriterionType.Numeric, 0.55, "Impacto medioambiental medible.");
         var crSost2 = new Criterion(catSost.Id, "Escalabilidad", CriterionType.Numeric, 0.45, "Capacidad de crecer y replicarse.");
         var prSost1 = new Prize(catSost.Id, 1, "Premio Sostenibilidad — 1er lugar", "750€ + presentación en COP31.");
@@ -99,7 +97,7 @@ public static class DbSeeder
         catSost.Prizes.Add(prSost1);
 
         // FIB Fair — Startups Tecnológicas
-        var catStartup = new Category(fibFair.Id, "Startups Tecnológicas", "Proyectos con modelo de negocio escalable y base tecnológica.");
+        var catStartup = new Category(fibFair.Id, "Startups Tecnológicas", "Proyectos con modelo de negocio escalable y base tecnológica.", topNProjectsAllowed: 2);
         var crStu1 = new Criterion(catStartup.Id, "Modelo de negocio", CriterionType.Numeric, 0.60, "Claridad y solidez del plan de negocio.");
         var crStu2 = new Criterion(catStartup.Id, "Tecnología base", CriterionType.Numeric, 0.40, "Madurez y diferenciación tecnológica.");
         var prStu1 = new Prize(catStartup.Id, 1, "Premio Startup — 1er lugar", "2.000€ + ronda de presentaciones a inversores.");
@@ -109,7 +107,7 @@ public static class DbSeeder
         catStartup.Prizes.Add(prStu1);
 
         // FIB Fair — Impacto Social
-        var catImpacto = new Category(fibFair.Id, "Impacto Social", "Proyectos que priorizan el bienestar social.");
+        var catImpacto = new Category(fibFair.Id, "Impacto Social", "Proyectos que priorizan el bienestar social.", topNProjectsAllowed: 2);
         var crImp1 = new Criterion(catImpacto.Id, "Alcance social", CriterionType.Numeric, 0.45, "Número de personas beneficiadas.");
         var crImp2 = new Criterion(catImpacto.Id, "Sostenibilidad", CriterionType.Numeric, 0.55, "Continuidad del proyecto en el tiempo.");
         var prImp1 = new Prize(catImpacto.Id, 1, "Premio Impacto — 1er lugar", "1.000€ + colaboración con ONG partner.");

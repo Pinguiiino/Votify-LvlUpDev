@@ -1,4 +1,4 @@
-﻿using Votify.Domain.CategoryFolder;
+using Votify.Domain.CategoryFolder;
 using Votify.Domain.Factory;
 using Votify.Domain.VoteFolder;
 
@@ -22,8 +22,9 @@ public class EventService
 
     public async Task<Event> CreateEventAsync(
         string name, string modality, int maxProjects,
-        DateTime startDate, DateTime endDate, int topNProjectsAllowed,
+        DateTime startDate, DateTime endDate,
         string? description,
+        string? imageUrl,
         List<CreateCategoryData> categoriasData)
     {
         bool nombreOcupado = await _repository.ExistsByNameAsync(name);
@@ -34,7 +35,7 @@ public class EventService
         }
 
         var creator = new ModalityEventCreator(modality);
-        var evento = creator.Create(name, maxProjects, startDate, endDate, topNProjectsAllowed, description);
+        var evento = creator.Create(name, maxProjects, startDate, endDate, description, imageUrl);
 
         var votingSession = new VotingSession(
             eventId: evento.Id,
@@ -59,11 +60,14 @@ public class EventService
                 throw new ArgumentException($"El evento no puede tener dos categorías con el mismo nombre: \"{nombreLimpio}\".");
             }
 
+            var topN = catData.TopNProjectsAllowed > 0 ? catData.TopNProjectsAllowed : 3;
+
             var categoria = new Category(
                 eventId: evento.Id,
                 name: nombreLimpio,
                 description: catData.Description,
-                allowSelfVoting: catData.AllowSelfVoting
+                allowSelfVoting: catData.AllowSelfVoting,
+                topNProjectsAllowed: topN
             );
 
             foreach (var crData in catData.Criteria)
@@ -91,6 +95,7 @@ public class CreateCategoryData
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public bool AllowSelfVoting { get; set; }
+    public int TopNProjectsAllowed { get; set; } = 3;
     public List<CreateCriterionData> Criteria { get; set; } = new();
     public List<CreatePrizeData> Prizes { get; set; } = new();
 }

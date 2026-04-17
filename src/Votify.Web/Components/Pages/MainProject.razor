@@ -1,4 +1,4 @@
-﻿@page "/event/{EventId}/categories/{CategoryId}/projects"
+@page "/event/{EventId}/categories/{CategoryId}/projects"
 @rendermode InteractiveServer
 @using Votify.Web.Helpers
 @inject NavigationManager Navigation
@@ -62,11 +62,18 @@
             @foreach (var proyecto in ProyectosSubidos)
             {
                 <div class="project-card" @onclick="() => AbrirPopup(proyecto)">
-                    <div class="icon-container">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31z" />
-                        </svg>
-                    </div>
+                    @if (!string.IsNullOrWhiteSpace(proyecto.ImageUrl))
+                    {
+                        <img src="@(apiBaseUrl + proyecto.ImageUrl)" alt="@proyecto.Title" class="card-image" />
+                    }
+                    else
+                    {
+                        <div class="icon-container">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31z" />
+                            </svg>
+                        </div>
+                    }
                     <div class="card-info">
                         <h2 class="card-title">@proyecto.Title</h2>
                         <p class="card-description">@proyecto.Description</p>
@@ -216,6 +223,7 @@
     private bool haVotado = false;
     private int maxVotosPermitidos = 1;
     private string _sessionUserId = string.Empty;
+    private string apiBaseUrl = string.Empty;
 
     private string tabActiva = "info";
     private bool cargandoComentarios = false;
@@ -225,19 +233,20 @@
     protected override async Task OnInitializedAsync()
     {
         var http = HttpClientFactory.CreateClient("API");
+        apiBaseUrl = http.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
 
         var cats = await http.GetFromJsonAsync<List<CategorySimpleDto>>($"api/categories/by-event/{EventId}");
-        categoriaNombre = cats?.FirstOrDefault(c => c.Id == CategoryId)?.Name ?? "la categoría";
+        var categoriaActual = cats?.FirstOrDefault(c => c.Id == CategoryId);
+        categoriaNombre = categoriaActual?.Name ?? "la categoría";
 
         ProyectosSubidos = await http.GetFromJsonAsync<List<ProjectDto>>($"api/projects/by-category/{CategoryId}");
-        var evento = await http.GetFromJsonAsync<EventDetailDto>($"api/events/{EventId}");
-        
+
         try
         {
             var sesion = await http.GetFromJsonAsync<VotingSessionDto>($"api/votingsessions/active/{EventId}");
-            if (sesion != null && evento != null)
+            if (sesion != null && categoriaActual != null)
             {
-                maxVotosPermitidos = evento.TopNProjectsAllowed;
+                maxVotosPermitidos = categoriaActual.TopNProjectsAllowed;
                 votacionActiva = sesion.IsActive;
             }
         }
@@ -321,6 +330,7 @@
         public string Title { get; set; } = "";
         public string? Description { get; set; }
         public string ProjectType { get; set; } = "";
+        public string? ImageUrl { get; set; }
         public List<MaterialDto> Materials { get; set; } = new();
     }
     public class MaterialDto
@@ -330,8 +340,14 @@
         public string Url { get; set; } = "";
         public string? Description { get; set; }
     }
-    public class CategorySimpleDto { public string Id { get; set; } = ""; public string Name { get; set; } = ""; }
-    public class EventDetailDto { public int TopNProjectsAllowed { get; set; } }
+    public class CategorySimpleDto
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string? Description { get; set; }
+        public bool AllowSelfVoting { get; set; }
+        public int TopNProjectsAllowed { get; set; }
+    }
     public class VotingSessionDto { public string Id { get; set; } = ""; public bool IsActive { get; set; } }
     public class VoteResultDto { public string VotedProjectId { get; set; } = ""; public int TopPosition { get; set; } }
 

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Votify.Domain.EventFolder;
 
 namespace Votify.Api.Controllers;
@@ -8,10 +8,12 @@ namespace Votify.Api.Controllers;
 public class EventsController : ControllerBase
 {
     private readonly EventService _service;
+    private readonly IWebHostEnvironment _env;
 
-    public EventsController(EventService service)
+    public EventsController(EventService service, IWebHostEnvironment env)
     {
         _service = service;
+        _env = env;
     }
 
     [HttpGet]
@@ -52,6 +54,7 @@ public class EventsController : ControllerBase
                 Name = c.Name,
                 Description = c.Description,
                 AllowSelfVoting = c.AllowSelfVoting,
+                TopNProjectsAllowed = c.TopNProjectsAllowed,
                 Criteria = c.Criteria.Select(cr => new CreateCriterionData
                 {
                     Name = cr.Name,
@@ -69,8 +72,8 @@ public class EventsController : ControllerBase
 
             var evento = await _service.CreateEventAsync(
                 dto.Name, dto.Modality, dto.MaxProjects,
-                startUtc, endUtc, dto.TopNProjectsAllowed,
-                dto.Description, categoriasData);
+                startUtc, endUtc,
+                dto.Description, dto.ImageUrl, categoriasData);
 
             return Ok(new { message = "Evento creado con éxito", id = evento.Id });
         }
@@ -78,6 +81,33 @@ public class EventsController : ControllerBase
         {
             return BadRequest(ex.Message);
         }
+    }
+
+    // ── Subida de imagen ────────────────────────────────────────────────
+    // Guarda el archivo en wwwroot/uploads/events/ y devuelve la URL relativa.
+    [HttpPost("upload-image")]
+    [RequestSizeLimit(5 * 1024 * 1024)] // 5 MB
+    public async Task<IActionResult> UploadImage(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest("No se ha proporcionado ningún archivo.");
+
+        var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!allowed.Contains(ext))
+            return BadRequest("Formato no permitido. Usa jpg, png, webp o gif.");
+
+        var folder = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads", "events");
+        Directory.CreateDirectory(folder);
+
+        var fileName = $"{Guid.NewGuid()}{ext}";
+        var fullPath = Path.Combine(folder, fileName);
+
+        using (var stream = new FileStream(fullPath, FileMode.Create))
+            await file.CopyToAsync(stream);
+
+        var url = $"/uploads/events/{fileName}";
+        return Ok(new { url });
     }
 
     private static object ToDto(Event e, List<Votify.Domain.CategoryFolder.Category> categorias) => new
@@ -88,7 +118,7 @@ public class EventsController : ControllerBase
         e.MaxProjects,
         e.StartDate,
         e.EndDate,
-        e.TopNProjectsAllowed,
+        e.ImageUrl,
         Modality = e.Modality(),
         Categories = categorias.Select(c => new
         {
@@ -96,6 +126,7 @@ public class EventsController : ControllerBase
             c.Name,
             c.Description,
             c.AllowSelfVoting,
+            c.TopNProjectsAllowed,
             Criteria = c.Criteria.Select(cr => new { cr.Id, cr.Name, cr.Type, cr.Weight, cr.Description }),
             Prizes = c.Prizes.Select(p => new { p.Id, p.Position, p.Name, p.Description })
         })
@@ -111,7 +142,7 @@ public class CreateEventDto
     public int MaxProjects { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
-    public int TopNProjectsAllowed { get; set; }
+    public string? ImageUrl { get; set; }
     public List<CategoryDto> Categories { get; set; } = new();
 }
 
@@ -120,6 +151,7 @@ public class CategoryDto
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public bool AllowSelfVoting { get; set; }
+    public int TopNProjectsAllowed { get; set; } = 3;
     public List<CriterionDto> Criteria { get; set; } = new();
     public List<PrizeDto> Prizes { get; set; } = new();
 }

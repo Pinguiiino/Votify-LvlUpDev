@@ -6,14 +6,14 @@ namespace Votify.Domain.Factory
     public abstract class EventCreator
     {
         public abstract Event Create(string name, int maxProjects,
-                                     DateTime startDate, DateTime endDate, int topNProjectsAllowed,
-                                     string? description = null);
+                                     DateTime startDate, DateTime endDate,
+                                     string? description = null, string? imageUrl = null);
 
         public string BuildSummary(string name, int maxProjects,
-                                   DateTime startDate, DateTime endDate, int topNProjectsAllowed,
-                                   string? description = null)
+                                   DateTime startDate, DateTime endDate,
+                                   string? description = null, string? imageUrl = null)
         {
-            Event ev = Create(name, maxProjects, startDate, endDate, topNProjectsAllowed, description);
+            Event ev = Create(name, maxProjects, startDate, endDate, description, imageUrl);
             return ev.Summary();
         }
     }

@@ -4,15 +4,9 @@ namespace Votify.Domain.ProjectFolder
     {
         public SustainabilityProject() { }
 
-        public SustainabilityProject(string title, string eventId, string? description = null)
-            : base(title, eventId, description) { }
+        public SustainabilityProject(string title, string eventId, string? description = null, string? imageUrl = null)
+            : base(title, eventId, description, imageUrl) { }
 
         public override string ProjectType() => "Sustainability";
     }
 }
-
-
-
-
-
-

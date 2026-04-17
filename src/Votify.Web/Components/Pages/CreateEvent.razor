@@ -50,6 +50,30 @@
             </div>
 
             <div class="form-group">
+                <label>Imagen del evento</label>
+                <InputFile class="form-control" OnChange="OnImagenSeleccionada" accept="image/*" />
+                @if (subiendoImagen)
+                {
+                    <div style="font-size: 0.85rem; color: #6b7280; margin-top: 0.25rem;">Subiendo imagen...</div>
+                }
+                @if (errorImagen != null)
+                {
+                    <div class="validation-error" style="color: #dc2626; font-size: 0.85rem; margin-top: 0.25rem;">
+                        @errorImagen
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(eventModel.ImageUrl))
+                {
+                    <div style="margin-top: 0.5rem;">
+                        <img src="@(apiBaseUrl + eventModel.ImageUrl)" alt="Vista previa"
+                             style="max-width: 200px; max-height: 150px; border-radius: 0.5rem; border: 1px solid #e5e7eb;" />
+                        <button type="button" class="btn-delete" style="margin-left: 0.5rem;"
+                                @onclick="() => eventModel.ImageUrl = null">Quitar</button>
+                    </div>
+                }
+            </div>
+
+            <div class="form-group">
                 <label>Modalidad *</label>
                 <InputText class="form-control" placeholder="Ej: Presencial, Online, Híbrido"
                            @bind-Value="eventModel.Modality" />
@@ -60,12 +84,6 @@
                 <label>Número máximo de proyectos *</label>
                 <InputNumber class="form-control" placeholder="20" @bind-Value="eventModel.MaxProjects" />
                 <ValidationMessage For="@(() => eventModel.MaxProjects)" />
-            </div>
-
-            <div class="form-group">
-                <label>Top N de proyectos a votar *</label>
-                <InputNumber class="form-control" placeholder="3" @bind-Value="eventModel.TopNProjectsAllowed" />
-                <ValidationMessage For="@(() => eventModel.TopNProjectsAllowed)" />
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
@@ -140,6 +158,13 @@
                             <label style="font-size: 0.85rem;">
                                 <input type="checkbox" @bind="nuevaCategoria.AllowSelfVoting" /> Permitir que los participantes voten en la categoría en la cual suben proyectos
                             </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label style="font-size: 0.85rem; font-weight: 600;">Top N proyectos que cada votante puede elegir</label>
+                            <input type="number" class="form-control form-control-sm" min="1" max="100"
+                                   @bind="nuevaCategoria.TopNProjectsAllowed"
+                                   style="max-width: 8rem;" />
                         </div>
 
                         @* ── Criterios ── *@
@@ -234,6 +259,11 @@
     private bool mostrandoFormularioCategoria = false;
     private string? errorNombreRepetido = null;
 
+    private bool subiendoImagen = false;
+    private string? errorImagen = null;
+    // Base URL de la API para pintar la preview (las URLs que devuelve la API son relativas: /uploads/...)
+    private string apiBaseUrl = string.Empty;
+
     private const int DefaultMaxProjects = 20;
 
     protected override void OnInitialized()
@@ -241,6 +271,62 @@
         eventModel.MaxProjects = DefaultMaxProjects;
         eventModel.StartDate = DateTime.Today;
         eventModel.EndDate = DateTime.Today.AddDays(1);
+
+        // Recuperamos la base address del HttpClient configurado para que la <img src> apunte a la API.
+        var http = HttpClientFactory.CreateClient("API");
+        apiBaseUrl = http.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
+    }
+
+    private async Task OnImagenSeleccionada(InputFileChangeEventArgs e)
+    {
+        errorImagen = null;
+        var archivo = e.File;
+        if (archivo == null) return;
+
+        // Validaciones en cliente
+        const long maxBytes = 5 * 1024 * 1024; // 5 MB
+        if (archivo.Size > maxBytes)
+        {
+            errorImagen = "La imagen excede el tamaño máximo de 5 MB.";
+            return;
+        }
+
+        try
+        {
+            subiendoImagen = true;
+            var http = HttpClientFactory.CreateClient("API");
+
+            using var content = new MultipartFormDataContent();
+            // Stream del archivo (límite de lectura razonable)
+            var streamContent = new StreamContent(archivo.OpenReadStream(maxBytes));
+            streamContent.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue(archivo.ContentType);
+            content.Add(streamContent, "file", archivo.Name);
+
+            var respuesta = await http.PostAsync("/api/events/upload-image", content);
+            if (respuesta.IsSuccessStatusCode)
+            {
+                var json = await respuesta.Content.ReadFromJsonAsync<UploadResponse>();
+                eventModel.ImageUrl = json?.Url;
+            }
+            else
+            {
+                errorImagen = await respuesta.Content.ReadAsStringAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorImagen = $"No se pudo subir la imagen: {ex.Message}";
+        }
+        finally
+        {
+            subiendoImagen = false;
+        }
+    }
+
+    private class UploadResponse
+    {
+        public string? Url { get; set; }
     }
 
     private void MostrarFormulario()
@@ -316,14 +402,15 @@
                 eventModel.Description,
                 eventModel.Modality,
                 eventModel.MaxProjects,
-                eventModel.TopNProjectsAllowed,
                 StartDate = eventModel.StartDate!.Value,
                 EndDate = eventModel.EndDate!.Value,
+                eventModel.ImageUrl,
                 Categories = eventModel.Categories.Select(c => new
                 {
                     c.Name,
                     c.Description,
                     c.AllowSelfVoting,
+                    c.TopNProjectsAllowed,
                     Criteria = c.Criteria.Select(cr => new { cr.Name, cr.Type, cr.Weight, cr.Description }),
                     Prizes = c.Prizes.Select(p => new { p.Position, p.Name, p.Description })
                 })
@@ -365,14 +452,13 @@
         [Range(1, 1000)]
         public int MaxProjects { get; set; }
 
-        [Range(1, 100, ErrorMessage = "Debe permitir votar al menos 1 proyecto")]
-        public int TopNProjectsAllowed { get; set; } = 3;
-
         [Required(ErrorMessage = "La fecha de inicio es obligatoria.")]
         public DateTime? StartDate { get; set; }
 
         [Required(ErrorMessage = "La fecha de fin es obligatoria.")]
         public DateTime? EndDate { get; set; }
+
+        public string? ImageUrl { get; set; }
 
         public List<CategoryDraft> Categories { get; set; } = new();
 
@@ -395,6 +481,7 @@
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public bool AllowSelfVoting { get; set; } = false;
+        public int TopNProjectsAllowed { get; set; } = 3;
         public List<CriterionDraft> Criteria { get; set; } = new();
         public List<PrizeDraft> Prizes { get; set; } = new();
     }

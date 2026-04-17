@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Votify.Domain.CategoryFolder;
 
 namespace Votify.Api.Controllers;
@@ -22,7 +22,9 @@ public class CategoriesController : ControllerBase
         {
             Id = c.Id,
             Name = c.Name,
-            Description = c.Description
+            Description = c.Description,
+            AllowSelfVoting = c.AllowSelfVoting,
+            TopNProjectsAllowed = c.TopNProjectsAllowed
         }));
     }
 }
@@ -32,4 +34,6 @@ public class CategorySimpleDto
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public bool AllowSelfVoting { get; set; }
+    public int TopNProjectsAllowed { get; set; }
 }

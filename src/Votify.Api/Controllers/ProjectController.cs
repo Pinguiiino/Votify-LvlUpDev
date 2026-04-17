@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Votify.Domain.ProjectFolder;
 
 namespace Votify.Api.Controllers
@@ -8,10 +8,12 @@ namespace Votify.Api.Controllers
     public class ProjectsController : ControllerBase
     {
         private readonly ProjectService _service;
+        private readonly IWebHostEnvironment _env;
 
-        public ProjectsController(ProjectService service)
+        public ProjectsController(ProjectService service, IWebHostEnvironment env)
         {
             _service = service;
+            _env = env;
         }
 
         [HttpPost]
@@ -27,7 +29,8 @@ namespace Votify.Api.Controllers
 
                 var project = await _service.CreateProjectAsync(
                     dto.Title, dto.EventId, dto.Description,
-                    dto.ProjectType, dto.CategoryIds, materials);
+                    dto.ProjectType, dto.ImageUrl,
+                    dto.CategoryIds, materials);
 
                 return Ok(new { message = "Proyecto creado", id = project.Id });
             }
@@ -51,12 +54,40 @@ namespace Votify.Api.Controllers
             return Ok(projects.Select(ToDto));
         }
 
+        // ── Subida de imagen ────────────────────────────────────────────────
+        // Guarda el archivo en wwwroot/uploads/projects/ y devuelve la URL relativa.
+        [HttpPost("upload-image")]
+        [RequestSizeLimit(5 * 1024 * 1024)] // 5 MB
+        public async Task<IActionResult> UploadImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No se ha proporcionado ningún archivo.");
+
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowed.Contains(ext))
+                return BadRequest("Formato no permitido. Usa jpg, png, webp o gif.");
+
+            var folder = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads", "projects");
+            Directory.CreateDirectory(folder);
+
+            var fileName = $"{Guid.NewGuid()}{ext}";
+            var fullPath = Path.Combine(folder, fileName);
+
+            using (var stream = new FileStream(fullPath, FileMode.Create))
+                await file.CopyToAsync(stream);
+
+            var url = $"/uploads/projects/{fileName}";
+            return Ok(new { url });
+        }
+
         private static object ToDto(Project p) => new
         {
             p.Id,
             p.Title,
             p.Description,
             p.EventId,
+            p.ImageUrl,
             ProjectType = p.ProjectType(),
             Materials = p.Materials.Select(m => new
             { m.Id, Type = m.Type.ToString(), m.Url, m.Description })
@@ -77,6 +108,7 @@ namespace Votify.Api.Controllers
         public string EventId { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string ProjectType { get; set; } = "AI";
+        public string? ImageUrl { get; set; }
         public List<string> CategoryIds { get; set; } = new();
         public List<MaterialDto> Materials { get; set; } = new();
     }
