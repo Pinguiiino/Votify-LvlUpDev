@@ -65,215 +65,44 @@
                                         <strong class="slot-title">@p.Title</strong>
                                         <button class="remove-btn" @onclick="() => QuitarProyecto(p)" title="Quitar">✕</button>
                                     </div>
-                                    <textarea
-                                        class="comment-textarea"
-                                        placeholder="Comentario anónimo opcional..."
-                                        rows="2"
-                                        maxlength="500"
-                                        @bind="comentarios[p.Id]"
-                                        @bind:event="oninput">
+                                    <textarea class="comment-textarea"
+                                              placeholder="Comentario anónimo opcional..."
+                                              rows="2"
+                                              maxlength="500"
+                                              @bind="comentarios[p.Id]"
+                                                  @bind:event="oninput">
                                     </textarea>
-                                    <div class="char-count">@((comentarios.TryGetValue(p.Id, out var txt) ? txt?.Length : 0) ?? 0)/500</div>
-                                }
+                                        <div class="char-count">@((comentarios.TryGetValue(p.Id, out var txt) ? txt?.Length : 0) ?? 0)/500</div>
+                                    }
                                 else
-                                {
-                                    <span class="empty-text">Haz clic en un proyecto para añadirlo aquí</span>
-                                }
+                                    {
+                                        <span class="empty-text">Haz clic en un proyecto para añadirlo aquí</span>
+                                    }
+                                </div>
                             </div>
-                        </div>
-                    }
+                        }
+                    </div>
+
+                    <button class="btn-primary submit-vote-btn" disabled="@(!ProyectosSeleccionados.Any())" @onclick="EnviarVoto">
+                        Confirmar Mi Voto
+                    </button>
                 </div>
-
-                <button class="btn-primary submit-vote-btn" disabled="@(!ProyectosSeleccionados.Any())" @onclick="EnviarVoto">
-                    Confirmar Mi Voto
-                </button>
             </div>
-        </div>
-    }
-</div>
-
-<style>
-    .ranking-container {
-        max-width: 960px;
-        margin: 2rem auto;
-        padding: 2rem;
-        background: white;
-        border-radius: 1rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-    .ranking-header {
-        margin-bottom: 2rem;
-        border-bottom: 1px solid #e5e7eb;
-        padding-bottom: 1rem;
-    }
-    .ranking-header h1 { margin: 0 0 0.25rem 0; font-size: 1.6rem; }
-    .ranking-header p  { margin: 0; color: #6b7280; font-size: 0.9rem; }
-
-    .back-btn {
-        background: none;
-        border: 1px solid #d1d5db;
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem;
-        cursor: pointer;
-        margin-bottom: 1rem;
-        font-size: 0.875rem;
-        transition: background 0.15s;
-    }
-    .back-btn:hover { background: #f3f4f6; }
-
-    .ranking-layout {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 2rem;
-        align-items: start;
-    }
-
-    .pool-list { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem; }
-
-    .pool-card {
-        padding: 0.85rem 1rem;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        cursor: pointer;
-        transition: background 0.15s, border-color 0.15s;
-        gap: 0.5rem;
-    }
-    .pool-card:hover { background: #f0f9ff; border-color: #3b82f6; }
-    .pool-card-info { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
-    .pool-card-desc { font-size: 0.78rem; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .add-icon { color: #3b82f6; font-weight: bold; font-size: 1.2rem; flex-shrink: 0; }
-    .pool-empty { color: #9ca3af; font-size: 0.85rem; font-style: italic; text-align: center; padding: 1rem 0; }
-
-    .slots-list { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
-
-    .slot-card {
-        display: flex;
-        border: 2px dashed #d1d5db;
-        border-radius: 0.6rem;
-        overflow: hidden;
-        transition: border-color 0.2s;
-        min-height: 3.5rem;
-    }
-    .slot-card.filled {
-        border-style: solid;
-        border-color: #10b981;
-        background: #f0fdf4;
-    }
-    .slot-card.empty { align-items: center; }
-
-    .slot-number {
-        padding: 0 1rem;
-        background: #f3f4f6;
-        font-weight: 700;
-        color: #4b5563;
-        min-width: 3rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.9rem;
-        flex-shrink: 0;
-        align-self: stretch;
-    }
-    .slot-card.filled .slot-number {
-        background: #10b981;
-        color: white;
-    }
-
-    .slot-body {
-        padding: 0.75rem 1rem;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        min-width: 0;
-    }
-
-    .slot-title-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
-    .slot-title {
-        font-size: 0.9rem;
-        color: #111827;
-        flex: 1;
-    }
-    .remove-btn {
-        background: none;
-        border: none;
-        color: #ef4444;
-        cursor: pointer;
-        font-size: 0.85rem;
-        padding: 0.1rem 0.3rem;
-        border-radius: 0.25rem;
-        line-height: 1;
-        flex-shrink: 0;
-        transition: background 0.15s;
-    }
-    .remove-btn:hover { background: #fee2e2; }
-
-    .empty-text { color: #9ca3af; font-size: 0.85rem; padding: 0.75rem 0; }
-
-    .comment-textarea {
-        width: 100%;
-        border: 1px solid #d1d5db;
-        border-radius: 0.4rem;
-        padding: 0.45rem 0.65rem;
-        font-size: 0.82rem;
-        color: #374151;
-        font-family: inherit;
-        resize: none;
-        background: white;
-        box-sizing: border-box;
-        transition: border-color 0.15s, box-shadow 0.15s;
-        line-height: 1.4;
-    }
-    .comment-textarea:focus {
-        outline: none;
-        border-color: #10b981;
-        box-shadow: 0 0 0 3px rgba(16,185,129,0.12);
-    }
-    .comment-textarea::placeholder { color: #9ca3af; }
-
-    .char-count {
-        font-size: 0.72rem;
-        color: #9ca3af;
-        text-align: right;
-        line-height: 1;
-    }
-
-    .submit-vote-btn {
-        width: 100%;
-        margin-top: 1.5rem;
-        padding: 0.9rem;
-        font-size: 1rem;
-        border-radius: 0.5rem;
-        font-weight: 600;
-    }
-    .submit-vote-btn:disabled { background: #9ca3af; cursor: not-allowed; }
-
-    @@media (max-width: 640px) {
-        .ranking-layout { grid-template-columns: 1fr; }
-    }
-</style>
+        }
+    </div>
 
 @code {
-    [Parameter] public string EventId  { get; set; } = "";
+    [Parameter] public string EventId { get; set; } = "";
     [Parameter] public string CategoryId { get; set; } = "";
 
-    private int    TopN      = 3;
+    private int TopN = 3;
     private string SessionId = "";
-    private string UserId    = "";
+    private string UserId = "";
 
     private List<ProjectDto>? ProyectosDisponibles;
-    private List<ProjectDto>  ProyectosSeleccionados = new();
+    private List<ProjectDto> ProyectosSeleccionados = new();
 
     private Dictionary<string, string> comentarios = new();
-
 
     protected override async Task OnInitializedAsync()
     {
@@ -320,7 +149,6 @@
         }
     }
 
-
     private void SeleccionarProyecto(ProjectDto p)
     {
         if (ProyectosSeleccionados.Count < TopN && !ProyectosSeleccionados.Contains(p))
@@ -337,7 +165,6 @@
         comentarios.Remove(p.Id);
     }
 
-
     private async Task EnviarVoto()
     {
         var http = HttpClientFactory.CreateClient("API");
@@ -346,8 +173,8 @@
             .Select((p, index) => new
             {
                 ProjectId = p.Id,
-                Position  = index + 1,
-                Comment   = comentarios.TryGetValue(p.Id, out var c) && !string.IsNullOrWhiteSpace(c)
+                Position = index + 1,
+                Comment = comentarios.TryGetValue(p.Id, out var c) && !string.IsNullOrWhiteSpace(c)
                                 ? c.Trim()
                                 : (string?)null
             })
@@ -359,7 +186,7 @@
             EventId,
             UserId,
             VotingSessionId = SessionId,
-            RankedProjects  = rankedProjects
+            RankedProjects = rankedProjects
         };
 
         var response = await http.PostAsJsonAsync("api/votes/batch", payload);
@@ -375,35 +202,34 @@
         }
     }
 
-
     public class VotingSessionDto
     {
-        public string   Id        { get; set; } = string.Empty;
+        public string Id { get; set; } = string.Empty;
         public DateTime StartDate { get; set; }
-        public DateTime EndDate   { get; set; }
-        public bool     IsActive  { get; set; }
+        public DateTime EndDate { get; set; }
+        public bool IsActive { get; set; }
     }
 
     public class CategorySimpleDto
     {
-        public string Id                  { get; set; } = string.Empty;
-        public string Name                { get; set; } = string.Empty;
-        public string? Description        { get; set; }
-        public bool   AllowSelfVoting     { get; set; }
-        public int    TopNProjectsAllowed { get; set; }
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public bool AllowSelfVoting { get; set; }
+        public int TopNProjectsAllowed { get; set; }
     }
 
     public class ProjectDto
     {
-        public string  Id          { get; set; } = "";
-        public string  Title       { get; set; } = "";
+        public string Id { get; set; } = "";
+        public string Title { get; set; } = "";
         public string? Description { get; set; }
-        public string  ProjectType { get; set; } = "";
+        public string ProjectType { get; set; } = "";
     }
 
     public class VoteResultDto
     {
         public string VotedProjectId { get; set; } = "";
-        public int    TopPosition    { get; set; }
+        public int TopPosition { get; set; }
     }
 }
