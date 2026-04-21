@@ -1,16 +1,14 @@
-﻿/* ── CONTENEDOR PRINCIPAL ── */
-.create-event-container,
+﻿.create-event-container,
 .create-project-container {
     background-color: #ffffff;
     border-radius: 1rem;
     padding: 2.5rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     max-width: 800px;
-    margin: 2rem auto; /* Centra el formulario en la pantalla */
+    margin: 2rem auto;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* ── CABECERA Y TÍTULOS ── */
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -33,7 +31,6 @@
         margin: 0;
     }
 
-/* ── INPUTS Y FORMULARIOS ── */
 .form-group {
     margin-bottom: 1.25rem;
 }
@@ -53,24 +50,23 @@
     color: #1f2937;
     background-color: #ffffff;
     border: 1px solid #d1d5db;
-    border-radius: 0.5rem; /* Bordes suaves en los inputs */
+    border-radius: 0.5rem;
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     box-sizing: border-box;
 }
 
     .form-control:focus {
         outline: none;
-        border-color: #111827; /* Borde oscuro al hacer foco */
-        box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.1); /* Sombra sutil alrededor */
+        border-color: #111827;
+        box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.1);
     }
 
-/* ── BOTONES PRINCIPALES (Negros y redondeados) ── */
 .btn-primary,
 .btn-dark {
-    background-color: #0f172a; /* Negro azulado muy elegante */
+    background-color: #0f172a;
     color: #ffffff;
     border: none;
-    border-radius: 0.6rem; /* Esquinas redondeadas */
+    border-radius: 0.6rem;
     padding: 0.75rem 1.5rem;
     font-size: 0.95rem;
     font-weight: 600;
@@ -84,15 +80,14 @@
 
     .btn-primary:hover,
     .btn-dark:hover {
-        background-color: #334155; /* Se aclara ligeramente al pasar el ratón */
+        background-color: #334155;
     }
 
     .btn-primary:active,
     .btn-dark:active {
-        transform: scale(0.98); /* Pequeño efecto de "hundirse" al hacer clic */
+        transform: scale(0.98);
     }
 
-/* ── BOTONES SECUNDARIOS (Cancelar / Añadir) ── */
 .btn-secondary {
     background-color: #ffffff;
     color: #374151;
@@ -110,7 +105,6 @@
         border-color: #9ca3af;
     }
 
-/* ── BOTÓN DE CERRAR (La X arriba a la derecha) ── */
 .close-btn {
     background: none;
     border: none;
@@ -123,5 +117,5 @@
 
     .close-btn:hover {
         background-color: #fee2e2;
-        color: #ef4444; /* Se pone rojo al pasar el ratón */
+        color: #ef4444;
     }
