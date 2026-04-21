@@ -98,7 +98,6 @@
     font-size: 0.85rem;
 }
 
-/* ── Badge de comentarios en tarjeta ── */
 .comment-count-badge {
     display: inline-flex;
     align-items: center;
@@ -111,7 +110,6 @@
     border-radius: 9999px;
 }
 
-/* ── Popup ── */
 .popup-overlay {
     position: fixed;
     inset: 0;
@@ -149,7 +147,6 @@
     margin: 0;
 }
 
-/* ── Tabs ── */
 .popup-tabs {
     display: flex;
     border-bottom: 1px solid #e5e7eb;
@@ -249,7 +246,6 @@
     font-size: 0.8rem;
 }
 
-/* ── Comentarios ── */
 .comments-loading {
     display: flex;
     align-items: center;
@@ -346,7 +342,6 @@
     font-style: italic;
 }
 
-/* ── Botones comunes ── */
 .back-btn {
     display: inline-flex;
     align-items: center;
