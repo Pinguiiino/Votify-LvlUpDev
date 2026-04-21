@@ -28,7 +28,6 @@ public class DashboardController : ControllerBase
                 .Where(p => p.EventId == eventoId)
                 .ToDictionaryAsync(p => p.Id, p => p.Title);
 
-            // Cargamos categorías con su TopN (ahora es por categoría, no por evento)
             var categorias = await _context.Categories
                 .Where(c => c.EventId == eventoId)
                 .ToListAsync();
@@ -52,7 +51,6 @@ public class DashboardController : ControllerBase
                 .GroupBy(v => new { v.VotedProjectId, v.CategoryId })
                 .Select(g =>
                 {
-                    // topN concreto de la categoría de este grupo de votos
                     var topN = topNPorCategoria.TryGetValue(g.Key.CategoryId, out var t) ? t : 3;
 
                     return new ProjectResultDto

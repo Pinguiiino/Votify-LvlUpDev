@@ -24,7 +24,6 @@
     {
         <div class="ranking-layout">
 
-            <!-- ── Columna izquierda: pool de proyectos ── -->
             <div class="projects-pool">
                 <h3>Proyectos Disponibles</h3>
                 <div class="pool-list">
@@ -48,7 +47,6 @@
                 </div>
             </div>
 
-            <!-- ── Columna derecha: slots del ranking ── -->
             <div class="top-n-slots">
                 <h3>Tu Voto</h3>
                 <div class="slots-list">
@@ -58,19 +56,15 @@
                         var p = ProyectosSeleccionados.Count > index ? ProyectosSeleccionados[index] : null;
 
                         <div class="slot-card @(p != null ? "filled" : "empty")">
-                            <!-- Número de posición -->
                             <div class="slot-number">@(index + 1)º</div>
 
-                            <!-- Contenido del slot -->
                             <div class="slot-body">
                                 @if (p != null)
                                 {
-                                    <!-- Fila título + quitar -->
                                     <div class="slot-title-row">
                                         <strong class="slot-title">@p.Title</strong>
                                         <button class="remove-btn" @onclick="() => QuitarProyecto(p)" title="Quitar">✕</button>
                                     </div>
-                                    <!-- Textarea de comentario -->
                                     <textarea
                                         class="comment-textarea"
                                         placeholder="Comentario anónimo opcional..."
@@ -99,7 +93,6 @@
 </div>
 
 <style>
-    /* ── Layout ── */
     .ranking-container {
         max-width: 960px;
         margin: 2rem auto;
@@ -135,7 +128,6 @@
         align-items: start;
     }
 
-    /* ── Pool de proyectos ── */
     .pool-list { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem; }
 
     .pool-card {
@@ -155,7 +147,6 @@
     .add-icon { color: #3b82f6; font-weight: bold; font-size: 1.2rem; flex-shrink: 0; }
     .pool-empty { color: #9ca3af; font-size: 0.85rem; font-style: italic; text-align: center; padding: 1rem 0; }
 
-    /* ── Slots del ranking ── */
     .slots-list { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
 
     .slot-card {
@@ -227,7 +218,6 @@
 
     .empty-text { color: #9ca3af; font-size: 0.85rem; padding: 0.75rem 0; }
 
-    /* ── Textarea de comentario ── */
     .comment-textarea {
         width: 100%;
         border: 1px solid #d1d5db;
@@ -256,7 +246,6 @@
         line-height: 1;
     }
 
-    /* ── Botón confirmar ── */
     .submit-vote-btn {
         width: 100%;
         margin-top: 1.5rem;
@@ -283,16 +272,13 @@
     private List<ProjectDto>? ProyectosDisponibles;
     private List<ProjectDto>  ProyectosSeleccionados = new();
 
-    // Comentario por projectId
     private Dictionary<string, string> comentarios = new();
 
-    // ── Inicialización ────────────────────────────────────────────────────
 
     protected override async Task OnInitializedAsync()
     {
         var http = HttpClientFactory.CreateClient("API");
 
-        // El TopN ahora pertenece a la categoría, no al evento
         var cats = await http.GetFromJsonAsync<List<CategorySimpleDto>>($"api/categories/by-event/{EventId}");
         var categoriaActual = cats?.FirstOrDefault(c => c.Id == CategoryId);
         if (categoriaActual != null) TopN = categoriaActual.TopNProjectsAllowed;
@@ -315,7 +301,6 @@
         UserId = result.Success ? result.Value! : Guid.NewGuid().ToString();
         if (!result.Success) await SessionStorage.SetAsync("votify_uid", UserId);
 
-        // Restaurar votos previos (sin comentarios previos — Vote.Comment no se devuelve aún)
         var http = HttpClientFactory.CreateClient("API");
         var votosPrevios = await http.GetFromJsonAsync<List<VoteResultDto>>(
             $"api/votes/by-user?userId={UserId}&categoryId={CategoryId}");
@@ -328,14 +313,13 @@
                 if (proj != null)
                 {
                     ProyectosSeleccionados.Add(proj);
-                    comentarios[proj.Id] = string.Empty; // comentario vacío al editar
+                    comentarios[proj.Id] = string.Empty;
                 }
             }
             StateHasChanged();
         }
     }
 
-    // ── Interacción con el ranking ────────────────────────────────────────
 
     private void SeleccionarProyecto(ProjectDto p)
     {
@@ -353,7 +337,6 @@
         comentarios.Remove(p.Id);
     }
 
-    // ── Envío ─────────────────────────────────────────────────────────────
 
     private async Task EnviarVoto()
     {
@@ -392,7 +375,6 @@
         }
     }
 
-    // ── DTOs ──────────────────────────────────────────────────────────────
 
     public class VotingSessionDto
     {

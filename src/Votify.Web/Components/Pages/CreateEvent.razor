@@ -261,7 +261,6 @@
 
     private bool subiendoImagen = false;
     private string? errorImagen = null;
-    // Base URL de la API para pintar la preview (las URLs que devuelve la API son relativas: /uploads/...)
     private string apiBaseUrl = string.Empty;
 
     private const int DefaultMaxProjects = 20;
@@ -272,7 +271,6 @@
         eventModel.StartDate = DateTime.Today;
         eventModel.EndDate = DateTime.Today.AddDays(1);
 
-        // Recuperamos la base address del HttpClient configurado para que la <img src> apunte a la API.
         var http = HttpClientFactory.CreateClient("API");
         apiBaseUrl = http.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
     }
@@ -283,8 +281,7 @@
         var archivo = e.File;
         if (archivo == null) return;
 
-        // Validaciones en cliente
-        const long maxBytes = 5 * 1024 * 1024; // 5 MB
+        const long maxBytes = 5 * 1024 * 1024; 
         if (archivo.Size > maxBytes)
         {
             errorImagen = "La imagen excede el tamaño máximo de 5 MB.";
@@ -297,7 +294,6 @@
             var http = HttpClientFactory.CreateClient("API");
 
             using var content = new MultipartFormDataContent();
-            // Stream del archivo (límite de lectura razonable)
             var streamContent = new StreamContent(archivo.OpenReadStream(maxBytes));
             streamContent.Headers.ContentType =
                 new System.Net.Http.Headers.MediaTypeHeaderValue(archivo.ContentType);
@@ -437,7 +433,6 @@
 
     private void Cancelar() => Navigation.NavigateTo("/");
 
-    // ── Modelos locales del formulario ───────────────────────────────────────
 
     public class CreateEventModel : IValidatableObject
     {

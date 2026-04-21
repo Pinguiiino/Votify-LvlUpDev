@@ -54,10 +54,8 @@ namespace Votify.Api.Controllers
             return Ok(projects.Select(ToDto));
         }
 
-        // ── Subida de imagen ────────────────────────────────────────────────
-        // Guarda el archivo en wwwroot/uploads/projects/ y devuelve la URL relativa.
         [HttpPost("upload-image")]
-        [RequestSizeLimit(5 * 1024 * 1024)] // 5 MB
+        [RequestSizeLimit(5 * 1024 * 1024)]
         public async Task<IActionResult> UploadImage(IFormFile file)
         {
             if (file == null || file.Length == 0)

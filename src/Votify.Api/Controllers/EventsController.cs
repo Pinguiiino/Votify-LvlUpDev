@@ -83,10 +83,8 @@ public class EventsController : ControllerBase
         }
     }
 
-    // ── Subida de imagen ────────────────────────────────────────────────
-    // Guarda el archivo en wwwroot/uploads/events/ y devuelve la URL relativa.
     [HttpPost("upload-image")]
-    [RequestSizeLimit(5 * 1024 * 1024)] // 5 MB
+    [RequestSizeLimit(5 * 1024 * 1024)]
     public async Task<IActionResult> UploadImage(IFormFile file)
     {
         if (file == null || file.Length == 0)
@@ -133,7 +131,6 @@ public class EventsController : ControllerBase
     };
 }
 
-// DTOs
 public class CreateEventDto
 {
     public string Name { get; set; } = string.Empty;

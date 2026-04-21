@@ -18,7 +18,6 @@ namespace Votify.Api.Controllers
         [HttpGet("active/{eventId}")]
         public async Task<IActionResult> GetActive(string eventId)
         {
-            // Buscamos el evento y sus sesiones asociadas
             var evento = await _context.Events
                 .Include(e => e.VotingSessions)
                 .FirstOrDefaultAsync(e => e.Id == eventId);
@@ -26,7 +25,6 @@ namespace Votify.Api.Controllers
             if (evento == null || !evento.VotingSessions.Any())
                 return NotFound("No hay sesión de votación activa");
 
-            // Cogemos la primera sesión de este evento
             var session = evento.VotingSessions.First();
 
             return Ok(new

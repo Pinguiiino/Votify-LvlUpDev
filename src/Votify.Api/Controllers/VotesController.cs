@@ -22,7 +22,6 @@ namespace Votify.Api.Controllers
         {
             try
             {
-                // Borrar votos anteriores del usuario en esta categoría
                 var votosAnteriores = await _context.Votes
                     .Where(v => v.UserId == dto.UserId && v.CategoryId == dto.CategoryId)
                     .ToListAsync();
@@ -73,7 +72,6 @@ namespace Votify.Api.Controllers
         [HttpGet("comments/{projectId}")]
         public async Task<IActionResult> GetCommentsByProject(string projectId)
         {
-            // ToListAsync() primero: EF Core no puede traducir 'v is ExpertVote' a SQL
             var votes = await _context.Votes
                 .Where(v => v.VotedProjectId == projectId && v.Comment != null && v.Comment != "")
                 .OrderBy(v => v.TopPosition)

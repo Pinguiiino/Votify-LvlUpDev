@@ -268,11 +268,9 @@
         {
             var http = HttpClientFactory.CreateClient("API");
 
-            // 1. Registrar en la BD
             var response = await http.PostAsync($"api/audit/request/{proyecto.Id}", null);
             response.EnsureSuccessStatusCode();
 
-            // 2. Consultar los votos (auditoría real, igual que antes)
             await http.GetFromJsonAsync<List<object>>($"api/audit/project/{proyecto.Id}");
 
             proyectosAuditados.Add(proyecto.Id);
@@ -309,7 +307,6 @@
 
         ProyectosSubidos = await http.GetFromJsonAsync<List<ProjectDto>>("api/projects");
 
-        // Cargar proyectos ya auditados desde la BD
         try
         {
             var auditados = await http.GetFromJsonAsync<List<string>>("api/audit/requested");

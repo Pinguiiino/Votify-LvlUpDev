@@ -308,7 +308,7 @@
         var archivo = e.File;
         if (archivo == null) return;
 
-        const long maxBytes = 5 * 1024 * 1024; // 5 MB
+        const long maxBytes = 5 * 1024 * 1024;
         if (archivo.Size > maxBytes)
         {
             errorImagen = "La imagen excede el tamaño máximo de 5 MB.";

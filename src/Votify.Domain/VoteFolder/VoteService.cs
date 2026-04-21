@@ -22,14 +22,12 @@ namespace Votify.Domain.VoteFolder
             _categoryRepo = categoryRepo;
         }
 
-        // topPosition: posición del ranking (1 = mejor proyecto, 2 = siguiente, etc.)
         public async Task<Vote> CastVoteAsync(string projectId, string categoryId, string eventId, string userId, int topPosition)
         {
             var session = await _sessionRepo.GetActiveSessionByEventAsync(eventId);
             if (session == null)
                 throw new InvalidOperationException("No hay una sesión de votación abierta.");
 
-            // El límite de votos depende de la categoría (ya no del evento)
             var category = await _categoryRepo.GetByIdAsync(categoryId);
             if (category == null)
                 throw new InvalidOperationException("Categoría no encontrada.");
