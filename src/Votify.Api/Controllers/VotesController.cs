@@ -1,8 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Votify.Domain.Factory;
 using Votify.Domain.VoteFolder;
-using Votify.Infrastructure;
 
 namespace Votify.Api.Controllers
 {
@@ -10,11 +7,11 @@ namespace Votify.Api.Controllers
     [Route("api/[controller]")]
     public class VotesController : ControllerBase
     {
-        private readonly VotifyDbContext _context;
+        private readonly VoteService _service;
 
-        public VotesController(VotifyDbContext context)
+        public VotesController(VoteService service)
         {
-            _context = context;
+            _service = service;
         }
 
         [HttpPost("batch")]
@@ -22,33 +19,12 @@ namespace Votify.Api.Controllers
         {
             try
             {
-                var votosAnteriores = await _context.Votes
-                    .Where(v => v.UserId == dto.UserId && v.CategoryId == dto.CategoryId)
-                    .ToListAsync();
+                var ranked = dto.RankedProjects
+                    .Select(r => (r.ProjectId, r.Position, r.Comment))
+                    .ToList();
 
-                if (votosAnteriores.Any())
-                {
-                    _context.Votes.RemoveRange(votosAnteriores);
-                    await _context.SaveChangesAsync();
-                }
+                await _service.CastTopNVotesAsync(dto.UserId, dto.CategoryId, dto.VotingSessionId, ranked);
 
-                VoteCreator voteCreator = new PublicVoteCreator();
-
-                foreach (var rank in dto.RankedProjects)
-                {
-                    var nuevoVoto = voteCreator.Create(
-                        votingSessionId: dto.VotingSessionId,
-                        projectId: rank.ProjectId,
-                        userId: dto.UserId,
-                        categoryId: dto.CategoryId,
-                        topPosition: rank.Position,
-                        comment: string.IsNullOrWhiteSpace(rank.Comment) ? null : rank.Comment.Trim()
-                    );
-                    nuevoVoto.IntegrityHash = Guid.NewGuid().ToString();
-                    _context.Votes.Add(nuevoVoto);
-                }
-
-                await _context.SaveChangesAsync();
                 return Ok(new { message = "Votos registrados correctamente" });
             }
             catch (Exception ex)
@@ -60,34 +36,17 @@ namespace Votify.Api.Controllers
         [HttpGet("by-user")]
         public async Task<IActionResult> GetByUser(string userId, string categoryId)
         {
-            var votes = await _context.Votes
-                .Where(v => v.UserId == userId && v.CategoryId == categoryId)
-                .OrderBy(v => v.TopPosition)
-                .Select(v => new { v.VotedProjectId, v.TopPosition })
-                .ToListAsync();
-
-            return Ok(votes);
+            var votes = await _service.GetUserVotesAsync(userId, categoryId);
+            return Ok(votes.Select(v => new { v.VotedProjectId, v.TopPosition }));
         }
 
         [HttpGet("comments/{projectId}")]
         public async Task<IActionResult> GetCommentsByProject(string projectId)
         {
-            var votes = await _context.Votes
-                .Where(v => v.VotedProjectId == projectId && v.Comment != null && v.Comment != "")
-                .OrderBy(v => v.TopPosition)
-                .ToListAsync();
-
-            var comments = votes.Select(v => new
-            {
-                v.Comment,
-                v.TopPosition,
-                VoteType = v is ExpertVote ? "Expert" : "Public"
-            });
-
-            return Ok(comments);
+            var comments = await _service.GetCommentsByProjectAsync(projectId);
+            return Ok(comments.Select(c => new { c.Comment, c.TopPosition, c.VoteType }));
         }
     }
-
 
     public record RankedProjectDto(string ProjectId, int Position, string? Comment);
     public record BatchVoteRequest(string CategoryId, string EventId, string UserId, string VotingSessionId, List<RankedProjectDto> RankedProjects);

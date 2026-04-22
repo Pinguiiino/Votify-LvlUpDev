@@ -41,7 +41,6 @@ namespace Votify.Domain.VoteFolder
                 throw new InvalidOperationException("Ya has votado por este proyecto.");
 
             var factory = new PublicVoteCreator();
-
             var vote = factory.Create(session.Id, projectId, userId, categoryId, topPosition);
 
             return await _repository.AddAsync(vote);
@@ -51,6 +50,50 @@ namespace Votify.Domain.VoteFolder
         {
             var votes = await _repository.GetByUserIdAndCategoryAsync(userId, categoryId);
             return votes.Select(v => v.VotedProjectId).ToList();
+        }
+
+        public async Task CastTopNVotesAsync(string userId, string categoryId, string votingSessionId,
+                                     List<(string ProjectId, int Position, string? Comment)> rankedProjects)
+        {
+            var previousVotes = await _repository.GetByUserIdAndCategoryAsync(userId, categoryId);
+
+            if (previousVotes.Any())
+            {
+                await _repository.RemoveRangeAsync(previousVotes);
+                await _repository.SaveChangesAsync();
+            }
+
+            VoteCreator voteCreator = new PublicVoteCreator();
+            var newVotes = new List<Vote>();
+
+            foreach (var rank in rankedProjects)
+            {
+                var newVote = voteCreator.Create(
+                    votingSessionId: votingSessionId,
+                    projectId: rank.ProjectId,
+                    userId: userId,
+                    categoryId: categoryId,
+                    topPosition: rank.Position,
+                    comment: string.IsNullOrWhiteSpace(rank.Comment) ? null : rank.Comment.Trim()
+                );
+                newVote.IntegrityHash = Guid.NewGuid().ToString();
+                newVotes.Add(newVote);
+            }
+
+            await _repository.AddRangeAsync(newVotes);
+            await _repository.SaveChangesAsync();
+        }
+
+        public async Task<List<(string VotedProjectId, int TopPosition)>> GetUserVotesAsync(string userId, string categoryId)
+        {
+            var votes = await _repository.GetByUserAndCategoryOrderedAsync(userId, categoryId);
+            return votes.Select(v => (v.VotedProjectId, v.TopPosition)).ToList();
+        }
+
+        public async Task<List<(string? Comment, int TopPosition, string VoteType)>> GetCommentsByProjectAsync(string projectId)
+        {
+            var votes = await _repository.GetCommentsByProjectAsync(projectId);
+            return votes.Select(v => (v.Comment, v.TopPosition, v is ExpertVote ? "Expert" : "Public")).ToList();
         }
     }
 }
