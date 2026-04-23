@@ -33,7 +33,9 @@
     {
         @foreach (var grupo in proyectosAgrupados)
         {
-            var nombreEvento = ListaEventos.FirstOrDefault(e => e.Id == grupo.Key)?.Name ?? "Evento Desconocido";
+            var evento = ListaEventos.FirstOrDefault(e => e.Id == grupo.Key);
+            var nombreEvento = evento?.Name ?? "Evento Desconocido";
+            var estadoEvento = GetEventStatus(evento);
 
             <div class="event-section" style="margin-bottom: 3rem;">
                 <h2
@@ -44,6 +46,7 @@
                         d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
                     </svg>
                     @nombreEvento
+                    <span class="@StatusCssClass(estadoEvento)">@StatusLabel(estadoEvento)</span>
                 </h2>
 
                 <div class="projects-grid">
@@ -83,7 +86,7 @@
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <span class="card-modality"
                                           style="font-weight: bold; color: #4b5563;">@(Translations.TipoProyecto.GetValueOrDefault(proyecto.ProjectType,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    proyecto.ProjectType))</span>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            proyecto.ProjectType))</span>
                                         @if (comentariosPorProyecto.TryGetValue(proyecto.Id, out var count) && count > 0)
                                         {
                                             <span class="comment-count-badge"
@@ -142,7 +145,7 @@
                     @if (tabActiva == "info")
                     {
                         <p class="popup-type">@(Translations.TipoProyecto.GetValueOrDefault(proyectoSeleccionado.ProjectType,
-                                                                                                                                                                                                                                                                                                                                                                                            proyectoSeleccionado.ProjectType))</p>
+                                                                                                                                                                                                                                                                                                                                                                                                                        proyectoSeleccionado.ProjectType))</p>
                             <p class="popup-description">@proyectoSeleccionado.Description</p>
 
                             @if (proyectoSeleccionado.Materials.Any())
@@ -318,6 +321,8 @@
         {
             proyectosAgrupados = ProyectosSubidos
                 .GroupBy(p => p.EventId)
+                .OrderBy(g => StatusOrder(GetEventStatus(ListaEventos.FirstOrDefault(e => e.Id == g.Key))))
+                .ThenBy(g => ListaEventos.FirstOrDefault(e => e.Id == g.Key)?.Name ?? "")
                 .ToDictionary(g => g.Key, g => g.ToList());
 
             foreach (var proyecto in ProyectosSubidos)
@@ -361,7 +366,48 @@
     }
 
 
-    public class EventDto { public string Id { get; set; } = ""; public string Name { get; set; } = ""; }
+    public class EventDto
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+    }
+
+    private enum EventStatus { Active, Upcoming, Finished }
+
+    private EventStatus GetEventStatus(EventDto? evento)
+    {
+        if (evento == null) return EventStatus.Finished;
+        var now = DateTime.UtcNow;
+        if (now < evento.StartDate) return EventStatus.Upcoming;
+        if (now > evento.EndDate) return EventStatus.Finished;
+        return EventStatus.Active;
+    }
+
+    private static int StatusOrder(EventStatus s) => s switch
+    {
+        EventStatus.Active => 0,
+        EventStatus.Upcoming => 1,
+        EventStatus.Finished => 2,
+        _ => 3
+    };
+
+    private static string StatusLabel(EventStatus s) => s switch
+    {
+        EventStatus.Active => "Activo",
+        EventStatus.Upcoming => "Por empezar",
+        EventStatus.Finished => "Finalizado",
+        _ => ""
+    };
+
+    private static string StatusCssClass(EventStatus s) => s switch
+    {
+        EventStatus.Active => "status-badge status-active",
+        EventStatus.Upcoming => "status-badge status-upcoming",
+        EventStatus.Finished => "status-badge status-finished",
+        _ => "status-badge"
+    };
     public class ProjectDto
     {
         public string Id { get; set; } = "";
