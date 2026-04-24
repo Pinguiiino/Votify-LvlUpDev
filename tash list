@@ -1,0 +1,15 @@
+[33m11d57d0[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m Corregido error
+[33mf148b66[m Creado registro de usuarios
+[33m42499fe[m Creado general user
+[33m8d8166c[m Orden de proyectos en Mis proyectos
+[33m55755c7[m Cambiado el VotesController para que se comunique con VoteService
+[33m01ce871[m Merge branch 'master' of https://github.com/Pinguiiino/Votify
+[33m7651d0f[m Separado css de razor
+[33m9085d41[m Eliminados comentarios del css
+[33m02dee17[m Eliminado texto inecesario
+[33m2bbef92[m Añadidas imagenes a eventos y proyectos y cambiado topN de eventos a categorias
+[33md046a7e[m Cambiado aspecto visual de creacion de eventos
+[33m3877ec4[m Merge branch 'master' of https://github.com/Pinguiiino/Votify
+[33mf4b3a2d[m Cambiado aspecto visual de creacion de proyectos
+[33mdf9f95f[m Palabras
+[33m10e583d[m Palabra

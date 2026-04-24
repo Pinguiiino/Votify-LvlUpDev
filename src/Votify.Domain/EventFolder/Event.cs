@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using Votify.Domain.VoteFolder;
 
 namespace Votify.Domain.EventFolder;
 
@@ -13,8 +11,6 @@ public abstract class Event
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public string? ImageUrl { get; set; }
-
-    public virtual List<VotingSession> VotingSessions { get; set; } = new();
 
     protected Event() { }
 

@@ -29,16 +29,16 @@
 
             <div class="form-group">
                 <label>Nombre del evento *</label>
-                <InputText class="@($"form-control {(errorNombreRepetido != null ? "is-invalid" : "")}")"
+                <InputText class="@($"form-control {(errorServidor != null ? "is-invalid" : "")}")"
                            placeholder="Ej: Hackathon 2026"
                            @bind-Value="eventModel.Name"
-                           @oninput="() => errorNombreRepetido = null" />
+                           @oninput="() => errorServidor = null" />
                 <ValidationMessage For="@(() => eventModel.Name)" />
 
-                @if (errorNombreRepetido != null)
+                @if (errorServidor != null)
                 {
                     <div class="validation-error" style="color: #dc2626; font-size: 0.85rem; margin-top: 0.25rem;">
-                        @errorNombreRepetido
+                        @errorServidor
                     </div>
                 }
             </div>
@@ -103,211 +103,59 @@
                 </div>
             </div>
 
-            <hr style="margin: 1rem 0; border: 0; border-top: 1px solid #e5e7eb;" />
+            <p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">
+                Las categorías y votaciones se configuran una vez creado el evento.
+            </p>
 
-            <div class="form-group">
-                <label>Categorías del Evento * <span style="font-weight: normal; font-size: 0.85rem; color: #6b7280;">(Añade al menos una)</span></label>
-
-                @if (eventModel.Categories.Any())
-                {
-                    <div class="categories-list">
-                        @foreach (var cat in eventModel.Categories)
-                        {
-                            <div class="category-item">
-                                <div>
-                                    <strong>@cat.Name</strong>
-                                    <span style="font-size: 0.8rem; color: #6b7280; display: block;">
-                                        @cat.Description
-                                        | Criterios: @cat.Criteria.Count | Premios: @cat.Prizes.Count
-                                    </span>
-                                </div>
-                                <button type="button" class="btn-delete" @onclick="() => eventModel.Categories.Remove(cat)">X</button>
-                            </div>
-                        }
-                    </div>
-                }
-
-                @if (errorCategorias)
-                {
-                    <div class="validation-message">Debes añadir al menos una categoría para crear el evento.</div>
-                }
-
-                @if (!mostrandoFormularioCategoria)
-                {
-                    <button type="button" class="btn-secondary mt-2" style="border: 2px dashed #d1d5db; color: #4b5563;"
-                            @onclick="MostrarFormulario">
-                        + Añadir Categoría
-                    </button>
-                }
-                else
-                {
-                    <div class="add-category-box">
-                        <h4 style="margin-top: 0; margin-bottom: 1rem; font-size: 0.95rem; color: #374151;">Configurar categoría</h4>
-
-                        <div class="form-group">
-                            <input type="text" class="form-control form-control-sm"
-                                   placeholder="Nombre (Ej: Proyectos de IA)" @bind="nuevaCategoria.Name" />
-                        </div>
-
-                        <div class="form-group">
-                            <textarea class="form-control form-control-sm" rows="2"
-                                      placeholder="Descripción de la categoría..." @bind="nuevaCategoria.Description"></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label style="font-size: 0.85rem;">
-                                <input type="checkbox" @bind="nuevaCategoria.AllowSelfVoting" /> Permitir que los participantes voten en la categoría en la cual suben proyectos
-                            </label>
-                        </div>
-
-                        <div class="form-group">
-                            <label style="font-size: 0.85rem; font-weight: 600;">Top N proyectos que cada votante puede elegir</label>
-                            <input type="number" class="form-control form-control-sm" min="1" max="100"
-                                   @bind="nuevaCategoria.TopNProjectsAllowed"
-                                   style="max-width: 8rem;" />
-                        </div>
-
-                        @* ── Criterios ── *@
-                        <div style="margin-top: 0.75rem;">
-                            <label style="font-size: 0.85rem; font-weight: 600;">Criterios de evaluación</label>
-                            @foreach (var cr in nuevaCategoria.Criteria)
-                            {
-                                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 0.5rem; margin-top: 0.4rem; align-items: center;">
-                                    <input type="text" class="form-control form-control-sm" placeholder="Nombre criterio" @bind="cr.Name" />
-                                    <select class="form-control form-control-sm" @bind="cr.Type">
-                                        <option value="Numeric">Numérico</option>
-                                        <option value="Checklist">Checklist</option>
-                                        <option value="Rubric">Rúbrica</option>
-                                        <option value="Comment">Comentario</option>
-                                        <option value="Audio">Audio</option>
-                                        <option value="Video">Vídeo</option>
-                                    </select>
-                                    <input type="number" class="form-control form-control-sm" step="0.05" min="0" max="1" placeholder="Peso" @bind="cr.Weight" />
-                                    <button type="button" class="btn-delete" @onclick="() => nuevaCategoria.Criteria.Remove(cr)">X</button>
-                                </div>
-                            }
-                            @if (errorPesos)
-                            {
-                                <div class="validation-message" style="margin-top: 0.25rem;">Los pesos de los criterios deben sumar 1.0.</div>
-                            }
-                            <button type="button" class="btn-secondary mt-2" style="font-size: 0.8rem;"
-                                    @onclick="() => nuevaCategoria.Criteria.Add(new CriterionDraft())">
-                                + Añadir criterio
-                            </button>
-                            @if (errorSinCriterios)
-                            {
-                                <div class="validation-message" style="margin-top: 0.5rem;">Debes añadir al menos 1 criterio de evaluación.</div>
-                            }
-                        </div>
-
-                        @* ── Premios ── *@
-                        <div style="margin-top: 0.75rem;">
-                            <label style="font-size: 0.85rem; font-weight: 600;">Premios</label>
-                            @foreach (var pr in nuevaCategoria.Prizes)
-                            {
-                                <div style="display: grid; grid-template-columns: auto 2fr 2fr auto; gap: 0.5rem; margin-top: 0.4rem; align-items: center;">
-                                    <input type="number" class="form-control form-control-sm" placeholder="Pos." min="1" @bind="pr.Position" style="width: 4rem;" />
-                                    <input type="text" class="form-control form-control-sm" placeholder="Recompensa (Ej: 1.000€)" @bind="pr.Name" />
-                                    <input type="text" class="form-control form-control-sm" placeholder="Descripción" @bind="pr.Description" />
-                                    <button type="button" class="btn-delete" @onclick="() => nuevaCategoria.Prizes.Remove(pr)">X</button>
-                                </div>
-                            }
-                            <button type="button" class="btn-secondary mt-2" style="font-size: 0.8rem;"
-                                    @onclick="() => nuevaCategoria.Prizes.Add(new PrizeDraft { Position = nuevaCategoria.Prizes.Count + 1 })">
-                                + Añadir premio
-                            </button>
-                            @if (errorSinPremios)
-                            {
-                                <div class="validation-message" style="margin-top: 0.5rem;">Debes añadir al menos 1 premio para esta categoría.</div>
-                            }
-                        </div>
-
-                        @if (errorNombreCategoria)
-                        {
-                            <div class="validation-message" style="margin-top: 0.5rem;">El nombre de la categoría es obligatorio.</div>
-                        }
-                        @if (errorCategoriaDuplicada)
-                        {
-                            <div class="validation-message" style="margin-top: 0.5rem; color: #dc2626;">Ya has añadido una categoría con este nombre. Elige otro.</div>
-                        }
-
-                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                            <button type="button" class="btn-primary" style="flex: 1; padding: 0.5rem;" @onclick="ConfirmarCategoria">Confirmar</button>
-                            <button type="button" class="btn-secondary" style="flex: 1; padding: 0.5rem;" @onclick="OcultarFormulario">Cancelar</button>
-                        </div>
-                    </div>
-                }
-            </div>
         </div>
 
         <footer class="modal-footer">
-            <button type="submit" class="btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;">Crear Evento</button>
+            <button type="button" class="btn-secondary" @onclick="Cancelar">Cancelar</button>
+            <button type="submit" class="btn-primary">Crear evento</button>
         </footer>
+
     </EditForm>
 </div>
 
 @code {
     private CreateEventModel eventModel = new();
-    private CategoryDraft nuevaCategoria = new();
-
-    private bool errorCategorias = false;
-    private bool errorNombreCategoria = false;
-    private bool errorCategoriaDuplicada = false;
-    private bool errorPesos = false;
-    private bool errorSinCriterios = false;
-    private bool errorSinPremios = false;
-    private bool mostrandoFormularioCategoria = false;
-    private string? errorNombreRepetido = null;
-
-    private bool subiendoImagen = false;
-    private string? errorImagen = null;
-    private string apiBaseUrl = string.Empty;
-
-    private const int DefaultMaxProjects = 20;
-
-    protected override void OnInitialized()
-    {
-        eventModel.MaxProjects = DefaultMaxProjects;
-        eventModel.StartDate = DateTime.Today;
-        eventModel.EndDate = DateTime.Today.AddDays(1);
-
-        var http = HttpClientFactory.CreateClient("API");
-        apiBaseUrl = http.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
-    }
+    private string? errorServidor;
+    private string? errorImagen;
+    private bool subiendoImagen;
+    private const string apiBaseUrl = "https://localhost:7276";
 
     private async Task OnImagenSeleccionada(InputFileChangeEventArgs e)
     {
         errorImagen = null;
-        var archivo = e.File;
-        if (archivo == null) return;
+        var file = e.File;
+        if (file == null) return;
 
-        const long maxBytes = 5 * 1024 * 1024; 
-        if (archivo.Size > maxBytes)
+        if (file.Size > 5 * 1024 * 1024)
         {
-            errorImagen = "La imagen excede el tamaño máximo de 5 MB.";
+            errorImagen = "La imagen no puede superar los 5 MB.";
             return;
         }
 
         try
         {
             subiendoImagen = true;
-            var http = HttpClientFactory.CreateClient("API");
-
             using var content = new MultipartFormDataContent();
-            var streamContent = new StreamContent(archivo.OpenReadStream(maxBytes));
-            streamContent.Headers.ContentType =
-                new System.Net.Http.Headers.MediaTypeHeaderValue(archivo.ContentType);
-            content.Add(streamContent, "file", archivo.Name);
+            var stream = file.OpenReadStream(5 * 1024 * 1024);
+            var streamContent = new StreamContent(stream);
+            streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+            content.Add(streamContent, "file", file.Name);
 
-            var respuesta = await http.PostAsync("/api/events/upload-image", content);
-            if (respuesta.IsSuccessStatusCode)
+            var http = HttpClientFactory.CreateClient("API");
+            var response = await http.PostAsync("/api/events/upload-image", content);
+
+            if (response.IsSuccessStatusCode)
             {
-                var json = await respuesta.Content.ReadFromJsonAsync<UploadResponse>();
-                eventModel.ImageUrl = json?.Url;
+                var data = await response.Content.ReadFromJsonAsync<UploadResponse>();
+                eventModel.ImageUrl = data?.Url;
             }
             else
             {
-                errorImagen = await respuesta.Content.ReadAsStringAsync();
+                errorImagen = "No se pudo subir la imagen.";
             }
         }
         catch (Exception ex)
@@ -325,71 +173,8 @@
         public string? Url { get; set; }
     }
 
-    private void MostrarFormulario()
-    {
-        nuevaCategoria = new CategoryDraft();
-        errorNombreCategoria = false;
-        errorCategoriaDuplicada = false;
-        errorPesos = false;
-        errorSinCriterios = false;
-        errorSinPremios = false;
-        mostrandoFormularioCategoria = true;
-    }
-
-    private void OcultarFormulario() => mostrandoFormularioCategoria = false;
-
-    private void ConfirmarCategoria()
-    {
-        errorNombreCategoria = false;
-        errorPesos = false;
-        errorSinCriterios = false;
-        errorSinPremios = false;
-        errorCategoriaDuplicada = false;
-
-        if (string.IsNullOrWhiteSpace(nuevaCategoria.Name))
-        {
-            errorNombreCategoria = true;
-            return;
-        }
-
-        if (eventModel.Categories.Any(c => c.Name.Trim().Equals(nuevaCategoria.Name?.Trim(), StringComparison.OrdinalIgnoreCase)))
-        {
-            errorCategoriaDuplicada = true;
-            return;
-        }
-
-        if (!nuevaCategoria.Criteria.Any())
-        {
-            errorSinCriterios = true;
-            return;
-        }
-
-        var suma = nuevaCategoria.Criteria.Sum(c => c.Weight);
-        if (Math.Abs(suma - 1.0) > 0.01)
-        {
-            errorPesos = true;
-            return;
-        }
-
-        if (!nuevaCategoria.Prizes.Any())
-        {
-            errorSinPremios = true;
-            return;
-        }
-
-        errorCategorias = false;
-        eventModel.Categories.Add(nuevaCategoria);
-        mostrandoFormularioCategoria = false;
-    }
-
     private async Task ManejarSubmitValido()
     {
-        if (!eventModel.Categories.Any())
-        {
-            errorCategorias = true;
-            return;
-        }
-
         try
         {
             var payload = new
@@ -400,16 +185,7 @@
                 eventModel.MaxProjects,
                 StartDate = eventModel.StartDate!.Value,
                 EndDate = eventModel.EndDate!.Value,
-                eventModel.ImageUrl,
-                Categories = eventModel.Categories.Select(c => new
-                {
-                    c.Name,
-                    c.Description,
-                    c.AllowSelfVoting,
-                    c.TopNProjectsAllowed,
-                    Criteria = c.Criteria.Select(cr => new { cr.Name, cr.Type, cr.Weight, cr.Description }),
-                    Prizes = c.Prizes.Select(p => new { p.Position, p.Name, p.Description })
-                })
+                eventModel.ImageUrl
             };
 
             var http = HttpClientFactory.CreateClient("API");
@@ -417,12 +193,16 @@
 
             if (respuesta.IsSuccessStatusCode)
             {
-                Navigation.NavigateTo("/");
+                var resultado = await respuesta.Content.ReadFromJsonAsync<CreatedEventResponse>();
+                if (resultado?.Id != null)
+                    Navigation.NavigateTo($"/event/{resultado.Id}/categories");
+                else
+                    Navigation.NavigateTo("/");
             }
             else
             {
                 var errorMsg = await respuesta.Content.ReadAsStringAsync();
-                errorNombreRepetido = errorMsg.Trim('"');
+                errorServidor = errorMsg.Trim('"');
             }
         }
         catch (Exception)
@@ -433,6 +213,11 @@
 
     private void Cancelar() => Navigation.NavigateTo("/");
 
+    private class CreatedEventResponse
+    {
+        public string? Message { get; set; }
+        public string? Id { get; set; }
+    }
 
     public class CreateEventModel : IValidatableObject
     {
@@ -455,8 +240,6 @@
 
         public string? ImageUrl { get; set; }
 
-        public List<CategoryDraft> Categories { get; set; } = new();
-
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (StartDate.HasValue && StartDate.Value.Date < DateTime.Today)
@@ -469,30 +252,5 @@
                     "La fecha de fin debe ser posterior a la de inicio.",
                     new[] { nameof(EndDate) });
         }
-    }
-
-    public class CategoryDraft
-    {
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
-        public bool AllowSelfVoting { get; set; } = false;
-        public int TopNProjectsAllowed { get; set; } = 3;
-        public List<CriterionDraft> Criteria { get; set; } = new();
-        public List<PrizeDraft> Prizes { get; set; } = new();
-    }
-
-    public class CriterionDraft
-    {
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
-        public string Type { get; set; } = "Numeric";
-        public double Weight { get; set; } = 0.0;
-    }
-
-    public class PrizeDraft
-    {
-        public int Position { get; set; } = 1;
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
     }
 }

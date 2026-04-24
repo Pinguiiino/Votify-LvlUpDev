@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Votify.Domain.EventFolder;
+using Votify.Domain.VoteFolder;
 using Votify.Infrastructure;
 
 namespace Votify.Api.Controllers;
@@ -33,9 +34,13 @@ public class DashboardController : ControllerBase
                 .ToListAsync();
 
             var categoriasInfo = categorias.ToDictionary(c => c.Id, c => c.Name);
-            var topNPorCategoria = categorias.ToDictionary(
-                c => c.Id,
-                c => c.TopNProjectsAllowed > 0 ? c.TopNProjectsAllowed : 3);
+            var categoryIds = categorias.Select(c => c.Id).ToList();
+
+            var sesiones = await _context.VotingSessions
+                .Where(vs => categoryIds.Contains(vs.CategoryId))
+                .ToListAsync();
+
+            var sesionesInfo = sesiones.ToDictionary(vs => vs.Id, vs => vs);
 
             var projectIds = proyectosInfo.Keys.ToList();
 
@@ -48,19 +53,39 @@ public class DashboardController : ControllerBase
             var totalRegistrados = await _context.Users.CountAsync();
 
             var ranking = votosDelEvento
-                .GroupBy(v => new { v.VotedProjectId, v.CategoryId })
+                .GroupBy(v => new { v.VotedProjectId, v.CategoryId, v.VotingSessionId })
                 .Select(g =>
                 {
-                    var topN = topNPorCategoria.TryGetValue(g.Key.CategoryId, out var t) ? t : 3;
+                    int puntos = 0;
+
+                    if (sesionesInfo.TryGetValue(g.Key.VotingSessionId, out var sesion))
+                    {
+                        if (sesion.EvaluationType == EvaluationType.TopN && sesion.TopN.HasValue)
+                        {
+                            var topN = sesion.TopN.Value;
+                            puntos = g.Sum(v => Math.Max(0, (topN - v.TopPosition + 1) * 10));
+                        }
+                        else
+                        {
+                            puntos = g.Count() * 10;
+                        }
+                    }
 
                     return new ProjectResultDto
                     {
                         Nombre = proyectosInfo.ContainsKey(g.Key.VotedProjectId) ? proyectosInfo[g.Key.VotedProjectId] : "Proyecto",
                         Categoria = categoriasInfo.ContainsKey(g.Key.CategoryId) ? categoriasInfo[g.Key.CategoryId] : "General",
-                        Puntos = g.Sum(v => Math.Max(0, (topN - v.TopPosition + 1) * 10))
+                        Puntos = puntos
                     };
                 })
                 .Where(p => p.Puntos > 0)
+                .GroupBy(p => new { p.Nombre, p.Categoria })
+                .Select(g => new ProjectResultDto
+                {
+                    Nombre = g.Key.Nombre,
+                    Categoria = g.Key.Categoria,
+                    Puntos = g.Sum(x => x.Puntos)
+                })
                 .OrderByDescending(p => p.Puntos)
                 .ToList();
 

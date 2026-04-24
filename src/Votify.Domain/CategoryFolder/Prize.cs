@@ -1,4 +1,5 @@
 using System;
+using Votify.Domain.VoteFolder;
 
 namespace Votify.Domain.CategoryFolder;
 
@@ -9,17 +10,20 @@ public class Prize
     public int Position { get; set; }
     public string Name { get; set; }
     public string? Description { get; set; }
+    public VoterType? TargetVoter { get; set; }
 
     public virtual Category? Category { get; set; }
 
     public Prize() { }
 
-    public Prize(string categoryId, int position, string name, string? description = null)
+    public Prize(string categoryId, int position, string name,
+                 string? description = null, VoterType? targetVoter = null)
     {
         Id = Guid.NewGuid().ToString();
         CategoryId = categoryId;
         Position = position;
         Name = name;
         Description = description;
+        TargetVoter = targetVoter;
     }
 }

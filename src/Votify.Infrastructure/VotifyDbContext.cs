@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Votify.Domain.CategoryFolder;
 using Votify.Domain.EventFolder;
 using Votify.Domain.ProjectFolder;
@@ -28,7 +28,6 @@ public class VotifyDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-
         modelBuilder.Entity<Event>()
             .HasDiscriminator<string>("EventType")
             .HasValue<ModalityEvent>("Modality");
@@ -37,7 +36,7 @@ public class VotifyDbContext : DbContext
             .HasDiscriminator<string>("ProjectType")
             .HasValue<AiProject>("AI")
             .HasValue<SustainabilityProject>("Sustainability")
-             .HasValue<GeneralProject>("General");
+            .HasValue<GeneralProject>("General");
 
         modelBuilder.Entity<Vote>()
             .HasDiscriminator<string>("VoteType")
@@ -62,10 +61,16 @@ public class VotifyDbContext : DbContext
             .HasForeignKey(c => c.EventId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<VotingSession>()
+            .HasOne(vs => vs.Category)
+            .WithMany(c => c.VotingSessions)
+            .HasForeignKey(vs => vs.CategoryId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder.Entity<Criterion>()
-            .HasOne(cr => cr.Category)
-            .WithMany(c => c.Criteria)
-            .HasForeignKey(cr => cr.CategoryId)
+            .HasOne(cr => cr.VotingSession)
+            .WithMany(vs => vs.Criteria)
+            .HasForeignKey(cr => cr.VotingSessionId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Prize>()
@@ -105,12 +110,6 @@ public class VotifyDbContext : DbContext
             .HasForeignKey(cs => cs.CriterionId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        modelBuilder.Entity<VotingSession>()
-            .HasOne<Event>()
-            .WithMany(e => e.VotingSessions)
-            .HasForeignKey(vs => vs.EventId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         modelBuilder.Entity<Vote>()
             .HasOne(v => v.VotingSession)
             .WithMany(vs => vs.Votes)
@@ -119,6 +118,14 @@ public class VotifyDbContext : DbContext
 
         modelBuilder.Entity<AuditRequest>()
             .HasIndex(a => a.ProjectId);
+
+        modelBuilder.Entity<Category>()
+            .Property(c => c.JuryWeight)
+            .HasPrecision(5, 4);
+
+        modelBuilder.Entity<Category>()
+            .Property(c => c.PublicWeight)
+            .HasPrecision(5, 4);
 
         modelBuilder.Entity<Criterion>()
             .Property(c => c.Weight)
