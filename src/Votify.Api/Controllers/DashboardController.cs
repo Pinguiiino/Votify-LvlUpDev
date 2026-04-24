@@ -45,7 +45,7 @@ public class DashboardController : ControllerBase
 
             var usuariosQueHanVotado = votosDelEvento.Select(v => v.UserId).Distinct().Count();
 
-            var totalRegistrados = await _context.Usuarios.CountAsync();
+            var totalRegistrados = await _context.Users.CountAsync();
 
             var ranking = votosDelEvento
                 .GroupBy(v => new { v.VotedProjectId, v.CategoryId })
