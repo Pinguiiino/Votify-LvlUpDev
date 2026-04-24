@@ -14,7 +14,7 @@ public static class DbSeeder
     {
         await context.Database.MigrateAsync();
 
-        if (await context.Usuarios.AnyAsync() || await context.Events.AnyAsync())
+        if (await context.Users.AnyAsync() || await context.Events.AnyAsync())
             return;
 
         var org1 = new Organizer("Alan Brito", "alan.brito@votify.com", "Hash$1234");
@@ -33,7 +33,7 @@ public static class DbSeeder
         var part5 = new Participant("Carlos Ruiz", "carlos@test.com", "Hash$Car5");
         var part6 = new Participant("Marta López", "marta@test.com", "Hash$Mar6");
 
-        context.Usuarios.AddRange(
+        context.Users.AddRange(
             org1, org2,
             jury1, jury2, jury3, jury4,
             pub1, pub2, pub3,

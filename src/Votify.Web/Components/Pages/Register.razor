@@ -1,0 +1,165 @@
+﻿@page "/register"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
+
+<PageTitle>Crear Cuenta - Votify</PageTitle>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="avatar-container">
+            <div class="avatar-circle">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+                    <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z" />
+                </svg>
+            </div>
+        </div>
+
+        <h1 class="auth-title">Crear Cuenta</h1>
+        <p class="auth-subtitle">Ingresa tus datos para registrarte</p>
+
+        <EditForm Model="registerModel" OnValidSubmit="HandleRegister">
+            <DataAnnotationsValidator />
+
+            <div class="input-group">
+                <label>Nombre de usuario</label>
+                <div class="input-wrapper">
+                    <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z" />
+                    </svg>
+                    <InputText class="auth-input" placeholder="Tu nombre de usuario" @bind-Value="registerModel.Username" />
+                </div>
+                <ValidationMessage For="@(() => registerModel.Username)" class="validation-msg" />
+            </div>
+
+            <div class="input-group">
+                <label>Correo electrónico</label>
+                <div class="input-wrapper">
+                    <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M.05 3.555A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.555L8 8.414.05 3.555ZM0 4.697v7.104l5.803-3.558L0 4.697ZM6.761 8.83l-6.57 4.027A2 2 0 0 0 2 14h12a2 2 0 0 0 1.808-1.144l-6.57-4.027L8 9.586l-1.239-.757Zm3.436-.586L16 11.801V4.697l-5.803 3.546Z" />
+                    </svg>
+                    <InputText type="email" class="auth-input" placeholder="ejemplo@correo.com" @bind-Value="registerModel.Email" />
+                </div>
+                <ValidationMessage For="@(() => registerModel.Email)" class="validation-msg" />
+            </div>
+
+            <div class="input-group">
+                <label>Contraseña</label>
+                <div class="input-wrapper">
+                    <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM5 8h6a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" />
+                    </svg>
+                    <InputText type="@(mostrarPassword ? "text" : "password")" class="auth-input" placeholder="••••••••" @bind-Value="registerModel.Password" />
+                    
+                    <button type="button" class="eye-btn" @onclick="TogglePassword">
+                        @if (mostrarPassword)
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755l-.809-.805zm-4.321-4.321a2.001 2.001 0 0 1 2.829 2.829l-2.829-2.829zm-2.025 2.025L3.924 5.852A13.14 13.14 0 0 0 1.172 8c.058.087.122.183.195.288.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z" /></svg>
+                        }
+                        else
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" /><path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" /></svg>
+                        }
+                    </button>
+                </div>
+                <ValidationMessage For="@(() => registerModel.Password)" class="validation-msg" />
+            </div>
+
+            <div class="input-group" style="margin-top: 1.5rem;">
+                <label>¿Cómo quieres registrarte?</label>
+                <InputRadioGroup @bind-Value="registerModel.Role">
+                    <div class="role-selector">
+                        <label class="role-option @(registerModel.Role == "GeneralUser" ? "selected" : "")">
+                            <InputRadio Value="@("GeneralUser")" class="hidden-radio" />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" /></svg>
+                            Usuario
+                        </label>
+                        <label class="role-option @(registerModel.Role == "Organizer" ? "selected" : "")">
+                            <InputRadio Value="@("Organizer")" class="hidden-radio" />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M6.5 1A1.5 1.5 0 0 0 5 2.5V3H1.5A1.5 1.5 0 0 0 0 4.5v8A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 14.5 3H11v-.5A1.5 1.5 0 0 0 9.5 1h-3Zm0 1h3a.5.5 0 0 1 .5.5V3H6v-.5a.5.5 0 0 1 .5-.5Zm1.886 6.914L15 7.151V12.5a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5V7.15l6.614 1.764a1.5 1.5 0 0 0 1.157 0Z" /></svg>
+                            Organizador
+                        </label>
+                    </div>
+                </InputRadioGroup>
+            </div>
+
+            @if (!string.IsNullOrEmpty(apiError))
+            {
+                <div class="api-error">@apiError</div>
+            }
+
+            <button type="submit" class="btn-submit" disabled="@isSubmitting">
+                @if (isSubmitting)
+                {
+                    <span class="spinner-border"></span>
+                }
+                else
+                {
+                    <span>Registrarse</span>
+                }
+            </button>
+
+            <div class="auth-footer">
+                ¿Ya tienes una cuenta? <a href="/login">Inicia sesión</a>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private RegisterModel registerModel = new();
+    private bool mostrarPassword = false;
+    private bool isSubmitting = false;
+    private string? apiError = null;
+
+    private void TogglePassword() => mostrarPassword = !mostrarPassword;
+
+    private async Task HandleRegister()
+    {
+        isSubmitting = true;
+        apiError = null;
+
+        try
+        {
+            var http = HttpClientFactory.CreateClient("API");
+            var response = await http.PostAsJsonAsync("api/auth/register", registerModel);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Si va bien, mandamos directamente al inicio (/)
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                apiError = await response.Content.ReadAsStringAsync();
+                apiError = apiError.Trim('"');
+            }
+        }
+        catch (Exception)
+        {
+            apiError = "No se pudo conectar con el servidor.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    public class RegisterModel
+    {
+        [Required(ErrorMessage = "El nombre de usuario es obligatorio")]
+        public string Username { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El correo es obligatorio")]
+        [EmailAddress(ErrorMessage = "Ingresa un correo válido")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "La contraseña es obligatoria")]
+        [MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
+        public string Password { get; set; } = string.Empty;
+
+        public string Role { get; set; } = "GeneralUser";
+    }
+}

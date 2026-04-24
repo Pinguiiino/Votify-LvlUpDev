@@ -12,7 +12,7 @@ public class VotifyDbContext : DbContext
 {
     public VotifyDbContext(DbContextOptions<VotifyDbContext> options) : base(options) { }
 
-    public DbSet<User> Usuarios { get; set; }
+    public DbSet<User> Users { get; set; }
     public DbSet<Event> Events { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Criterion> Criteria { get; set; }

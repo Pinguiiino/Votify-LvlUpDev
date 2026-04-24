@@ -1,0 +1,223 @@
+﻿.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 80px);
+    background-color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 2rem;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 440px;
+    background: #ffffff;
+    padding: 0;
+}
+
+.avatar-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.avatar-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+
+.auth-title {
+    text-align: center;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 0.5rem 0;
+}
+
+.auth-subtitle {
+    text-align: center;
+    font-size: 0.95rem;
+    color: #6b7280;
+    margin: 0 0 2rem 0;
+}
+
+.input-group {
+    margin-bottom: 1.25rem;
+}
+
+    .input-group label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 0.5rem;
+    }
+
+.input-wrapper {
+    display: flex;
+    align-items: center;
+    background-color: #f3f4f6;
+    border-radius: 0.6rem;
+    padding: 0.75rem 1rem;
+    transition: box-shadow 0.2s;
+}
+
+    .input-wrapper:focus-within {
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        background-color: #ffffff;
+        border: 1px solid #d1d5db;
+        padding: calc(0.75rem - 1px) calc(1rem - 1px);
+    }
+
+.input-icon {
+    color: #9ca3af;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+.auth-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 0.95rem;
+    color: #111827;
+    outline: none;
+    width: 100%;
+}
+
+    .auth-input::placeholder {
+        color: #9ca3af;
+    }
+
+.eye-btn {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .eye-btn:hover {
+        color: #4b5563;
+    }
+
+.role-selector {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.role-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #6b7280;
+    transition: all 0.2s;
+}
+
+    .role-option:hover {
+        background-color: #f9fafb;
+    }
+
+    .role-option.selected {
+        border-color: #0f172a;
+        color: #0f172a;
+        background-color: #f8fafc;
+    }
+
+.hidden-radio {
+    display: none;
+}
+
+.btn-submit {
+    width: 100%;
+    background-color: #0f172a;
+    color: #ffffff;
+    border: none;
+    border-radius: 0.6rem;
+    padding: 0.85rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+    .btn-submit:hover:not(:disabled) {
+        background-color: #1e293b;
+    }
+
+    .btn-submit:active:not(:disabled) {
+        transform: scale(0.98);
+    }
+
+    .btn-submit:disabled {
+        background-color: #9ca3af;
+        cursor: not-allowed;
+    }
+
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+    .auth-footer a {
+        color: #2563eb;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+.validation-msg {
+    color: #ef4444;
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+    display: block;
+}
+
+.api-error {
+    color: #ef4444;
+    background: #fee2e2;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.spinner-border {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
