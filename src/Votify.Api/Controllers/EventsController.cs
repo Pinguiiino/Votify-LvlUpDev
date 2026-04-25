@@ -62,6 +62,21 @@ public class EventsController : ControllerBase
         }
     }
 
+    [HttpGet("{id}/stats")]
+    public async Task<ActionResult<EventDashboardDto>> GetStats(string id)
+    {
+        try
+        {
+            var stats = await _service.GetDashboardStatsAsync(id);
+            if (stats == null) return NotFound("Evento no encontrado");
+            return Ok(stats);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Error al obtener estadísticas: {ex.Message}");
+        }
+    }
+
     [HttpPost("upload-image")]
     [RequestSizeLimit(5 * 1024 * 1024)]
     public async Task<IActionResult> UploadImage(IFormFile file)

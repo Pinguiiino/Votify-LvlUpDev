@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Votify.Domain.ProjectFolder;
 
 namespace Votify.Infrastructure.Repositories;
@@ -33,6 +33,12 @@ public class ProjectRepository : IProjectRepository
             .AsNoTracking()
             .ToListAsync();
 
+    public async Task<List<Project>> GetByEventAsync(string eventId)
+        => await _context.Projects
+            .AsNoTracking()
+            .Where(p => p.EventId == eventId)
+            .ToListAsync();
+
     public async Task AddAsync(Project project)
         => await _context.Projects.AddAsync(project);
 
@@ -40,6 +46,6 @@ public class ProjectRepository : IProjectRepository
         => await _context.SaveChangesAsync();
 
     public async Task<bool> TitleExistsInEventAsync(string title, string eventId)
-    => await _context.Projects
-        .AnyAsync(p => p.Title == title && p.EventId == eventId);
+        => await _context.Projects
+            .AnyAsync(p => p.Title == title && p.EventId == eventId);
 }

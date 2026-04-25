@@ -8,6 +8,7 @@ namespace Votify.Domain.VoteFolder
         Task<int> CountVotesByUserInCategoryAsync(string userId, string categoryId);
         Task<bool> HasUserVotedForProjectAsync(string userId, string projectId);
         Task<List<Vote>> GetByProjectAsync(string projectId);
+        Task<List<Vote>> GetByProjectIdsAsync(IEnumerable<string> projectIds);
         Task RemoveByUserInCategoryAsync(string userId, string categoryId, string? votingSessionId = null);
         Task SaveChangesAsync();
     }

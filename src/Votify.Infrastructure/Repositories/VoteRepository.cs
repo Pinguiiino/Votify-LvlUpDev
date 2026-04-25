@@ -48,6 +48,15 @@ namespace Votify.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<Vote>> GetByProjectIdsAsync(IEnumerable<string> projectIds)
+        {
+            var ids = projectIds.ToList();
+            return await _context.Votes
+                .AsNoTracking()
+                .Where(v => ids.Contains(v.VotedProjectId))
+                .ToListAsync();
+        }
+
         public async Task RemoveByUserInCategoryAsync(string userId, string categoryId, string? votingSessionId = null)
         {
             var query = _context.Votes

@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Votify.Infrastructure;
+using Votify.Domain.VoteFolder;
 
 namespace Votify.Api.Controllers
 {
@@ -8,26 +7,22 @@ namespace Votify.Api.Controllers
     [Route("api/[controller]")]
     public class VotingSessionsController : ControllerBase
     {
-        private readonly VotifyDbContext _context;
+        private readonly VotingSessionService _service;
 
-        public VotingSessionsController(VotifyDbContext context)
+        public VotingSessionsController(VotingSessionService service)
         {
-            _context = context;
+            _service = service;
         }
 
         [HttpGet("active/{eventId}")]
         public async Task<IActionResult> GetActive(string eventId)
         {
-            var now = DateTime.UtcNow;
-
-            var sesiones = await _context.VotingSessions
-                .Include(vs => vs.Category)
-                .Where(vs => vs.Category != null && vs.Category.EventId == eventId)
-                .ToListAsync();
+            var sesiones = await _service.GetByEventAsync(eventId);
 
             if (sesiones.Count == 0)
                 return NotFound("No hay sesiones de votación para este evento.");
 
+            var now = DateTime.UtcNow;
             var result = sesiones.Select(vs => new
             {
                 vs.Id,

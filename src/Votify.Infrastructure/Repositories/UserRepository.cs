@@ -1,6 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Votify.Domain.UserFolder;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,6 +26,9 @@ namespace Votify.Infrastructure.Repositories
                 u.Name.ToLower() == nameLower ||
                 u.Email.ToLower() == emailLower);
         }
+
+        public async Task<int> CountAsync()
+            => await _context.Users.CountAsync();
 
         public async Task SaveChangesAsync()
         {
