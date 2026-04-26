@@ -163,6 +163,8 @@ public class CategoryService
                     throw new ArgumentException($"Criterios repetidos dentro de la misma votación: \"{crNombre}\".");
                 if (crData.Weight < 0)
                     throw new ArgumentException($"El peso del criterio \"{crNombre}\" no puede ser negativo.");
+                if (data.EvaluationType == EvaluationType.WeightedScale && crData.Weight <= 0)
+                    throw new ArgumentException($"El peso del criterio \"{crNombre}\" es obligatorio y debe ser mayor que 0.");
 
                 sesion.Criteria.Add(new Criterion(
                     votingSessionId: sesion.Id,
