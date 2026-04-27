@@ -34,6 +34,8 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<IAuditRequestRepository, AuditRequestRepository>();
 builder.Services.AddScoped<AuditService>();
 
+builder.Services.AddScoped<IWeightedVoteRepository, WeightedVoteRepository>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazor",

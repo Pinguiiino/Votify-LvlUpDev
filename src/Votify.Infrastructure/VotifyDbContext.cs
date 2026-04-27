@@ -23,6 +23,8 @@ public class VotifyDbContext : DbContext
     public DbSet<VotingSession> VotingSessions { get; set; }
     public DbSet<Vote> Votes { get; set; }
     public DbSet<AuditRequest> AuditRequests { get; set; }
+    public DbSet<WeightedVote> WeightedVotes { get; set; }
+    public DbSet<WeightedCriterionScore> WeightedCriterionScores { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -133,6 +135,21 @@ public class VotifyDbContext : DbContext
 
         modelBuilder.Entity<CriterionScore>()
             .Property(cs => cs.Score)
+            .HasPrecision(5, 2);
+
+        modelBuilder.Entity<WeightedVote>()
+            .HasMany(wv => wv.CriterionScores)
+            .WithOne(wcs => wcs.WeightedVote)
+            .HasForeignKey(wcs => wcs.WeightedVoteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WeightedCriterionScore>()
+            .HasOne(wcs => wcs.WeightedVote)
+            .WithMany(wv => wv.CriterionScores)
+            .HasForeignKey(wcs => wcs.WeightedVoteId);
+
+        modelBuilder.Entity<WeightedCriterionScore>()
+            .Property(wcs => wcs.Score)
             .HasPrecision(5, 2);
     }
 }

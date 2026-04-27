@@ -1,0 +1,305 @@
+﻿@page "/event/{EventId}/categories/{CategoryId}/vote-weighted"
+@rendermode InteractiveServer
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+@inject Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage.ProtectedSessionStorage SessionStorage
+@inject IJSRuntime JS
+
+<PageTitle>Evaluación por Baremo - Votify</PageTitle>
+
+<div class="weighted-container">
+    <header class="weighted-header">
+        <button class="back-btn" @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories/{CategoryId}/projects")'>
+            ← Volver a proyectos
+        </button>
+        <h1 class="weighted-title">Evaluación por Baremo</h1>
+        <p class="weighted-subtitle">
+            Puntúa cada criterio de 0 a 10 para cada proyecto. La puntuación final es la suma ponderada de los criterios.
+        </p>
+    </header>
+
+    @if (proyectos == null)
+    {
+        <div class="weighted-loading">
+            <div class="weighted-spinner"></div>
+            <p>Cargando proyectos...</p>
+        </div>
+    }
+    else if (!proyectos.Any())
+    {
+        <div class="weighted-empty">
+            <p>No hay proyectos en esta categoría.</p>
+        </div>
+    }
+    else
+    {
+        @if (criterios.Any())
+        {
+            <div class="criteria-legend">
+                <span class="criteria-legend-label">Criterios de evaluación:</span>
+                @foreach (var c in criterios)
+                {
+                    <span class="criteria-legend-pill">
+                        @c.Name <span class="criteria-legend-weight">@((c.Weight * 100).ToString("0"))%</span>
+                    </span>
+                }
+            </div>
+        }
+
+        @foreach (var proyecto in proyectos)
+        {
+            <div class="weighted-project-card">
+                <div class="weighted-project-header">
+                    <div>
+                        <h3 class="weighted-project-title">@proyecto.Title</h3>
+                        @if (!string.IsNullOrWhiteSpace(proyecto.Description))
+                        {
+                            <p class="weighted-project-desc">@proyecto.Description</p>
+                        }
+                    </div>
+                    <div class="weighted-score-badge">
+                        <span class="weighted-score-value">@CalcularScore(proyecto.Id).ToString("0.00")</span>
+                        <span class="weighted-score-max">/ 10</span>
+                    </div>
+                </div>
+
+                <div class="criteria-rows">
+                    @foreach (var criterio in criterios)
+                    {
+                        <div class="criterion-row">
+                            <div class="criterion-info">
+                                <span class="criterion-label">@criterio.Name</span>
+                                <span class="criterion-weight-badge">@((criterio.Weight * 100).ToString("0"))%</span>
+                                @if (!string.IsNullOrWhiteSpace(criterio.Description))
+                                {
+                                    <p class="criterion-desc">@criterio.Description</p>
+                                }
+                            </div>
+                            <div class="score-input-group">
+                                <input type="number" min="0" max="10" step="0.5"
+                                       class="score-input"
+                                       value="@GetScore(proyecto.Id, criterio.Id)"
+                                       @onchange="e => SetScore(proyecto.Id, criterio.Id, e.Value?.ToString())" />
+                                <span class="score-max">/ 10</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (sesion?.AllowComments == true)
+                {
+                    <div class="weighted-comment-section">
+                        <label class="weighted-comment-label">
+                            Comentario
+                            @if (sesion.RequireComments)
+                            {
+                                <span class="required-star">*</span>
+                            }
+                            else
+                            {
+                                <span class="optional-tag">(opcional)</span>
+                            }
+                        </label>
+                        <textarea class="weighted-comment-textarea"
+                                  rows="2"
+                                  maxlength="500"
+                                  @bind="comentarios[proyecto.Id]"
+                                  placeholder="@(sesion.RequireComments ? "Obligatorio..." : "Añade un comentario sobre este proyecto...")" />
+                        <div class="weighted-char-count">
+                            @((comentarios.TryGetValue(proyecto.Id, out var txt) ? txt?.Length : 0) ?? 0)/500
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (error != null)
+        {
+            <div class="weighted-error-banner">@error</div>
+        }
+
+        <button class="weighted-submit-btn" @onclick="EnviarVotos" disabled="@enviando">
+            @if (enviando)
+            {
+                <span>Guardando...</span>
+            }
+            else
+            {
+                <span>✓ Confirmar Evaluación</span>
+            }
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public string EventId { get; set; } = "";
+    [Parameter] public string CategoryId { get; set; } = "";
+
+    private List<ProjectDto>? proyectos;
+    private List<CriterionDto> criterios = new();
+    private VotingSessionSimpleDto? sesion;
+    private string userId = "";
+    private string? error;
+    private bool enviando = false;
+
+    private Dictionary<string, Dictionary<string, double>> scores = new();
+    private Dictionary<string, string> comentarios = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var http = HttpClientFactory.CreateClient("API");
+
+        var sesiones = await http.GetFromJsonAsync<List<VotingSessionSimpleDto>>(
+            $"api/votingsessions/by-category/{CategoryId}");
+        sesion = sesiones?.FirstOrDefault(s => s.EvaluationType == "WeightedScale");
+
+        if (sesion != null)
+            criterios = sesion.Criteria;
+
+        proyectos = await http.GetFromJsonAsync<List<ProjectDto>>(
+            $"api/projects/by-category/{CategoryId}");
+
+        if (proyectos != null)
+        {
+            foreach (var p in proyectos)
+            {
+                scores[p.Id] = criterios.ToDictionary(c => c.Id, _ => 0.0);
+                comentarios[p.Id] = "";
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        var result = await SessionStorage.GetAsync<string>("votify_uid");
+        userId = result.Success ? result.Value! : Guid.NewGuid().ToString();
+        if (!result.Success) await SessionStorage.SetAsync("votify_uid", userId);
+
+        if (sesion != null)
+        {
+            var http = HttpClientFactory.CreateClient("API");
+            var previos = await http.GetFromJsonAsync<List<WeightedVoteDto>>(
+                $"api/votes/weighted?userId={userId}&votingSessionId={sesion.Id}");
+
+            if (previos != null && previos.Any())
+            {
+                foreach (var v in previos)
+                {
+                    if (!scores.ContainsKey(v.ProjectId))
+                        scores[v.ProjectId] = new();
+                    scores[v.ProjectId][v.CriterionId] = v.Score;
+                    if (!string.IsNullOrEmpty(v.Comment))
+                        comentarios[v.ProjectId] = v.Comment;
+                }
+                StateHasChanged();
+            }
+        }
+    }
+
+    private double GetScore(string projectId, string criterionId)
+        => scores.TryGetValue(projectId, out var d) && d.TryGetValue(criterionId, out var v) ? v : 0;
+
+    private void SetScore(string projectId, string criterionId, string? raw)
+    {
+        if (double.TryParse(raw, System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture, out var val))
+        {
+            val = Math.Clamp(val, 0, 10);
+            if (!scores.ContainsKey(projectId)) scores[projectId] = new();
+            scores[projectId][criterionId] = val;
+        }
+    }
+
+    private double CalcularScore(string projectId)
+    {
+        if (!scores.TryGetValue(projectId, out var d)) return 0;
+        return criterios.Sum(c => d.TryGetValue(c.Id, out var s) ? s * c.Weight : 0);
+    }
+
+    private async Task EnviarVotos()
+    {
+        error = null;
+
+        if (sesion == null) { error = "No hay sesión activa."; return; }
+
+        if (sesion.RequireComments && proyectos!.Any(p => string.IsNullOrWhiteSpace(comentarios[p.Id])))
+        {
+            error = "El comentario es obligatorio en cada proyecto.";
+            return;
+        }
+
+        enviando = true;
+        try
+        {
+            var payload = new
+            {
+                UserId = userId,
+                CategoryId,
+                VotingSessionId = sesion.Id,
+                Scores = proyectos!.Select(p => new
+                {
+                    ProjectId = p.Id,
+                    Comment = string.IsNullOrWhiteSpace(comentarios[p.Id])
+                        ? null : comentarios[p.Id].Trim(),
+                    CriterionScores = criterios.Select(c => new
+                    {
+                        CriterionId = c.Id,
+                        Score = GetScore(p.Id, c.Id)
+                    }).ToList()
+                }).ToList()
+            };
+
+            var http = HttpClientFactory.CreateClient("API");
+            var resp = await http.PostAsJsonAsync("api/votes/weighted-batch", payload);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                await JS.InvokeVoidAsync("alert", "¡Evaluación registrada!");
+                Navigation.NavigateTo($"/event/{EventId}/categories/{CategoryId}/projects");
+            }
+            else
+            {
+                error = await resp.Content.ReadAsStringAsync();
+                error = error?.Trim('"');
+            }
+        }
+        finally
+        {
+            enviando = false;
+        }
+    }
+
+    public class ProjectDto
+    {
+        public string Id { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string? Description { get; set; }
+    }
+
+    public class CriterionDto
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string? Description { get; set; }
+        public double Weight { get; set; }
+    }
+
+    public class VotingSessionSimpleDto
+    {
+        public string Id { get; set; } = "";
+        public string EvaluationType { get; set; } = "";
+        public bool AllowComments { get; set; }
+        public bool RequireComments { get; set; }
+        public List<CriterionDto> Criteria { get; set; } = new();
+    }
+
+    public class WeightedVoteDto
+    {
+        public string ProjectId { get; set; } = "";
+        public string CriterionId { get; set; } = "";
+        public double Score { get; set; }
+        public string? Comment { get; set; }
+    }
+}

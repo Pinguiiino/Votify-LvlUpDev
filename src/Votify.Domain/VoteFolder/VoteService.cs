@@ -8,14 +8,17 @@ namespace Votify.Domain.VoteFolder
         private readonly IVoteRepository _repository;
         private readonly IVotingSessionRepository _sessionRepo;
         private readonly ICategoryRepository _categoryRepo;
+        private readonly IWeightedVoteRepository _weightedRepo;
 
         public VoteService(IVoteRepository repository,
                            IVotingSessionRepository sessionRepo,
-                           ICategoryRepository categoryRepo)
+                           ICategoryRepository categoryRepo,
+                           IWeightedVoteRepository weightedRepo)
         {
             _repository = repository;
             _sessionRepo = sessionRepo;
             _categoryRepo = categoryRepo;
+            _weightedRepo = weightedRepo;
         }
 
         public async Task<Vote> CastVoteAsync(string projectId, string categoryId, string eventId, string userId, int topPosition)
@@ -98,6 +101,51 @@ namespace Votify.Domain.VoteFolder
             await _repository.AddRangeAsync(nuevos);
             await _repository.SaveChangesAsync();
         }
+        
+        public async Task CastWeightedVotesAsync(
+            string userId, string categoryId, string votingSessionId,
+            List<(string ProjectId, string? Comment, List<(string CriterionId, double Score)> Scores)> projectEvals)
+        {
+            var session = await _sessionRepo.GetByIdAsync(votingSessionId)
+                ?? throw new InvalidOperationException("Sesión no encontrada.");
+
+            if (session.CategoryId != categoryId)
+                throw new InvalidOperationException("La sesión no pertenece a la categoría.");
+
+            if (!session.IsOpen)
+                throw new InvalidOperationException("La sesión no está abierta.");
+
+            if (session.EvaluationType != EvaluationType.WeightedScale)
+                throw new InvalidOperationException("Esta sesión no es de baremo ponderado.");
+
+            if (session.RequireComments && projectEvals.Any(e => string.IsNullOrWhiteSpace(e.Comment)))
+                throw new InvalidOperationException("El comentario es obligatorio en cada proyecto.");
+
+            await _weightedRepo.RemoveByUserAndSessionAsync(userId, votingSessionId);
+
+            var nuevos = projectEvals.Select(e =>
+            {
+                var wv = new WeightedVote(votingSessionId, e.ProjectId, userId, categoryId,
+                                          string.IsNullOrWhiteSpace(e.Comment) ? null : e.Comment.Trim());
+                foreach (var (criterionId, score) in e.Scores)
+                {
+                    var clamped = Math.Clamp(score, 0, 10);
+                    wv.CriterionScores.Add(new WeightedCriterionScore(wv.Id, criterionId, clamped));
+                }
+                return wv;
+            }).ToList();
+
+            await _weightedRepo.AddRangeAsync(nuevos);
+            await _weightedRepo.SaveChangesAsync();
+        }
+
+        public async Task<List<WeightedVoteDto>> GetWeightedVotesByUserAndSessionAsync(
+            string userId, string votingSessionId)
+        {
+            var votes = await _weightedRepo.GetByUserAndSessionAsync(userId, votingSessionId);
+            return votes.SelectMany(wv => wv.CriterionScores.Select(cs => new WeightedVoteDto(
+                wv.ProjectId, cs.CriterionId, cs.Score, wv.Comment))).ToList();
+        }
 
         public Task<List<Vote>> GetUserVotesAsync(string userId, string categoryId)
             => _repository.GetByUserIdAndCategoryAsync(userId, categoryId);
@@ -122,5 +170,6 @@ namespace Votify.Domain.VoteFolder
         }
     }
 
+    public record WeightedVoteDto(string ProjectId, string CriterionId, double Score, string? Comment);
     public record CommentDto(string Comment, int TopPosition, string VoteType);
 }

@@ -19,7 +19,7 @@ public class CategoriesController : ControllerBase
     public async Task<IActionResult> GetByEvent(string eventId)
     {
         var categorias = await _service.GetByEventAsync(eventId);
-        return Ok(categorias.Select(ToDto));
+        return Ok(categorias.Select(ToSimpleDto));
     }
 
     [HttpGet("{id}")]
@@ -125,6 +125,17 @@ public class CategoriesController : ControllerBase
             p.Description,
             TargetVoter = p.TargetVoter?.ToString()
         })
+    };
+
+    private static object ToSimpleDto(Category c) => new
+    {
+        c.Id,
+        c.Name,
+        c.Description,
+        c.AllowSelfVoting,
+        TopNProjectsAllowed = c.VotingSessions
+        .FirstOrDefault(vs => vs.EvaluationType == EvaluationType.TopN)?.TopN ?? 3,
+        EvaluationType = c.VotingSessions.FirstOrDefault()?.EvaluationType.ToString()
     };
 }
 

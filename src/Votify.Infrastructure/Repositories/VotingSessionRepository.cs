@@ -14,12 +14,14 @@ namespace Votify.Infrastructure.Repositories
 
         public async Task<List<VotingSession>> GetByCategoryAsync(string categoryId)
             => await _context.VotingSessions
+                .Include(vs => vs.Criteria)
                 .Where(vs => vs.CategoryId == categoryId)
                 .ToListAsync();
 
         public async Task<List<VotingSession>> GetByEventAsync(string eventId)
             => await _context.VotingSessions
                 .Include(vs => vs.Category)
+                .Include(vs => vs.Criteria)
                 .Where(vs => vs.Category != null && vs.Category.EventId == eventId)
                 .ToListAsync();
 

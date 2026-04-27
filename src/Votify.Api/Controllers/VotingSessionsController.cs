@@ -37,5 +37,19 @@ namespace Votify.Api.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet("by-category/{categoryId}")]
+        public async Task<IActionResult> GetByCategory(string categoryId)
+        {
+            var sesiones = await _service.GetByCategoryAsync(categoryId);
+            return Ok(sesiones.Select(vs => new
+            {
+                vs.Id,
+                EvaluationType = vs.EvaluationType.ToString(),
+                vs.AllowComments,
+                vs.RequireComments,
+                Criteria = vs.Criteria.Select(cr => new { cr.Id, cr.Name, cr.Description, cr.Weight })
+            }));
+        }
     }
 }
