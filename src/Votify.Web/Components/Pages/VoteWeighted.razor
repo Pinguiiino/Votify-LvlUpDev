@@ -149,10 +149,14 @@
     {
         var http = HttpClientFactory.CreateClient("API");
 
-        var sesiones = await http.GetFromJsonAsync<List<VotingSessionSimpleDto>>(
-            $"api/votingsessions/by-category/{CategoryId}");
-        sesion = sesiones?.FirstOrDefault(s => s.EvaluationType == "WeightedScale");
-
+        try {
+            var sesiones = await http.GetFromJsonAsync<List<VotingSessionSimpleDto>>(
+                $"api/votingsessions/by-category/{CategoryId}");
+            sesion = sesiones?.FirstOrDefault(s => s.EvaluationType == "0" || s.EvaluationType == "WeightedScale");
+        } catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
         if (sesion != null)
             criterios = sesion.Criteria;
 
