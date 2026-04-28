@@ -14,7 +14,7 @@
         </button>
         <h1 class="weighted-title">Evaluación por Baremo</h1>
         <p class="weighted-subtitle">
-            Puntúa cada criterio de 0 a 10 para cada proyecto. La puntuación final es la suma ponderada de los criterios.
+            @GetSubtitleForType()
         </p>
     </header>
 
@@ -41,6 +41,12 @@
                 {
                     <span class="criteria-legend-pill">
                         @c.Name <span class="criteria-legend-weight">@((c.Weight * 100).ToString("0"))%</span>
+                    </span>
+                }
+                @if (criterionType != null)
+                {
+                    <span class="criteria-type-badge criteria-type-@criterionType.ToLower()">
+                        @GetTypeLabel()
                     </span>
                 }
             </div>
@@ -75,13 +81,53 @@
                                     <p class="criterion-desc">@criterio.Description</p>
                                 }
                             </div>
-                            <div class="score-input-group">
-                                <input type="number" min="0" max="10" step="0.5"
-                                       class="score-input"
-                                       value="@GetScore(proyecto.Id, criterio.Id)"
-                                       @onchange="e => SetScore(proyecto.Id, criterio.Id, e.Value?.ToString())" />
-                                <span class="score-max">/ 10</span>
-                            </div>
+
+                            @if (criterionType == "Checklist")
+                            {
+                                <div class="checklist-input-group">
+                                    <label class="checklist-toggle @(GetScore(proyecto.Id, criterio.Id) == 10 ? "checked" : "")">
+                                        <input type="checkbox"
+                                               checked="@(GetScore(proyecto.Id, criterio.Id) == 10)"
+                                               @onchange="e => SetCheckbox(proyecto.Id, criterio.Id, e.Value)" />
+                                        <span class="checklist-toggle-track">
+                                            <span class="checklist-toggle-thumb"></span>
+                                        </span>
+                                        <span class="checklist-toggle-label">
+                                            @(GetScore(proyecto.Id, criterio.Id) == 10 ? "Cumple" : "No cumple")
+                                        </span>
+                                    </label>
+                                    <span class="checklist-score-preview">
+                                        +@((GetScore(proyecto.Id, criterio.Id) * criterio.Weight).ToString("0.00"))
+                                    </span>
+                                </div>
+                            }
+                            else if (criterionType == "Rubric")
+                            {
+                                <div class="rubric-input-group">
+                                    @foreach (var level in RubricLevels)
+                                    {
+                                        var isSelected = GetScore(proyecto.Id, criterio.Id) == level.Score;
+                                        <button type="button"
+                                                class="rubric-level-btn @(isSelected ? "selected" : "") rubric-level-@level.Key"
+                                                title="@level.Label (@level.Score)"
+                                                @onclick="() => SetScore(proyecto.Id, criterio.Id, level.Score.ToString(System.Globalization.CultureInfo.InvariantCulture))">
+                                            <span class="rubric-level-key">@level.Key</span>
+                                            <span class="rubric-level-label">@level.Label</span>
+                                        </button>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                @* Numeric (default) *@
+                                <div class="score-input-group">
+                                    <input type="number" min="0" max="10" step="0.5"
+                                           class="score-input"
+                                           value="@GetScore(proyecto.Id, criterio.Id)"
+                                           @onchange="e => SetScore(proyecto.Id, criterio.Id, e.Value?.ToString())" />
+                                    <span class="score-max">/ 10</span>
+                                </div>
+                            }
                         </div>
                     }
                 </div>
@@ -138,6 +184,7 @@
     private List<ProjectDto>? proyectos;
     private List<CriterionDto> criterios = new();
     private VotingSessionSimpleDto? sesion;
+    private string? criterionType;
     private string userId = "";
     private string? error;
     private bool enviando = false;
@@ -145,20 +192,38 @@
     private Dictionary<string, Dictionary<string, double>> scores = new();
     private Dictionary<string, string> comentarios = new();
 
+    private static readonly List<RubricLevel> RubricLevels = new()
+    {
+        new("D", "Insuficiente", 0),
+        new("C", "Regular",      2.5),
+        new("B", "Bueno",        5),
+        new("A", "Notable",      7.5),
+        new("S", "Excelente",    10),
+    };
+
+    private record RubricLevel(string Key, string Label, double Score);
+
     protected override async Task OnInitializedAsync()
     {
         var http = HttpClientFactory.CreateClient("API");
 
-        try {
+        try
+        {
             var sesiones = await http.GetFromJsonAsync<List<VotingSessionSimpleDto>>(
                 $"api/votingsessions/by-category/{CategoryId}");
-            sesion = sesiones?.FirstOrDefault(s => s.EvaluationType == "0" || s.EvaluationType == "WeightedScale");
-        } catch (Exception ex)
+            sesion = sesiones?.FirstOrDefault(s =>
+                s.EvaluationType == "0" || s.EvaluationType == "WeightedScale");
+        }
+        catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
         }
+
         if (sesion != null)
+        {
             criterios = sesion.Criteria;
+            criterionType = sesion.CriterionType;
+        }
 
         proyectos = await http.GetFromJsonAsync<List<ProjectDto>>(
             $"api/projects/by-category/{CategoryId}");
@@ -216,11 +281,28 @@
         }
     }
 
+    private void SetCheckbox(string projectId, string criterionId, object? value)
+        => SetScore(projectId, criterionId, (value is bool b && b) ? "10" : "0");
+
     private double CalcularScore(string projectId)
     {
         if (!scores.TryGetValue(projectId, out var d)) return 0;
         return criterios.Sum(c => d.TryGetValue(c.Id, out var s) ? s * c.Weight : 0);
     }
+
+    private string GetSubtitleForType() => criterionType switch
+    {
+        "Checklist" => "Marca cada criterio que el proyecto cumpla. La puntuación final es la suma ponderada de los criterios cumplidos.",
+        "Rubric" => "Selecciona el nivel alcanzado en cada criterio. La puntuación final es la suma ponderada de los niveles elegidos.",
+        _ => "Puntúa cada criterio de 0 a 10 para cada proyecto. La puntuación final es la suma ponderada de los criterios."
+    };
+
+    private string GetTypeLabel() => criterionType switch
+    {
+        "Checklist" => "✓ Checklist",
+        "Rubric" => "▤ Rúbrica",
+        _ => "# Numérico"
+    };
 
     private async Task EnviarVotos()
     {
@@ -294,6 +376,7 @@
     {
         public string Id { get; set; } = "";
         public string EvaluationType { get; set; } = "";
+        public string? CriterionType { get; set; }
         public bool AllowComments { get; set; }
         public bool RequireComments { get; set; }
         public List<CriterionDto> Criteria { get; set; } = new();
@@ -307,3 +390,4 @@
         public string? Comment { get; set; }
     }
 }
+
