@@ -5,5 +5,6 @@ namespace Votify.Domain.UserFolder
         Task AddAsync(User user);
         Task<(bool NameExists, bool EmailExists)> CheckForDuplicatesAsync(string name, string email);
         Task SaveChangesAsync();
+        Task<int> CountAsync();
     }
 }
