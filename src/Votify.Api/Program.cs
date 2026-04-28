@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Votify.Domain.AuditFolder;
 using Votify.Domain.CategoryFolder;
 using Votify.Domain.EventFolder;
 using Votify.Domain.ProjectFolder;
@@ -25,6 +26,11 @@ builder.Services.AddScoped<VoteService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddScoped<AuthService>();
+
+builder.Services.AddScoped<IAuditRequestRepository, AuditRequestRepository>();
+builder.Services.AddScoped<AuditService>();
+
+builder.Services.AddScoped<IWeightedVoteRepository, WeightedVoteRepository>();
 
 builder.Services.AddCors(options =>
 {

@@ -46,8 +46,34 @@ namespace Votify.Api.Controllers
             var comments = await _service.GetCommentsByProjectAsync(projectId);
             return Ok(comments.Select(c => new { c.Comment, c.TopPosition, c.VoteType }));
         }
+        [HttpPost("weighted-batch")]
+        public async Task<IActionResult> CastWeightedVotes([FromBody] WeightedBatchRequest dto)
+        {
+            try
+            {
+                var evals = dto.Scores.Select(s => (
+                    s.ProjectId,
+                    s.Comment,
+                    s.CriterionScores.Select(cs => (cs.CriterionId, cs.Score)).ToList()
+                )).ToList();
+
+                await _service.CastWeightedVotesAsync(dto.UserId, dto.CategoryId, dto.VotingSessionId, evals);
+                return Ok(new { message = "Evaluación registrada" });
+            }
+            catch (Exception ex) { return BadRequest(ex.Message); }
+        }
+
+        [HttpGet("weighted")]
+        public async Task<IActionResult> GetWeightedByUser(string userId, string votingSessionId)
+        {
+            var votes = await _service.GetWeightedVotesByUserAndSessionAsync(userId, votingSessionId);
+            return Ok(votes);
+        }        
     }
 
+    public record WeightedCriterionScoreDto(string CriterionId, double Score);
+    public record WeightedProjectScoreDto(string ProjectId, string? Comment, List<WeightedCriterionScoreDto> CriterionScores);
+    public record WeightedBatchRequest(string UserId, string CategoryId, string VotingSessionId, List<WeightedProjectScoreDto> Scores);
     public record RankedProjectDto(string ProjectId, int Position, string? Comment);
     public record BatchVoteRequest(string CategoryId, string EventId, string UserId, string VotingSessionId, List<RankedProjectDto> RankedProjects);
 }

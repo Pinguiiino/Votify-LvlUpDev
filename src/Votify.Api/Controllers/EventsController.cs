@@ -49,37 +49,31 @@ public class EventsController : ControllerBase
             var startUtc = DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc);
             var endUtc = DateTime.SpecifyKind(dto.EndDate, DateTimeKind.Utc);
 
-            var categoriasData = dto.Categories.Select(c => new CreateCategoryData
-            {
-                Name = c.Name,
-                Description = c.Description,
-                AllowSelfVoting = c.AllowSelfVoting,
-                TopNProjectsAllowed = c.TopNProjectsAllowed,
-                Criteria = c.Criteria.Select(cr => new CreateCriterionData
-                {
-                    Name = cr.Name,
-                    Description = cr.Description,
-                    Type = cr.Type,
-                    Weight = cr.Weight
-                }).ToList(),
-                Prizes = c.Prizes.Select(p => new CreatePrizeData
-                {
-                    Position = p.Position,
-                    Name = p.Name,
-                    Description = p.Description
-                }).ToList()
-            }).ToList();
-
             var evento = await _service.CreateEventAsync(
                 dto.Name, dto.Modality, dto.MaxProjects,
                 startUtc, endUtc,
-                dto.Description, dto.ImageUrl, categoriasData);
+                dto.Description, dto.ImageUrl);
 
             return Ok(new { message = "Evento creado con éxito", id = evento.Id });
         }
         catch (Exception ex)
         {
             return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpGet("{id}/stats")]
+    public async Task<ActionResult<EventDashboardDto>> GetStats(string id)
+    {
+        try
+        {
+            var stats = await _service.GetDashboardStatsAsync(id);
+            if (stats == null) return NotFound("Evento no encontrado");
+            return Ok(stats);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Error al obtener estadísticas: {ex.Message}");
         }
     }
 
@@ -124,9 +118,35 @@ public class EventsController : ControllerBase
             c.Name,
             c.Description,
             c.AllowSelfVoting,
-            c.TopNProjectsAllowed,
-            Criteria = c.Criteria.Select(cr => new { cr.Id, cr.Name, cr.Type, cr.Weight, cr.Description }),
-            Prizes = c.Prizes.Select(p => new { p.Id, p.Position, p.Name, p.Description })
+            c.CombineResults,
+            c.JuryWeight,
+            c.PublicWeight,
+            VotingSessions = c.VotingSessions.Select(vs => new
+            {
+                vs.Id,
+                vs.Name,
+                vs.Description,
+                VoterType = vs.VoterType.ToString(),
+                EvaluationType = vs.EvaluationType.ToString(),
+                CriterionType = vs.CriterionType?.ToString(),
+                vs.TopN,
+                vs.PointsPerVoter,
+                vs.MaxPointsPerProject,
+                vs.AllowComments,
+                vs.RequireComments,
+                vs.AllowCommentsPerCriterion,
+                vs.OpenAt,
+                vs.CloseAt,
+                Criteria = vs.Criteria.Select(cr => new { cr.Id, cr.Name, cr.Weight, cr.Description })
+            }),
+            Prizes = c.Prizes.Select(p => new
+            {
+                p.Id,
+                p.Position,
+                p.Name,
+                p.Description,
+                TargetVoter = p.TargetVoter?.ToString()
+            })
         })
     };
 }
@@ -140,30 +160,4 @@ public class CreateEventDto
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public string? ImageUrl { get; set; }
-    public List<CategoryDto> Categories { get; set; } = new();
-}
-
-public class CategoryDto
-{
-    public string Name { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public bool AllowSelfVoting { get; set; }
-    public int TopNProjectsAllowed { get; set; } = 3;
-    public List<CriterionDto> Criteria { get; set; } = new();
-    public List<PrizeDto> Prizes { get; set; } = new();
-}
-
-public class CriterionDto
-{
-    public string Name { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public string Type { get; set; } = "Numeric";
-    public double Weight { get; set; }
-}
-
-public class PrizeDto
-{
-    public int Position { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string? Description { get; set; }
 }

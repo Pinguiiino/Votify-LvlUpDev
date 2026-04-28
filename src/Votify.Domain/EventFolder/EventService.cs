@@ -1,5 +1,7 @@
 using Votify.Domain.CategoryFolder;
 using Votify.Domain.Factory;
+using Votify.Domain.ProjectFolder;
+using Votify.Domain.UserFolder;
 using Votify.Domain.VoteFolder;
 
 namespace Votify.Domain.EventFolder;
@@ -7,10 +9,29 @@ namespace Votify.Domain.EventFolder;
 public class EventService
 {
     private readonly IEventRepository _repository;
+    private readonly IProjectRepository _projectRepository;
+    private readonly ICategoryRepository _categoryRepository;
+    private readonly IVotingSessionRepository _votingSessionRepository;
+    private readonly IVoteRepository _voteRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IWeightedVoteRepository _weightedVoteRepository;
 
-    public EventService(IEventRepository repository)
+    public EventService(
+        IEventRepository repository,
+        IProjectRepository projectRepository,
+        ICategoryRepository categoryRepository,
+        IVotingSessionRepository votingSessionRepository,
+        IVoteRepository voteRepository,
+        IUserRepository userRepository,
+        IWeightedVoteRepository weightedVoteRepository)
     {
         _repository = repository;
+        _projectRepository = projectRepository;
+        _categoryRepository = categoryRepository;
+        _votingSessionRepository = votingSessionRepository;
+        _voteRepository = voteRepository;
+        _userRepository = userRepository;
+        _weightedVoteRepository = weightedVoteRepository;
     }
 
     public Task<List<Event>> GetAllAsync() => _repository.GetAllAsync();
@@ -24,93 +45,131 @@ public class EventService
         string name, string modality, int maxProjects,
         DateTime startDate, DateTime endDate,
         string? description,
-        string? imageUrl,
-        List<CreateCategoryData> categoriasData)
+        string? imageUrl)
     {
         bool nombreOcupado = await _repository.ExistsByNameAsync(name);
-
         if (nombreOcupado)
-        {
             throw new ArgumentException($"Ya existe un evento con el nombre \"{name}\". Elige un nombre diferente.");
-        }
 
         var creator = new ModalityEventCreator(modality);
         var evento = creator.Create(name, maxProjects, startDate, endDate, description, imageUrl);
 
-        var votingSession = new VotingSession(
-            eventId: evento.Id,
-            name: $"Votación principal - {evento.Name}",
-            openAt: startDate,
-            closeAt: endDate,
-            description: "Sesión de votación general del evento.",
-            reminderMinutesBeforeClose: 60
-        );
-        evento.VotingSessions.Add(votingSession);
-
-        var categorias = new List<Category>();
-
-        var nombresProcesados = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var catData in categoriasData)
-        {
-            var nombreLimpio = catData.Name.Trim();
-
-            if (!nombresProcesados.Add(nombreLimpio))
-            {
-                throw new ArgumentException($"El evento no puede tener dos categorías con el mismo nombre: \"{nombreLimpio}\".");
-            }
-
-            var topN = catData.TopNProjectsAllowed > 0 ? catData.TopNProjectsAllowed : 3;
-
-            var categoria = new Category(
-                eventId: evento.Id,
-                name: nombreLimpio,
-                description: catData.Description,
-                allowSelfVoting: catData.AllowSelfVoting,
-                topNProjectsAllowed: topN
-            );
-
-            foreach (var crData in catData.Criteria)
-            {
-                var tipo = Enum.TryParse<CriterionType>(crData.Type, out var ct) ? ct : CriterionType.Numeric;
-                categoria.Criteria.Add(new Criterion(categoria.Id, crData.Name, tipo, crData.Weight, crData.Description));
-            }
-
-            foreach (var prData in catData.Prizes)
-            {
-                categoria.Prizes.Add(new Prize(categoria.Id, prData.Position, prData.Name, prData.Description));
-            }
-
-            categorias.Add(categoria);
-        }
-
-        await _repository.AddAsync(evento, categorias);
+        await _repository.AddAsync(evento);
         await _repository.SaveChangesAsync();
         return evento;
     }
-}
 
-public class CreateCategoryData
-{
-    public string Name { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public bool AllowSelfVoting { get; set; }
-    public int TopNProjectsAllowed { get; set; } = 3;
-    public List<CreateCriterionData> Criteria { get; set; } = new();
-    public List<CreatePrizeData> Prizes { get; set; } = new();
-}
+    public async Task<EventDashboardDto?> GetDashboardStatsAsync(string eventId)
+    {
+        var evento = await _repository.GetByIdAsync(eventId);
+        if (evento == null) return null;
 
-public class CreateCriterionData
-{
-    public string Name { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public string Type { get; set; } = "Numeric";
-    public double Weight { get; set; }
-}
+        var proyectos = await _projectRepository.GetByEventAsync(eventId);
+        var proyectosInfo = proyectos.ToDictionary(p => p.Id, p => p.Title);
 
-public class CreatePrizeData
-{
-    public int Position { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string? Description { get; set; }
+        var categorias = await _categoryRepository.GetByEventAsync(eventId);
+        var categoriasInfo = categorias.ToDictionary(c => c.Id, c => c.Name);
+
+        var sesiones = await _votingSessionRepository.GetByEventAsync(eventId);
+        var sesionesInfo = sesiones.ToDictionary(vs => vs.Id, vs => vs);
+
+        var projectIds = proyectosInfo.Keys.ToList();
+        var votosDelEvento = await _voteRepository.GetByProjectIdsAsync(projectIds);
+
+        var usuariosQueHanVotado = votosDelEvento.Select(v => v.UserId).Distinct().Count();
+        var totalRegistrados = await _userRepository.CountAsync();
+
+        var rankingTopN = votosDelEvento
+            .GroupBy(v => new { v.VotedProjectId, v.CategoryId, v.VotingSessionId })
+            .Select(g =>
+            {
+                int puntos = 0;
+                if (sesionesInfo.TryGetValue(g.Key.VotingSessionId, out var sesion))
+                {
+                    if (sesion.EvaluationType == EvaluationType.TopN && sesion.TopN.HasValue)
+                        puntos = g.Sum(v => Math.Max(0, (sesion.TopN.Value - v.TopPosition + 1) * 10));
+                    else if (sesion.EvaluationType != EvaluationType.WeightedScale)
+                        puntos = g.Count() * 10;
+                }
+                return new { g.Key.VotedProjectId, g.Key.CategoryId, puntos };
+            })
+            .Where(x => x.puntos > 0)
+            .ToList();
+
+        var weightedSessionIds = sesiones
+            .Where(vs => vs.EvaluationType == EvaluationType.WeightedScale)
+            .Select(vs => vs.Id)
+            .ToList();
+
+        var rankingWeighted = new List<(string ProjectId, string CategoryId, double Score)>();
+
+        if (weightedSessionIds.Any())
+        {
+            var weightedVotes = await _weightedVoteRepository.GetBySessionIdsAsync(weightedSessionIds);
+
+            var criteriaBySession = sesiones
+                .Where(vs => vs.EvaluationType == EvaluationType.WeightedScale)
+                .ToDictionary(vs => vs.Id, vs => vs.Criteria);
+
+            foreach (var sessionId in weightedSessionIds)
+            {
+                var criteria = criteriaBySession[sessionId];
+                if (!criteria.Any()) continue;
+
+                var weightMap = criteria.ToDictionary(c => c.Id, c => c.Weight);
+                var categoryId = sesiones.First(vs => vs.Id == sessionId).CategoryId;
+
+                var votosDeSesion = weightedVotes.Where(wv => wv.VotingSessionId == sessionId).ToList();
+
+                var scoresPorProyecto = votosDeSesion
+                    .GroupBy(wv => wv.ProjectId)
+                    .Select(g => (
+                        ProjectId: g.Key,
+                        CategoryId: categoryId,
+                        Score: g.Average(wv =>
+                            wv.CriterionScores.Sum(cs =>
+                                cs.Score * (weightMap.TryGetValue(cs.CriterionId, out var w) ? w : 0)))
+                    ));
+
+                rankingWeighted.AddRange(scoresPorProyecto);
+            }
+        }
+
+        var ranking = new List<ProjectResultDto>();
+
+        foreach (var grupo in rankingTopN.GroupBy(x => new { x.VotedProjectId, x.CategoryId }))
+        {
+            ranking.Add(new ProjectResultDto
+            {
+                Nombre = proyectosInfo.GetValueOrDefault(grupo.Key.VotedProjectId, "Proyecto"),
+                Categoria = categoriasInfo.GetValueOrDefault(grupo.Key.CategoryId, "General"),
+                Puntos = grupo.Sum(x => x.puntos)
+            });
+        }
+
+        foreach (var grupo in rankingWeighted.GroupBy(x => new { x.ProjectId, x.CategoryId }))
+        {
+            var puntos = (int)Math.Round(grupo.Sum(x => x.Score) * 10);
+            var existente = ranking.FirstOrDefault(r =>
+                r.Nombre == proyectosInfo.GetValueOrDefault(grupo.Key.ProjectId, "") &&
+                r.Categoria == categoriasInfo.GetValueOrDefault(grupo.Key.CategoryId, ""));
+
+            if (existente != null)
+                existente.Puntos += puntos;
+            else
+                ranking.Add(new ProjectResultDto
+                {
+                    Nombre = proyectosInfo.GetValueOrDefault(grupo.Key.ProjectId, "Proyecto"),
+                    Categoria = categoriasInfo.GetValueOrDefault(grupo.Key.CategoryId, "General"),
+                    Puntos = puntos
+                });
+        }
+
+        return new EventDashboardDto
+        {
+            TotalVotantes = totalRegistrados,
+            VotosEmitidos = usuariosQueHanVotado,
+            Ranking = ranking.OrderByDescending(p => p.Puntos).ToList()
+        };
+    }
 }

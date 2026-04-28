@@ -1,6 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Votify.Domain.UserFolder;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,6 +32,9 @@ namespace Votify.Infrastructure.Repositories
             bool emailExists = matchedUser.Email.ToLower() == emailLower;
             return (nameExists, emailExists);
         }
+
+        public async Task<int> CountAsync()
+            => await _context.Users.CountAsync();
 
         public async Task SaveChangesAsync()
         {

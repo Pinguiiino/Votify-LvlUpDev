@@ -21,7 +21,7 @@
             </button>
             
             <h1 class="main-title" style="margin-bottom: 0.5rem;">Proyectos de @(categoriaNombre ?? "la categoría")</h1>
-            <p class="subtitle" style="margin: 0;">Explora los proyectos y decide tu Top @maxVotosPermitidos</p>
+            <p class="subtitle" style="margin: 0;">Explora los proyectos y vótalos</p>
         </div>
 
         @if (votacionActiva)
@@ -214,6 +214,8 @@
 @code {
     [Parameter] public string EventId { get; set; } = string.Empty;
     [Parameter] public string CategoryId { get; set; } = string.Empty;
+    private string _voteUrl = "";
+    private string _sesionWeightedId = "";
 
     private List<ProjectDto>? ProyectosSubidos;
     private ProjectDto? proyectoSeleccionado;
@@ -239,15 +241,34 @@
         var categoriaActual = cats?.FirstOrDefault(c => c.Id == CategoryId);
         categoriaNombre = categoriaActual?.Name ?? "la categoría";
 
+        var evalType = categoriaActual?.EvaluationType;
+        _voteUrl = evalType == "WeightedScale"
+            ? $"/event/{EventId}/categories/{CategoryId}/vote-weighted"
+            : $"/event/{EventId}/categories/{CategoryId}/vote-ranking";
+
+        if (evalType == "WeightedScale")
+        {
+            try
+            {
+                var sesiones = await http.GetFromJsonAsync<List<VotingSessionSimpleDto>>(
+                    $"api/votingsessions/by-category/{CategoryId}");
+                _sesionWeightedId = sesiones?
+                    .FirstOrDefault(s => s.EvaluationType == "WeightedScale")?.Id ?? "";
+            }
+            catch { }
+        }
+
         ProyectosSubidos = await http.GetFromJsonAsync<List<ProjectDto>>($"api/projects/by-category/{CategoryId}");
 
         try
         {
-            var sesion = await http.GetFromJsonAsync<VotingSessionDto>($"api/votingsessions/active/{EventId}");
-            if (sesion != null && categoriaActual != null)
+            var sesiones = await http.GetFromJsonAsync<List<VotingSessionDto>>(
+        $"api/votingsessions/active/{EventId}");
+            var sesionDeCategoria = sesiones?.FirstOrDefault(s => s.CategoryId == CategoryId);
+            if (sesionDeCategoria != null && categoriaActual != null)
             {
                 maxVotosPermitidos = categoriaActual.TopNProjectsAllowed;
-                votacionActiva = sesion.IsActive;
+                votacionActiva = sesionDeCategoria.IsActive;
             }
         }
         catch { votacionActiva = false; }
@@ -269,7 +290,7 @@
         }
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    /*protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
@@ -283,11 +304,36 @@
             
             StateHasChanged();
         }
+    }*/
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        var result = await SessionStorage.GetAsync<string>("votify_uid");
+        _sessionUserId = result.Success ? result.Value! : Guid.NewGuid().ToString();
+        if (!result.Success) await SessionStorage.SetAsync("votify_uid", _sessionUserId);
+
+        var http = HttpClientFactory.CreateClient("API");
+
+        if (_voteUrl.Contains("vote-weighted") && !string.IsNullOrEmpty(_sesionWeightedId))
+        {
+            var previos = await http.GetFromJsonAsync<List<WeightedVotePrevioDto>>(
+                $"api/votes/weighted?userId={_sessionUserId}&votingSessionId={_sesionWeightedId}");
+            haVotado = previos != null && previos.Any();
+        }
+        else
+        {
+            var votosPrevios = await http.GetFromJsonAsync<List<VoteResultDto>>(
+                $"api/votes/by-user?userId={_sessionUserId}&categoryId={CategoryId}");
+            haVotado = votosPrevios != null && votosPrevios.Any();
+        }
+
+        StateHasChanged();
     }
 
     private void IrAVotar()
     {
-        Navigation.NavigateTo($"/event/{EventId}/categories/{CategoryId}/vote");
+        Navigation.NavigateTo(_voteUrl);
     }
 
     private async Task AbrirPopup(ProjectDto proyecto)
@@ -346,8 +392,13 @@
         public string? Description { get; set; }
         public bool AllowSelfVoting { get; set; }
         public int TopNProjectsAllowed { get; set; }
+        public string? EvaluationType { get; set; }
     }
-    public class VotingSessionDto { public string Id { get; set; } = ""; public bool IsActive { get; set; } }
+    public class VotingSessionDto {
+        public string Id { get; set; } = "";
+        public string CategoryId { get; set; } = "";
+        public bool IsActive { get; set; }
+    }
     public class VoteResultDto { public string VotedProjectId { get; set; } = ""; public int TopPosition { get; set; } }
 
     public class CommentDto
@@ -356,4 +407,7 @@
         public int TopPosition { get; set; }
         public string VoteType { get; set; } = string.Empty;
     }
+
+    public class WeightedVotePrevioDto { public string ProjectId { get; set; } = ""; }
+    public class VotingSessionSimpleDto { public string Id { get; set; } = ""; public string EvaluationType { get; set; } = ""; }
 }

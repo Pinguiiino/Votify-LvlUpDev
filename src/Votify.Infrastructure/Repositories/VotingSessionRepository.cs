@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Votify.Domain.VoteFolder;
 using Microsoft.EntityFrameworkCore;
+using Votify.Domain.VoteFolder;
 
 namespace Votify.Infrastructure.Repositories
 {
@@ -12,19 +9,32 @@ namespace Votify.Infrastructure.Repositories
 
         public VotingSessionRepository(VotifyDbContext context) => _context = context;
 
-        public async Task<VotingSession?> GetActiveSessionByEventAsync(string eventId)
+        public async Task<VotingSession?> GetByIdAsync(string id)
+            => await _context.VotingSessions.FindAsync(id);
+
+        public async Task<List<VotingSession>> GetByCategoryAsync(string categoryId)
+            => await _context.VotingSessions
+                .Include(vs => vs.Criteria)
+                .Where(vs => vs.CategoryId == categoryId)
+                .ToListAsync();
+
+        public async Task<List<VotingSession>> GetByEventAsync(string eventId)
+            => await _context.VotingSessions
+                .Include(vs => vs.Category)
+                .Include(vs => vs.Criteria)
+                .Where(vs => vs.Category != null && vs.Category.EventId == eventId)
+                .ToListAsync();
+
+        public async Task<List<VotingSession>> GetActiveByEventAsync(string eventId)
         {
             var now = DateTime.UtcNow;
             return await _context.VotingSessions
-                .FirstOrDefaultAsync(vs => vs.EventId == eventId &&
-                                         now >= vs.OpenAt &&
-                                         now <= (vs.AdjustedCloseAt ?? vs.CloseAt));
+                .Include(vs => vs.Category)
+                .Where(vs => vs.Category != null &&
+                             vs.Category.EventId == eventId &&
+                             now >= vs.OpenAt &&
+                             now <= (vs.AdjustedCloseAt ?? vs.CloseAt))
+                .ToListAsync();
         }
-
-        public async Task<List<VotingSession>> GetByEventAsync(string eventId) =>
-            await _context.VotingSessions.Where(vs => vs.EventId == eventId).ToListAsync();
-
-        public async Task<VotingSession?> GetByIdAsync(string id) =>
-            await _context.VotingSessions.FindAsync(id);
     }
 }

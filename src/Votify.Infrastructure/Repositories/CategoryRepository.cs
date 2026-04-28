@@ -14,6 +14,9 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<List<Category>> GetByEventAsync(string eventId)
         => await _context.Categories
+            .Include(c => c.VotingSessions)
+                .ThenInclude(vs => vs.Criteria)
+            .Include(c => c.Prizes)
             .Where(c => c.EventId == eventId)
             .AsNoTracking()
             .ToListAsync();
@@ -22,4 +25,27 @@ public class CategoryRepository : ICategoryRepository
         => await _context.Categories
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == categoryId);
+
+    public async Task<Category?> GetWithDetailsAsync(string categoryId)
+        => await _context.Categories
+            .Include(c => c.VotingSessions)
+                .ThenInclude(vs => vs.Criteria)
+            .Include(c => c.Prizes)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == categoryId);
+
+    public async Task AddAsync(Category category)
+    {
+        await _context.Categories.AddAsync(category);
+    }
+
+    public async Task<bool> ExistsByNameInEventAsync(string eventId, string name)
+    {
+        var nombreLimpio = name.Trim().ToLower();
+        return await _context.Categories
+            .AnyAsync(c => c.EventId == eventId && c.Name.ToLower() == nombreLimpio);
+    }
+
+    public async Task SaveChangesAsync()
+        => await _context.SaveChangesAsync();
 }

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Votify.Domain.CategoryFolder;
 using Votify.Domain.EventFolder;
 
@@ -21,16 +21,16 @@ public class EventRepository : IEventRepository
 
     public async Task<List<Category>> GetCategoriesWithDetailsAsync(string eventId)
         => await _context.Categories
-            .Include(c => c.Criteria)
+            .Include(c => c.VotingSessions)
+                .ThenInclude(vs => vs.Criteria)
             .Include(c => c.Prizes)
             .Where(c => c.EventId == eventId)
             .AsNoTracking()
             .ToListAsync();
 
-    public async Task AddAsync(Event evento, List<Category> categorias)
+    public async Task AddAsync(Event evento)
     {
         await _context.Events.AddAsync(evento);
-        await _context.Categories.AddRangeAsync(categorias);
     }
 
     public async Task<bool> ExistsByNameAsync(string name)

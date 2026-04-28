@@ -12,6 +12,19 @@ namespace Votify.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "AuditRequests",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    ProjectId = table.Column<string>(type: "text", nullable: false),
+                    RequestedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AuditRequests", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Events",
                 columns: table => new
                 {
@@ -21,6 +34,7 @@ namespace Votify.Infrastructure.Migrations
                     MaxProjects = table.Column<int>(type: "integer", nullable: false),
                     StartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     EndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ImageUrl = table.Column<string>(type: "text", nullable: true),
                     EventType = table.Column<string>(type: "character varying(8)", maxLength: 8, nullable: false),
                     modality = table.Column<string>(type: "text", nullable: true)
                 },
@@ -37,6 +51,7 @@ namespace Votify.Infrastructure.Migrations
                     Title = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: true),
                     EventId = table.Column<string>(type: "text", nullable: false),
+                    ImageUrl = table.Column<string>(type: "text", nullable: true),
                     ProjectType = table.Column<string>(type: "character varying(21)", maxLength: 21, nullable: false)
                 },
                 constraints: table =>
@@ -45,7 +60,7 @@ namespace Votify.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Usuarios",
+                name: "Users",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
@@ -56,7 +71,7 @@ namespace Votify.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Usuarios", x => x.Id);
+                    table.PrimaryKey("PK_Users", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -67,40 +82,16 @@ namespace Votify.Infrastructure.Migrations
                     EventId = table.Column<string>(type: "text", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: true),
-                    VotingMode = table.Column<int>(type: "integer", nullable: false),
-                    VotingParameter = table.Column<int>(type: "integer", nullable: true),
-                    AllowSelfVoting = table.Column<bool>(type: "boolean", nullable: false)
+                    AllowSelfVoting = table.Column<bool>(type: "boolean", nullable: false),
+                    CombineResults = table.Column<bool>(type: "boolean", nullable: false),
+                    JuryWeight = table.Column<double>(type: "double precision", precision: 5, scale: 4, nullable: true),
+                    PublicWeight = table.Column<double>(type: "double precision", precision: 5, scale: 4, nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Categories", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Categories_Events_EventId",
-                        column: x => x.EventId,
-                        principalTable: "Events",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "VotingSessions",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "text", nullable: false),
-                    EventId = table.Column<string>(type: "text", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: true),
-                    OpenAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    CloseAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    AdjustedCloseAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ReminderMinutesBeforeClose = table.Column<int>(type: "integer", nullable: true),
-                    IsManuallyAdjusted = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_VotingSessions", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_VotingSessions_Events_EventId",
                         column: x => x.EventId,
                         principalTable: "Events",
                         principalColumn: "Id",
@@ -129,28 +120,6 @@ namespace Votify.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Criteria",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "text", nullable: false),
-                    CategoryId = table.Column<string>(type: "text", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    Type = table.Column<int>(type: "integer", nullable: false),
-                    Weight = table.Column<double>(type: "double precision", precision: 5, scale: 4, nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Criteria", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Criteria_Categories_CategoryId",
-                        column: x => x.CategoryId,
-                        principalTable: "Categories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Prizes",
                 columns: table => new
                 {
@@ -158,7 +127,8 @@ namespace Votify.Infrastructure.Migrations
                     CategoryId = table.Column<string>(type: "text", nullable: false),
                     Position = table.Column<int>(type: "integer", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: true)
+                    Description = table.Column<string>(type: "text", nullable: true),
+                    TargetVoter = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -199,6 +169,61 @@ namespace Votify.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "VotingSessions",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    CategoryId = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: true),
+                    VoterType = table.Column<int>(type: "integer", nullable: false),
+                    EvaluationType = table.Column<int>(type: "integer", nullable: false),
+                    CriterionType = table.Column<int>(type: "integer", nullable: true),
+                    TopN = table.Column<int>(type: "integer", nullable: true),
+                    PointsPerVoter = table.Column<int>(type: "integer", nullable: true),
+                    MaxPointsPerProject = table.Column<int>(type: "integer", nullable: true),
+                    AllowComments = table.Column<bool>(type: "boolean", nullable: false),
+                    RequireComments = table.Column<bool>(type: "boolean", nullable: false),
+                    AllowCommentsPerCriterion = table.Column<bool>(type: "boolean", nullable: false),
+                    OpenAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CloseAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    AdjustedCloseAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ReminderMinutesBeforeClose = table.Column<int>(type: "integer", nullable: true),
+                    IsManuallyAdjusted = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_VotingSessions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_VotingSessions_Categories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Criteria",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    VotingSessionId = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Weight = table.Column<double>(type: "double precision", precision: 5, scale: 4, nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Criteria", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Criteria_VotingSessions_VotingSessionId",
+                        column: x => x.VotingSessionId,
+                        principalTable: "VotingSessions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Votes",
                 columns: table => new
                 {
@@ -207,11 +232,11 @@ namespace Votify.Infrastructure.Migrations
                     VotedProjectId = table.Column<string>(type: "text", nullable: false),
                     UserId = table.Column<string>(type: "text", nullable: false),
                     CategoryId = table.Column<string>(type: "text", nullable: false),
+                    TopPosition = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    VoteType = table.Column<string>(type: "character varying(8)", maxLength: 8, nullable: false),
-                    ExpertVote_RawScore = table.Column<double>(type: "double precision", precision: 5, scale: 2, nullable: true),
-                    RawScore = table.Column<double>(type: "double precision", precision: 5, scale: 2, nullable: true)
+                    IntegrityHash = table.Column<string>(type: "text", nullable: false),
+                    VoteType = table.Column<string>(type: "character varying(8)", maxLength: 8, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -252,14 +277,19 @@ namespace Votify.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_AuditRequests_ProjectId",
+                table: "AuditRequests",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Categories_EventId",
                 table: "Categories",
                 column: "EventId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Criteria_CategoryId",
+                name: "IX_Criteria_VotingSessionId",
                 table: "Criteria",
-                column: "CategoryId");
+                column: "VotingSessionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CriterionScores_CriterionId",
@@ -298,14 +328,17 @@ namespace Votify.Infrastructure.Migrations
                 column: "VotingSessionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_VotingSessions_EventId",
+                name: "IX_VotingSessions_CategoryId",
                 table: "VotingSessions",
-                column: "EventId");
+                column: "CategoryId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "AuditRequests");
+
             migrationBuilder.DropTable(
                 name: "CriterionScores");
 
@@ -316,7 +349,7 @@ namespace Votify.Infrastructure.Migrations
                 name: "ProjectMaterial");
 
             migrationBuilder.DropTable(
-                name: "Usuarios");
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "Votes");
@@ -331,10 +364,10 @@ namespace Votify.Infrastructure.Migrations
                 name: "VotingSessions");
 
             migrationBuilder.DropTable(
-                name: "Categories");
+                name: "Projects");
 
             migrationBuilder.DropTable(
-                name: "Projects");
+                name: "Categories");
 
             migrationBuilder.DropTable(
                 name: "Events");

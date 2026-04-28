@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Votify.Domain.CategoryFolder;
 using Votify.Domain.EventFolder;
 using Votify.Domain.ProjectFolder;
@@ -23,11 +23,12 @@ public class VotifyDbContext : DbContext
     public DbSet<VotingSession> VotingSessions { get; set; }
     public DbSet<Vote> Votes { get; set; }
     public DbSet<AuditRequest> AuditRequests { get; set; }
+    public DbSet<WeightedVote> WeightedVotes { get; set; }
+    public DbSet<WeightedCriterionScore> WeightedCriterionScores { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
 
         modelBuilder.Entity<Event>()
             .HasDiscriminator<string>("EventType")
@@ -37,7 +38,7 @@ public class VotifyDbContext : DbContext
             .HasDiscriminator<string>("ProjectType")
             .HasValue<AiProject>("AI")
             .HasValue<SustainabilityProject>("Sustainability")
-             .HasValue<GeneralProject>("General");
+            .HasValue<GeneralProject>("General");
 
         modelBuilder.Entity<Vote>()
             .HasDiscriminator<string>("VoteType")
@@ -63,10 +64,16 @@ public class VotifyDbContext : DbContext
             .HasForeignKey(c => c.EventId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<VotingSession>()
+            .HasOne(vs => vs.Category)
+            .WithMany(c => c.VotingSessions)
+            .HasForeignKey(vs => vs.CategoryId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder.Entity<Criterion>()
-            .HasOne(cr => cr.Category)
-            .WithMany(c => c.Criteria)
-            .HasForeignKey(cr => cr.CategoryId)
+            .HasOne(cr => cr.VotingSession)
+            .WithMany(vs => vs.Criteria)
+            .HasForeignKey(cr => cr.VotingSessionId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Prize>()
@@ -106,12 +113,6 @@ public class VotifyDbContext : DbContext
             .HasForeignKey(cs => cs.CriterionId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        modelBuilder.Entity<VotingSession>()
-            .HasOne<Event>()
-            .WithMany(e => e.VotingSessions)
-            .HasForeignKey(vs => vs.EventId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         modelBuilder.Entity<Vote>()
             .HasOne(v => v.VotingSession)
             .WithMany(vs => vs.Votes)
@@ -121,12 +122,35 @@ public class VotifyDbContext : DbContext
         modelBuilder.Entity<AuditRequest>()
             .HasIndex(a => a.ProjectId);
 
+        modelBuilder.Entity<Category>()
+            .Property(c => c.JuryWeight)
+            .HasPrecision(5, 4);
+
+        modelBuilder.Entity<Category>()
+            .Property(c => c.PublicWeight)
+            .HasPrecision(5, 4);
+
         modelBuilder.Entity<Criterion>()
             .Property(c => c.Weight)
             .HasPrecision(5, 4);
 
         modelBuilder.Entity<CriterionScore>()
             .Property(cs => cs.Score)
+            .HasPrecision(5, 2);
+
+        modelBuilder.Entity<WeightedVote>()
+            .HasMany(wv => wv.CriterionScores)
+            .WithOne(wcs => wcs.WeightedVote)
+            .HasForeignKey(wcs => wcs.WeightedVoteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WeightedCriterionScore>()
+            .HasOne(wcs => wcs.WeightedVote)
+            .WithMany(wv => wv.CriterionScores)
+            .HasForeignKey(wcs => wcs.WeightedVoteId);
+
+        modelBuilder.Entity<WeightedCriterionScore>()
+            .Property(wcs => wcs.Score)
             .HasPrecision(5, 2);
     }
 }

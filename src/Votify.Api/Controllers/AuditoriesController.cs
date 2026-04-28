@@ -1,8 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 using Votify.Domain.AuditFolder;
-using Votify.Domain.VoteFolder;
-using Votify.Infrastructure;
 
 namespace Votify.Api.Controllers
 {
@@ -10,84 +7,54 @@ namespace Votify.Api.Controllers
     [Route("api/audit")]
     public class AuditController : ControllerBase
     {
-        private readonly IVoteRepository _voteRepository;
-        private readonly VotifyDbContext _context;
+        private readonly AuditService _service;
 
-        public AuditController(IVoteRepository voteRepository, VotifyDbContext context)
+        public AuditController(AuditService service)
         {
-            _voteRepository = voteRepository;
-            _context = context;
+            _service = service;
         }
-
 
         [HttpGet("project/{projectId}")]
         public async Task<IActionResult> GetProjectAudit(string projectId)
         {
-            var votes = await _context.Votes
-                .AsNoTracking()
-                .Where(v => v.VotedProjectId == projectId)
-                .ToListAsync();
-
-            var auditTrail = votes.Select(v => new
+            var auditTrail = await _service.GetProjectAuditAsync(projectId);
+            var result = auditTrail.Select(a => new
             {
-                voter = v.UserId,
-                date = v.CreatedAt,
-                hash = v.IntegrityHash,
-                topPosition = v.TopPosition,
-                comment = v.Comment
-            }).ToList();
-
-            return Ok(auditTrail);
-   
+                voter = a.Voter,
+                date = a.Date,
+                hash = a.Hash,
+                topPosition = a.TopPosition,
+                comment = a.Comment
+            });
+            return Ok(result);
         }
-
 
         [HttpPost("request/{projectId}")]
         public async Task<IActionResult> RequestAudit(string projectId)
         {
-
-            bool exists = await _context.AuditRequests
-                .AnyAsync(a => a.ProjectId == projectId);
-
-            if (!exists)
-            {
-                _context.AuditRequests.Add(new AuditRequest(projectId));
-                await _context.SaveChangesAsync();
-            }
-
+            await _service.RequestAuditAsync(projectId);
             return Ok(new { message = "Solicitud registrada." });
         }
-
 
         [HttpGet("requested")]
         public async Task<IActionResult> GetRequestedProjectIds()
         {
-            var ids = await _context.AuditRequests
-                .Select(a => a.ProjectId)
-                .ToListAsync();
-
+            var ids = await _service.GetRequestedProjectIdsAsync();
             return Ok(ids);
         }
 
         [HttpGet("dashboard/{eventId}")]
         public async Task<IActionResult> GetAuditDashboardByEvent(string eventId)
         {
-            var requests = await _context.AuditRequests
-                .Join(_context.Projects,
-                    audit => audit.ProjectId,
-                    project => project.Id,
-                    (audit, project) => new { audit, project })
-                .Where(x => x.project.EventId == eventId)
-                .Select(x => new {
-                    AuditId = x.audit.Id,
-                    ProjectId = x.project.Id,
-                    ProjectTitle = x.project.Title,
-                    RequestedAt = x.audit.RequestedAt
-                })
-                .OrderByDescending(x => x.RequestedAt)
-                .ToListAsync();
-
-            return Ok(requests);
+            var requests = await _service.GetDashboardByEventAsync(eventId);
+            var result = requests.Select(r => new
+            {
+                AuditId = r.AuditId,
+                ProjectId = r.ProjectId,
+                ProjectTitle = r.ProjectTitle,
+                RequestedAt = r.RequestedAt
+            });
+            return Ok(result);
         }
     }
 }

@@ -1,6 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Votify.Infrastructure;
+using Microsoft.AspNetCore.Mvc;
+using Votify.Domain.VoteFolder;
 
 namespace Votify.Api.Controllers
 {
@@ -8,32 +7,49 @@ namespace Votify.Api.Controllers
     [Route("api/[controller]")]
     public class VotingSessionsController : ControllerBase
     {
-        private readonly VotifyDbContext _context;
+        private readonly VotingSessionService _service;
 
-        public VotingSessionsController(VotifyDbContext context)
+        public VotingSessionsController(VotingSessionService service)
         {
-            _context = context;
+            _service = service;
         }
 
         [HttpGet("active/{eventId}")]
         public async Task<IActionResult> GetActive(string eventId)
         {
-            var evento = await _context.Events
-                .Include(e => e.VotingSessions)
-                .FirstOrDefaultAsync(e => e.Id == eventId);
+            var sesiones = await _service.GetByEventAsync(eventId);
 
-            if (evento == null || !evento.VotingSessions.Any())
-                return NotFound("No hay sesión de votación activa");
+            if (sesiones.Count == 0)
+                return NotFound("No hay sesiones de votación para este evento.");
 
-            var session = evento.VotingSessions.First();
-
-            return Ok(new
+            var now = DateTime.UtcNow;
+            var result = sesiones.Select(vs => new
             {
-                Id = session.Id,
-                StartDate = session.OpenAt,
-                EndDate = session.CloseAt,
-                IsActive = true
+                vs.Id,
+                CategoryId = vs.CategoryId,
+                CategoryName = vs.Category!.Name,
+                VoterType = vs.VoterType.ToString(),
+                EvaluationType = vs.EvaluationType.ToString(),
+                StartDate = vs.OpenAt,
+                EndDate = vs.EffectiveCloseAt,
+                IsActive = now >= vs.OpenAt && now <= vs.EffectiveCloseAt
             });
+
+            return Ok(result);
+        }
+
+        [HttpGet("by-category/{categoryId}")]
+        public async Task<IActionResult> GetByCategory(string categoryId)
+        {
+            var sesiones = await _service.GetByCategoryAsync(categoryId);
+            return Ok(sesiones.Select(vs => new
+            {
+                vs.Id,
+                EvaluationType = vs.EvaluationType.ToString(),
+                vs.AllowComments,
+                vs.RequireComments,
+                Criteria = vs.Criteria.Select(cr => new { cr.Id, cr.Name, cr.Description, cr.Weight })
+            }));
         }
     }
 }

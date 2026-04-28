@@ -12,8 +12,8 @@ using Votify.Infrastructure;
 namespace Votify.Infrastructure.Migrations
 {
     [DbContext(typeof(VotifyDbContext))]
-    [Migration("20260328160652_AddTopNProjects")]
-    partial class AddTopNProjects
+    [Migration("20260424155150_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,12 +25,34 @@ namespace Votify.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Votify.Domain.AuditFolder.AuditRequest", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProjectId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("AuditRequests");
+                });
+
             modelBuilder.Entity("Votify.Domain.CategoryFolder.Category", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
                     b.Property<bool>("AllowSelfVoting")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CombineResults")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Description")
@@ -40,9 +62,17 @@ namespace Votify.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<double?>("JuryWeight")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("double precision");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<double?>("PublicWeight")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("double precision");
 
                     b.HasKey("Id");
 
@@ -56,10 +86,6 @@ namespace Votify.Infrastructure.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
-                    b.Property<string>("CategoryId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
@@ -67,8 +93,9 @@ namespace Votify.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                    b.Property<string>("VotingSessionId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<double>("Weight")
                         .HasPrecision(5, 4)
@@ -76,7 +103,7 @@ namespace Votify.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("VotingSessionId");
 
                     b.ToTable("Criteria");
                 });
@@ -98,6 +125,9 @@ namespace Votify.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("TargetVoter")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -123,6 +153,9 @@ namespace Votify.Infrastructure.Migrations
                         .HasMaxLength(8)
                         .HasColumnType("character varying(8)");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
+
                     b.Property<int>("MaxProjects")
                         .HasColumnType("integer");
 
@@ -132,9 +165,6 @@ namespace Votify.Infrastructure.Migrations
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("TopNProjectsAllowed")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -184,6 +214,9 @@ namespace Votify.Infrastructure.Migrations
 
                     b.Property<string>("EventId")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImageUrl")
                         .HasColumnType("text");
 
                     b.Property<string>("ProjectType")
@@ -281,7 +314,7 @@ namespace Votify.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Usuarios");
+                    b.ToTable("Users");
 
                     b.HasDiscriminator<string>("TipoUsuario").HasValue("User");
 
@@ -302,6 +335,13 @@ namespace Votify.Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IntegrityHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("TopPosition")
+                        .HasColumnType("integer");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -339,18 +379,33 @@ namespace Votify.Infrastructure.Migrations
                     b.Property<DateTime?>("AdjustedCloseAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("AllowComments")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowCommentsPerCriterion")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("CategoryId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CloseAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("CriterionType")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<string>("EventId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("EvaluationType")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsManuallyAdjusted")
                         .HasColumnType("boolean");
+
+                    b.Property<int?>("MaxPointsPerProject")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -359,12 +414,24 @@ namespace Votify.Infrastructure.Migrations
                     b.Property<DateTime>("OpenAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("PointsPerVoter")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("ReminderMinutesBeforeClose")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("RequireComments")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("TopN")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("VoterType")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventId");
+                    b.HasIndex("CategoryId");
 
                     b.ToTable("VotingSessions");
                 });
@@ -385,6 +452,13 @@ namespace Votify.Infrastructure.Migrations
                     b.HasBaseType("Votify.Domain.ProjectFolder.Project");
 
                     b.HasDiscriminator().HasValue("AI");
+                });
+
+            modelBuilder.Entity("Votify.Domain.ProjectFolder.GeneralProject", b =>
+                {
+                    b.HasBaseType("Votify.Domain.ProjectFolder.Project");
+
+                    b.HasDiscriminator().HasValue("General");
                 });
 
             modelBuilder.Entity("Votify.Domain.ProjectFolder.SustainabilityProject", b =>
@@ -412,26 +486,12 @@ namespace Votify.Infrastructure.Migrations
                 {
                     b.HasBaseType("Votify.Domain.VoteFolder.Vote");
 
-                    b.Property<double>("RawScore")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("double precision");
-
-                    b.ToTable("Votes", t =>
-                        {
-                            t.Property("RawScore")
-                                .HasColumnName("ExpertVote_RawScore");
-                        });
-
                     b.HasDiscriminator().HasValue("Expert");
                 });
 
             modelBuilder.Entity("Votify.Domain.VoteFolder.PublicVote", b =>
                 {
                     b.HasBaseType("Votify.Domain.VoteFolder.Vote");
-
-                    b.Property<double>("RawScore")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("double precision");
 
                     b.HasDiscriminator().HasValue("Public");
                 });
@@ -468,13 +528,13 @@ namespace Votify.Infrastructure.Migrations
 
             modelBuilder.Entity("Votify.Domain.CategoryFolder.Criterion", b =>
                 {
-                    b.HasOne("Votify.Domain.CategoryFolder.Category", "Category")
+                    b.HasOne("Votify.Domain.VoteFolder.VotingSession", "VotingSession")
                         .WithMany("Criteria")
-                        .HasForeignKey("CategoryId")
+                        .HasForeignKey("VotingSessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Category");
+                    b.Navigation("VotingSession");
                 });
 
             modelBuilder.Entity("Votify.Domain.CategoryFolder.Prize", b =>
@@ -546,24 +606,21 @@ namespace Votify.Infrastructure.Migrations
 
             modelBuilder.Entity("Votify.Domain.VoteFolder.VotingSession", b =>
                 {
-                    b.HasOne("Votify.Domain.EventFolder.Event", null)
+                    b.HasOne("Votify.Domain.CategoryFolder.Category", "Category")
                         .WithMany("VotingSessions")
-                        .HasForeignKey("EventId")
+                        .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("Votify.Domain.CategoryFolder.Category", b =>
                 {
-                    b.Navigation("Criteria");
-
                     b.Navigation("Prizes");
 
                     b.Navigation("ProjectCategories");
-                });
 
-            modelBuilder.Entity("Votify.Domain.EventFolder.Event", b =>
-                {
                     b.Navigation("VotingSessions");
                 });
 
@@ -581,6 +638,8 @@ namespace Votify.Infrastructure.Migrations
 
             modelBuilder.Entity("Votify.Domain.VoteFolder.VotingSession", b =>
                 {
+                    b.Navigation("Criteria");
+
                     b.Navigation("Votes");
                 });
 #pragma warning restore 612, 618

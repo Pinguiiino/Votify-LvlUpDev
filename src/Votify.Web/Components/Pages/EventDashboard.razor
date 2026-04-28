@@ -1,4 +1,4 @@
-﻿@page "/dashboard/{EventoId}"
+@page "/dashboard/{EventoId}"
 @rendermode InteractiveServer
 @using Votify.Domain.EventFolder
 @inject IHttpClientFactory HttpClientFactory
@@ -120,7 +120,7 @@
         try
         {
             var http = HttpClientFactory.CreateClient("API");
-            stats = await http.GetFromJsonAsync<EventDashboardDto>($"api/dashboard/stats/{EventoId}");
+            stats = await http.GetFromJsonAsync<EventDashboardDto>($"api/events/{EventoId}/stats");
         }
         catch (Exception ex)
         {

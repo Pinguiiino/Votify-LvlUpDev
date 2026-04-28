@@ -1,4 +1,4 @@
-@page "/event/{EventId}/categories/{CategoryId}/vote"
+@page "/event/{EventId}/categories/{CategoryId}/vote-ranking"
 @rendermode InteractiveServer
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
@@ -114,7 +114,9 @@
 
         try
         {
-            var sesion = await http.GetFromJsonAsync<VotingSessionDto>($"api/votingsessions/active/{EventId}");
+            var sesiones = await http.GetFromJsonAsync<List<VotingSessionDto>>(
+                    $"api/votingsessions/active/{EventId}");
+            var sesion = sesiones?.FirstOrDefault(s => s.CategoryId == CategoryId);
             if (sesion != null) SessionId = sesion.Id;
         }
         catch { }
@@ -207,6 +209,7 @@
         public string Id { get; set; } = string.Empty;
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
+        public string CategoryId { get; set; } = string.Empty;
         public bool IsActive { get; set; }
     }
 

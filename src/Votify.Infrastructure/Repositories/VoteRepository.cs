@@ -1,6 +1,3 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Votify.Domain.VoteFolder;
 
@@ -19,11 +16,9 @@ namespace Votify.Infrastructure.Repositories
             return vote;
         }
 
-        public Task AddRangeAsync(IEnumerable<Vote> votes)
+        public async Task AddRangeAsync(IEnumerable<Vote> votes)
         {
-            foreach (var v in votes)
-                _context.Votes.Add(v);
-            return Task.CompletedTask;
+            await _context.Votes.AddRangeAsync(votes);
         }
 
         public async Task<int> CountVotesByUserInCategoryAsync(string userId, string categoryId)
@@ -36,6 +31,7 @@ namespace Votify.Infrastructure.Repositories
         {
             return await _context.Votes
                 .Where(v => v.UserId == userId && v.CategoryId == categoryId)
+                .OrderBy(v => v.TopPosition)
                 .ToListAsync();
         }
 
@@ -52,26 +48,26 @@ namespace Votify.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<Vote>> GetByUserAndCategoryOrderedAsync(string userId, string categoryId)
+        public async Task<List<Vote>> GetByProjectIdsAsync(IEnumerable<string> projectIds)
         {
+            var ids = projectIds.ToList();
             return await _context.Votes
-                .Where(v => v.UserId == userId && v.CategoryId == categoryId)
-                .OrderBy(v => v.TopPosition)
+                .AsNoTracking()
+                .Where(v => ids.Contains(v.VotedProjectId))
                 .ToListAsync();
         }
 
-        public async Task<List<Vote>> GetCommentsByProjectAsync(string projectId)
+        public async Task RemoveByUserInCategoryAsync(string userId, string categoryId, string? votingSessionId = null)
         {
-            return await _context.Votes
-                .Where(v => v.VotedProjectId == projectId && v.Comment != null && v.Comment != "")
-                .OrderBy(v => v.TopPosition)
-                .ToListAsync();
-        }
+            var query = _context.Votes
+                .Where(v => v.UserId == userId && v.CategoryId == categoryId);
 
-        public Task RemoveRangeAsync(IEnumerable<Vote> votes)
-        {
-            _context.Votes.RemoveRange(votes);
-            return Task.CompletedTask;
+            if (!string.IsNullOrWhiteSpace(votingSessionId))
+                query = query.Where(v => v.VotingSessionId == votingSessionId);
+
+            var previos = await query.ToListAsync();
+            if (previos.Count > 0)
+                _context.Votes.RemoveRange(previos);
         }
 
         public async Task SaveChangesAsync()

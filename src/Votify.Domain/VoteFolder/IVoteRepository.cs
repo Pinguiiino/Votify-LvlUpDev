@@ -1,7 +1,3 @@
-﻿
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 namespace Votify.Domain.VoteFolder
 {
     public interface IVoteRepository
@@ -12,9 +8,8 @@ namespace Votify.Domain.VoteFolder
         Task<int> CountVotesByUserInCategoryAsync(string userId, string categoryId);
         Task<bool> HasUserVotedForProjectAsync(string userId, string projectId);
         Task<List<Vote>> GetByProjectAsync(string projectId);
-        Task<List<Vote>> GetByUserAndCategoryOrderedAsync(string userId, string categoryId);
-        Task<List<Vote>> GetCommentsByProjectAsync(string projectId);
-        Task RemoveRangeAsync(IEnumerable<Vote> votes);
+        Task<List<Vote>> GetByProjectIdsAsync(IEnumerable<string> projectIds);
+        Task RemoveByUserInCategoryAsync(string userId, string categoryId, string? votingSessionId = null);
         Task SaveChangesAsync();
     }
 }
