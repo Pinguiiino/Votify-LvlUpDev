@@ -38,5 +38,17 @@ namespace Votify.Domain.UserFolder
 
             return newUser;
         }
+
+        public async Task<User> LoginAsync(string email, string password)
+        {
+            var user = await _repository.GetByEmailAsync(email);
+
+            if (user == null || user.Password != password)
+            {
+                throw new ArgumentException("El correo electrónico o la contraseña son incorrectos.");
+            }
+
+            return user;
+        }
     }
 }

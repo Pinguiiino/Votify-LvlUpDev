@@ -24,10 +24,36 @@ namespace Votify.Api.Controllers
             }
             catch (Exception ex)
             {
-                // Devuelve el error (ej: "El correo ya está en uso") para que el Frontend lo muestre en rojo
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
+        {
+            try
+            {
+                var user = await _service.LoginAsync(dto.Email, dto.Password);
+
+                return Ok(new
+                {
+                    Id = user.Id,
+                    Username = user.Name,
+                    Email = user.Email,
+                    Role = user is Organizer ? "Organizer" : "GeneralUser"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+    }
+
+    public class LoginDto
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 
     public class RegisterDto
