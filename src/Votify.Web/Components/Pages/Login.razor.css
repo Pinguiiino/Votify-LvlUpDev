@@ -5,6 +5,7 @@
     min-height: calc(100vh - 80px);
     background-color: #ffffff;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 2rem;
 }
 
 .auth-card {
@@ -13,7 +14,13 @@
     background: #ffffff;
     padding: 2.5rem;
     border-radius: 1rem;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.avatar-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
 }
 
 .avatar-circle {
@@ -25,62 +32,180 @@
     justify-content: center;
     align-items: center;
     color: white;
-    margin: 0 auto 1.5rem auto;
 }
 
 .auth-title {
     text-align: center;
+    font-size: 1.75rem;
     font-weight: 700;
     color: #111827;
+    margin: 0 0 0.5rem 0;
 }
 
 .auth-subtitle {
     text-align: center;
+    font-size: 0.95rem;
     color: #6b7280;
-    margin-bottom: 2rem;
+    margin: 0 0 2rem 0;
 }
 
+.auth-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.25rem;
+    width: 100%;
+}
+
+    .auth-field label {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 0.5rem;
+        text-align: left;
+    }
+
+/* ── CONTENEDOR GRIS (Más estrecho) ── */
 .input-wrapper {
     display: flex;
     align-items: center;
     background-color: #f3f4f6;
     border-radius: 0.6rem;
-    padding: 0.75rem 1rem;
-    margin-bottom: 0.5rem;
+    padding: 0.5rem 1rem; /* Reducido para que sea menos alto */
+    width: 100%;
+    box-sizing: border-box;
+    border: 2px solid transparent;
+    transition: all 0.2s ease-in-out;
 }
 
-.auth-input {
+    .input-wrapper:focus-within {
+        background-color: #ffffff;
+        border-color: #e5e7eb;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+.input-icon {
+    color: #9ca3af;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+/* ── DESTRUIR LOS ESTILOS DE VALIDACIÓN DE TEXTO DE BLAZOR ── */
+.auth-input,
+.auth-input.valid,
+.auth-input.modified,
+.auth-input.invalid {
     flex: 1;
+    background-color: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    font-size: 0.95rem;
+    color: #111827;
+    width: 100%;
+    padding: 0.2rem 0;
+}
+
+    .auth-input::placeholder {
+        color: #9ca3af;
+    }
+
+.eye-btn {
+    background: none;
     border: none;
-    background: transparent;
-    outline: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .eye-btn:hover {
+        color: #4b5563;
+    }
+
+.role-selector {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.role-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.65rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #6b7280;
+    transition: all 0.2s;
+}
+
+    .role-option:hover {
+        background-color: #f9fafb;
+    }
+
+    .role-option.selected {
+        border-color: #0f172a;
+        color: #0f172a;
+        background-color: #f8fafc;
+    }
+
+/* ── DESTRUIR EL CUADRADO VERDE DEL RADIO BUTTON DE BLAZOR ── */
+.hidden-radio,
+.hidden-radio.valid,
+.hidden-radio.modified,
+.hidden-radio.invalid {
+    display: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: absolute !important;
 }
 
 .btn-submit {
     width: 100%;
-    background-color: #0f172a;
-    color: white;
+    background-color: #050505;
+    color: #ffffff;
     border: none;
     border-radius: 0.6rem;
-    padding: 1rem;
+    padding: 0.85rem;
+    font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    margin-top: 1.5rem;
+    margin-top: 1rem;
+    transition: background-color 0.2s, transform 0.1s;
 }
 
-.api-error {
-    color: #ef4444;
-    background: #fee2e2;
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    margin-top: 1rem;
-    text-align: center;
-}
+    .btn-submit:hover:not(:disabled) {
+        background-color: #1e293b;
+    }
+
+    .btn-submit:active:not(:disabled) {
+        transform: scale(0.98);
+    }
+
+    .btn-submit:disabled {
+        background-color: #9ca3af;
+        cursor: not-allowed;
+    }
 
 .auth-footer {
     text-align: center;
     margin-top: 1.5rem;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    color: #6b7280;
 }
 
     .auth-footer a {
@@ -88,3 +213,42 @@
         font-weight: 600;
         text-decoration: none;
     }
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+.validation-msg {
+    color: #ef4444;
+    font-size: 0.8rem;
+    margin-top: 0.4rem;
+    display: block;
+    font-weight: 500;
+}
+
+.api-error {
+    color: #ef4444;
+    background: #fee2e2;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    text-align: center;
+    margin-top: 1rem;
+    font-weight: 500;
+}
+
+.spinner-border {
+    display: inline-block;
+    width: 1.2rem;
+    height: 1.2rem;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

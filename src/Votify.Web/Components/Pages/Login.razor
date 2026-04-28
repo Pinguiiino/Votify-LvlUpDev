@@ -25,7 +25,7 @@
         <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
             <DataAnnotationsValidator />
 
-            <div class="input-group">
+            <div class="auth-field">
                 <label>Correo electrónico</label>
                 <div class="input-wrapper">
                     <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -36,7 +36,7 @@
                 <ValidationMessage For="@(() => loginModel.Email)" class="validation-msg" />
             </div>
 
-            <div class="input-group">
+            <div class="auth-field">
                 <label>Contraseña</label>
                 <div class="input-wrapper">
                     <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
