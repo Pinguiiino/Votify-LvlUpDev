@@ -49,7 +49,8 @@ public class VotifyDbContext : DbContext
             .HasValue<Organizer>("Organizador")
             .HasValue<Public>("PublicoGeneral")
             .HasValue<Jury>("Jurado")
-            .HasValue<Participant>("Participante");
+            .HasValue<Participant>("Participante")
+            .HasValue<GeneralUser>("UsuarioGeneral");
 
         modelBuilder.Entity<Voter>().HasBaseType<User>();
         modelBuilder.Entity<Jury>().HasBaseType<Voter>();

@@ -12,7 +12,9 @@
     width: 100%;
     max-width: 440px;
     background: #ffffff;
-    padding: 0;
+    padding: 2.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .avatar-container {
@@ -25,11 +27,13 @@
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    background-color: #3b82f6;
     display: flex;
     justify-content: center;
     align-items: center;
     color: white;
+    font-weight: bold;
+    font-size: 2rem;
 }
 
 .auth-title {
@@ -62,17 +66,16 @@
 .input-wrapper {
     display: flex;
     align-items: center;
-    background-color: #f3f4f6;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
     border-radius: 0.6rem;
     padding: 0.75rem 1rem;
-    transition: box-shadow 0.2s;
+    transition: all 0.2s;
 }
 
     .input-wrapper:focus-within {
-        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-        background-color: #ffffff;
-        border: 1px solid #d1d5db;
-        padding: calc(0.75rem - 1px) calc(1rem - 1px);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        border-color: #0f172a;
     }
 
 .input-icon {
@@ -151,7 +154,7 @@
     color: #ffffff;
     border: none;
     border-radius: 0.6rem;
-    padding: 0.85rem;
+    padding: 1rem;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;

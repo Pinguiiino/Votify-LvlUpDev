@@ -15,10 +15,15 @@ namespace Votify.Domain.UserFolder
 
         public async Task<User> RegisterUserAsync(string name, string email, string password, string role)
         {
-            bool exists = await _repository.ExistsByNameOrEmailAsync(name, email);
-            if (exists)
+            var (nameExists, emailExists) = await _repository.CheckForDuplicatesAsync(name, email);
+
+            if (emailExists)
             {
-                throw new ArgumentException("El nombre de usuario o el correo electrónico ya están en uso.");
+                throw new ArgumentException("Ese correo ya está registrado.");
+            }
+            if (nameExists)
+            {
+                throw new ArgumentException("El nombre de usuario ya está en uso.");
             }
 
             User newUser = role switch

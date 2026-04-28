@@ -20,14 +20,20 @@ namespace Votify.Infrastructure.Repositories
             await _context.Users.AddAsync(user);
         }
 
-        public async Task<bool> ExistsByNameOrEmailAsync(string name, string email)
+        public async Task<(bool NameExists, bool EmailExists)> CheckForDuplicatesAsync(string name, string email)
         {
             var nameLower = name.Trim().ToLower();
             var emailLower = email.Trim().ToLower();
 
-            return await _context.Users.AnyAsync(u =>
+            var matchedUser = await _context.Users.FirstOrDefaultAsync(u =>
                 u.Name.ToLower() == nameLower ||
                 u.Email.ToLower() == emailLower);
+
+            if (matchedUser == null) return (false, false);
+
+            bool nameExists = matchedUser.Name.ToLower() == nameLower;
+            bool emailExists = matchedUser.Email.ToLower() == emailLower;
+            return (nameExists, emailExists);
         }
 
         public async Task SaveChangesAsync()

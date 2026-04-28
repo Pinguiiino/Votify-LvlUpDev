@@ -417,7 +417,7 @@
 
             if (respuesta.IsSuccessStatusCode)
             {
-                Navigation.NavigateTo("/");
+                Navigation.NavigateTo("/MainEvent");
             }
             else
             {
@@ -431,7 +431,7 @@
         }
     }
 
-    private void Cancelar() => Navigation.NavigateTo("/");
+    private void Cancelar() => Navigation.NavigateTo("/MainEvent");
 
 
     public class CreateEventModel : IValidatableObject
