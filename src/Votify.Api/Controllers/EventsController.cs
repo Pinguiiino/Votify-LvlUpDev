@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Votify.Domain.EventFolder;
 
@@ -42,6 +43,7 @@ public class EventsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Organizer")]
     public async Task<IActionResult> CreateEvent([FromBody] CreateEventDto dto)
     {
         try

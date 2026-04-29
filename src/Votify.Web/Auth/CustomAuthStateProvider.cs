@@ -75,6 +75,20 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
         // Avisa a toda la aplicación de que el estado ha cambiado
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(claimsPrincipal)));
     }
+
+    public async Task<UserSession?> GetUserSessionAsync()
+    {
+        try
+        {
+            var result = await _sessionStorage.GetAsync<UserSession>("UserSession");
+            return result.Success ? result.Value : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
 }
 
 // Una clase sencilla para guardar los datos básicos
@@ -84,4 +98,5 @@ public class UserSession
     public string Username { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
+    public string Token { get; set; } = string.Empty;
 }
