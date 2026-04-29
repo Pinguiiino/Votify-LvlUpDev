@@ -46,6 +46,7 @@ namespace Votify.Api.Controllers
             {
                 vs.Id,
                 EvaluationType = vs.EvaluationType.ToString(),
+                CriterionType = vs.CriterionType?.ToString(),
                 vs.AllowComments,
                 vs.RequireComments,
                 Criteria = vs.Criteria.Select(cr => new { cr.Id, cr.Name, cr.Description, cr.Weight })

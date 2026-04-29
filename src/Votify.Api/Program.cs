@@ -22,6 +22,7 @@ builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<EventService>();
 builder.Services.AddScoped<IVoteRepository, VoteRepository>();
 builder.Services.AddScoped<IVotingSessionRepository, VotingSessionRepository>();
+builder.Services.AddScoped<VotingSessionService>();
 builder.Services.AddScoped<VoteService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 

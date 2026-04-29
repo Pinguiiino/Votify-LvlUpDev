@@ -10,7 +10,9 @@ namespace Votify.Infrastructure.Repositories
         public VotingSessionRepository(VotifyDbContext context) => _context = context;
 
         public async Task<VotingSession?> GetByIdAsync(string id)
-            => await _context.VotingSessions.FindAsync(id);
+            => await _context.VotingSessions
+                .Include(vs => vs.Criteria)
+                .FirstOrDefaultAsync(vs => vs.Id == id);
 
         public async Task<List<VotingSession>> GetByCategoryAsync(string categoryId)
             => await _context.VotingSessions
