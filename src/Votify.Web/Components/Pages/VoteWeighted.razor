@@ -119,12 +119,13 @@
                             }
                             else
                             {
-                                @* Numeric (default) *@
+                                @* Numeric *@
                                 <div class="score-input-group">
                                     <input type="number" min="0" max="10" step="0.5"
                                            class="score-input"
-                                           value="@GetScore(proyecto.Id, criterio.Id)"
-                                           @onchange="e => SetScore(proyecto.Id, criterio.Id, e.Value?.ToString())" />
+                                           value="@GetScoreString(proyecto.Id, criterio.Id)"
+                                           @onchange="e => SetScore(proyecto.Id, criterio.Id, e.Value?.ToString())"
+                                           @oninput="e => SetScore(proyecto.Id, criterio.Id, e.Value?.ToString())" />
                                     <span class="score-max">/ 10</span>
                                 </div>
                             }
@@ -279,6 +280,14 @@
             if (!scores.ContainsKey(projectId)) scores[projectId] = new();
             scores[projectId][criterionId] = val;
         }
+    }
+
+    private string GetScoreString(string projectId, string criterionId)
+    {
+        var val = GetScore(projectId, criterionId);
+        return val == Math.Floor(val)
+            ? val.ToString("0", System.Globalization.CultureInfo.InvariantCulture)
+            : val.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
     }
 
     private void SetCheckbox(string projectId, string criterionId, object? value)
