@@ -1,7 +1,10 @@
 @page "/MainEvent"
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Authorization
+@using Votify.Web.Auth
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthStateProvider
 
 <PageTitle>Inicio - Votify</PageTitle>
 
@@ -12,8 +15,17 @@
     </header>
 
     <div class="toolbar">
-        <a href="/create-event" class="btn-dark" style="text-decoration: none;">+ Crear Evento</a>
-        <a href="/my-projects" class="btn-dark" style="text-decoration: none;">Mis Proyectos</a>
+    <AuthorizeView Roles="Organizer">
+        <Authorized>
+            <a href="/create-event" class="btn-dark" style="text-decoration: none;">+ Crear Evento</a>
+        </Authorized>
+    </AuthorizeView>
+
+    <AuthorizeView Roles="Participant">
+        <Authorized>
+            <a href="/my-projects" class="btn-dark" style="text-decoration: none;">Mis Proyectos</a>
+        </Authorized>
+    </AuthorizeView>
     </div>
 
     @if (isLoading)
@@ -74,8 +86,13 @@
     private string mensajeEstado = "Conectando con el servidor...";
     private string apiBaseUrl = string.Empty;
 
-    protected override async Task OnInitializedAsync()
+   private bool _rendered = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender && !_rendered)
+        {
+        _rendered = true;
         var http = HttpClientFactory.CreateClient("API");
         apiBaseUrl = http.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
 
@@ -88,6 +105,7 @@
             {
                 EventosActivos = await http.GetFromJsonAsync<List<EventDto>>("api/events");
                 isLoading = false;
+                StateHasChanged();
                 return;
             }
             catch (HttpRequestException)
@@ -95,13 +113,14 @@
                 intentos++;
                 mensajeEstado = $"La API se está iniciando... Reintentando ({intentos}/{maxIntentos})";
                 StateHasChanged();
-                
                 await Task.Delay(2000);
             }
         }
 
         isLoading = false;
         mensajeEstado = "No se pudo conectar con el servidor.";
+        StateHasChanged();
+        }
     }
 
     public class EventDto
