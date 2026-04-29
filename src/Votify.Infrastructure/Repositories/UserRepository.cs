@@ -45,5 +45,9 @@ namespace Votify.Infrastructure.Repositories
             return await _context.Users
                 .FirstOrDefaultAsync(u => u.Email.ToLower() == email.Trim().ToLower());
         }
+        public async Task<User?> GetByIdAsync(string id)
+        {
+            return await _context.Users.FindAsync(id);
+        }
     }
 }

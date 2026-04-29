@@ -50,5 +50,17 @@ namespace Votify.Domain.UserFolder
 
             return user;
         }
+        public async Task ChangePasswordAsync(string userId, string currentPassword, string newPassword)
+        {
+            var user = await _repository.GetByIdAsync(userId);
+            if (user == null)
+                throw new ArgumentException("Usuario no encontrado.");
+
+            if (user.Password != currentPassword)
+                throw new ArgumentException("La contraseña actual es incorrecta.");
+
+            user.Password = newPassword;
+            await _repository.SaveChangesAsync();
+        }
     }
 }

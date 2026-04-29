@@ -7,5 +7,6 @@ namespace Votify.Domain.UserFolder
         Task SaveChangesAsync();
         Task<User?> GetByEmailAsync(string email);
         Task<int> CountAsync();
+        Task<User?> GetByIdAsync(string id);
     }
 }

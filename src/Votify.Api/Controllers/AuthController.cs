@@ -48,6 +48,24 @@ namespace Votify.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+        {
+            try
+            {
+                await _service.ChangePasswordAsync(dto.UserId, dto.CurrentPassword, dto.NewPassword);
+                return Ok(new { message = "Contraseña actualizada con éxito" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Error interno del servidor.");
+            }
+        }
     }
 
     public class LoginDto
@@ -62,5 +80,11 @@ namespace Votify.Api.Controllers
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string Role { get; set; } = "GeneralUser";
+    }
+    public class ChangePasswordDto
+    {
+        public string UserId { get; set; } = string.Empty;
+        public string CurrentPassword { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
     }
 }
