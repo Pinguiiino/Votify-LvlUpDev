@@ -1,4 +1,5 @@
 using System;
+using Votify.Domain.UserFolder;
 
 namespace Votify.Domain.EventFolder;
 
@@ -11,6 +12,9 @@ public abstract class Event
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public string? ImageUrl { get; set; }
+    public List<GeneralUser> Participants { get; set; }
+    public List<GeneralUser> Public { get; set; }
+    public string Organizer { get; set; } 
 
     protected Event() { }
 

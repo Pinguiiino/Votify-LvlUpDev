@@ -14,10 +14,20 @@ public class EventRepository : IEventRepository
     }
 
     public async Task<List<Event>> GetAllAsync()
-        => await _context.Events.AsNoTracking().ToListAsync();
+    {
+        return await _context.Events
+            .Include(e => e.Participants)
+            .Include(e => e.Public)
+            .ToListAsync();
+    }
 
     public async Task<Event?> GetByIdAsync(string id)
-        => await _context.Events.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
+    {
+        return await _context.Events
+            .Include(e => e.Participants) 
+            .Include(e => e.Public)       
+            .FirstOrDefaultAsync(e => e.Id == id);
+    }
 
     public async Task<List<Category>> GetCategoriesWithDetailsAsync(string eventId)
         => await _context.Categories

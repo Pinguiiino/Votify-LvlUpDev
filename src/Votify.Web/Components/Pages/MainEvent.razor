@@ -1,7 +1,10 @@
 @page "/MainEvent"
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Inicio - Votify</PageTitle>
 
@@ -24,57 +27,93 @@
                 <path d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z" fill="currentColor" />
             </svg>
             <p><em>@mensajeEstado</em></p>
-            <style>
-                        @@keyframes spin {
-                            100% {
-                                transform: rotate(360deg);
-                            }
-                }</style>
-            </div>
-        }
+        </div>
+    }
     else if (EventosActivos == null || !EventosActivos.Any())
-        {
-            <p>No hay eventos disponibles en este momento.</p>
-        }
-        else
-        {
-            <div class="events-grid">
-                @foreach (var evento in EventosActivos)
-                {
-                    <div class="event-card" style="cursor: pointer;"
-                         @onclick='() => Navigation.NavigateTo($"/event/{evento.Id}/categories")'>
-                        @if (!string.IsNullOrWhiteSpace(evento.ImageUrl))
-                        {
-                            <img src="@(apiBaseUrl + evento.ImageUrl)" alt="@evento.Name" class="card-image" />
-                        }
-                        else
-                        {
-                            <div class="icon-container">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                                    <path d="M11.354 4.646a.5.5 0 0 0-.708 0l-6 6a.5.5 0 0 0 .708.708l6-6a.5.5 0 0 0 0-.708z" />
-                                </svg>
-                            </div>
-                        }
-                        <div class="card-info">
-                            <h2 class="card-title">@evento.Name</h2>
-                            <span class="card-date">@evento.StartDate.ToString("dd 'de' MMMM, yyyy")</span>
-                            <p class="card-description">@evento.Description</p>
-                            <span class="card-modality" style="font-weight: bold; color: #4b5563;">@evento.Modality</span>
+    {
+        <p>No hay eventos disponibles en este momento.</p>
+    }
+    else
+    {
+        <div class="events-grid">
+            @foreach (var evento in EventosActivos)
+            {
+                bool isOrganizer = evento.Organizer == currentUserId;
+                bool isParticipant = evento.ParticipantsIds != null && evento.ParticipantsIds.Contains(currentUserId);
+                bool isPublic = evento.PublicIds != null && evento.PublicIds.Contains(currentUserId);
+
+                <div class="event-card cursor-pointer" @onclick='() => Navigation.NavigateTo($"/event/{evento.Id}/categories")'>
+                     
+                    @if (!string.IsNullOrWhiteSpace(evento.ImageUrl))
+                    {
+                        <img src="@(apiBaseUrl + evento.ImageUrl)" alt="@evento.Name" class="card-image" />
+                    }
+                    else
+                    {
+                        <div class="icon-container">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                <path d="M11.354 4.646a.5.5 0 0 0-.708 0l-6 6a.5.5 0 0 0 .708.708l6-6a.5.5 0 0 0 0-.708z" />
+                            </svg>
+                        </div>
+                    }
+                    <div class="card-info">
+                        <h2 class="card-title">@evento.Name</h2>
+                        <span class="card-date">@evento.StartDate.ToString("dd 'de' MMMM, yyyy")</span>
+                        <p class="card-description">@evento.Description</p>
+                        <span class="card-modality" style="font-weight: bold; color: #4b5563;">@evento.Modality</span>
+
+                        <div style="margin-top: 1.5rem; border-top: 1px solid #e5e7eb; padding-top: 1rem;" @onclick:stopPropagation="true">
+                            @if (isOrganizer)
+                            {
+                                <span style="display: block; font-size: 0.85rem; color: #16a34a; font-weight: 600; text-align: center;">★ Creador del Evento</span>
+                            }
+                            else if (isParticipant)
+                            {
+                                <span style="display: block; font-size: 0.85rem; color: #0284c7; font-weight: 600; text-align: center;">✓ Inscrito como Participante</span>
+                            }
+                            else if (isPublic)
+                            {
+                                <span style="display: block; font-size: 0.85rem; color: #9333ea; font-weight: 600; text-align: center;">✓ Inscrito como Público</span>
+                            }
+                            else
+                            {
+                                <button class="btn-outline" style="width: 100%; padding: 0.6rem; font-size: 0.9rem;" 
+                                        @onclick='() => EnrollAsPublic(evento.Id, evento.Name)'>
+                                    Inscribirse al evento
+                                </button>
+                            }
                         </div>
                     </div>
-                }
-            </div>
-        }
-    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .cursor-pointer { cursor: pointer; transition: transform 0.2s; }
+    .cursor-pointer:hover { transform: translateY(-2px); }
+    .btn-outline { background: transparent; border: 1px solid #cbd5e1; border-radius: 0.5rem; color: #0f172a; font-weight: 600; transition: all 0.2s; cursor: pointer; }
+    .btn-outline:hover { background-color: #f8fafc; border-color: #94a3b8; }
+</style>
 
 @code {
     private List<EventDto>? EventosActivos;
     private bool isLoading = true;
     private string mensajeEstado = "Conectando con el servidor...";
     private string apiBaseUrl = string.Empty;
+    private string currentUserId = string.Empty;
 
     protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
+        await LoadEvents();
+    }
+
+    private async Task LoadEvents()
     {
         var http = HttpClientFactory.CreateClient("API");
         apiBaseUrl = http.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
@@ -95,13 +134,51 @@
                 intentos++;
                 mensajeEstado = $"La API se está iniciando... Reintentando ({intentos}/{maxIntentos})";
                 StateHasChanged();
-                
                 await Task.Delay(2000);
             }
         }
 
         isLoading = false;
         mensajeEstado = "No se pudo conectar con el servidor.";
+    }
+
+    private async Task EnrollAsPublic(string eventId, string eventName)
+    {
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        try
+        {
+            var http = HttpClientFactory.CreateClient("API");
+            var request = new { UserId = currentUserId, Role = "Public" }; 
+            
+            var response = await http.PostAsJsonAsync($"api/events/{eventId}/enroll", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", $"¡Te has inscrito correctamente al evento '{eventName}' como Público!");
+                
+                var eventoActualizado = EventosActivos?.FirstOrDefault(e => e.Id == eventId);
+                if (eventoActualizado != null && !eventoActualizado.PublicIds.Contains(currentUserId))
+                {
+                    eventoActualizado.PublicIds.Add(currentUserId);
+                }
+
+                StateHasChanged();
+            }
+            else
+            {
+                var errorMsg = await response.Content.ReadAsStringAsync();
+                await JSRuntime.InvokeVoidAsync("alert", $"Error al inscribirse: {errorMsg}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Error de conexión. Inténtalo de nuevo más tarde.");
+        }
     }
 
     public class EventDto
@@ -113,5 +190,9 @@
         public DateTime StartDate { get; set; }
         public string? ImageUrl { get; set; }
         public string Modality { get; set; } = string.Empty;
+        
+        public string Organizer { get; set; } = string.Empty;
+        public List<string> ParticipantsIds { get; set; } = new();
+        public List<string> PublicIds { get; set; } = new();
     }
 }

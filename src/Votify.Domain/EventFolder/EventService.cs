@@ -45,7 +45,8 @@ public class EventService
         string name, string modality, int maxProjects,
         DateTime startDate, DateTime endDate,
         string? description,
-        string? imageUrl)
+        string? imageUrl,
+        string organizerId)
     {
         bool nombreOcupado = await _repository.ExistsByNameAsync(name);
         if (nombreOcupado)
@@ -54,9 +55,47 @@ public class EventService
         var creator = new ModalityEventCreator(modality);
         var evento = creator.Create(name, maxProjects, startDate, endDate, description, imageUrl);
 
+        evento.Organizer = organizerId;
+        evento.Participants ??= new List<GeneralUser>();
+        evento.Public ??= new List<GeneralUser>();
+
         await _repository.AddAsync(evento);
         await _repository.SaveChangesAsync();
         return evento;
+    }
+
+    public async Task EnrollUserAsync(string eventId, string userId, string role)
+    {
+        var evt = await _repository.GetByIdAsync(eventId);
+        if (evt == null) throw new ArgumentException("Evento no encontrado.");
+
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null || user is not GeneralUser generalUser)
+            throw new ArgumentException("Usuario no encontrado o no es válido para inscripción.");
+
+        evt.Participants ??= new List<GeneralUser>();
+        evt.Public ??= new List<GeneralUser>();
+
+        if (role == "Participant")
+        {
+            if (!evt.Participants.Any(p => p.Id == userId))
+            {
+                evt.Participants.Add(generalUser);
+            }
+        }
+        else if (role == "Public")
+        {
+            if (!evt.Public.Any(p => p.Id == userId))
+            {
+                evt.Public.Add(generalUser);
+            }
+        }
+        else
+        {
+            throw new ArgumentException("Rol no válido para inscripción.");
+        }
+
+        await _repository.SaveChangesAsync();
     }
 
     public async Task<EventDashboardDto?> GetDashboardStatsAsync(string eventId)

@@ -52,7 +52,8 @@ public class EventsController : ControllerBase
             var evento = await _service.CreateEventAsync(
                 dto.Name, dto.Modality, dto.MaxProjects,
                 startUtc, endUtc,
-                dto.Description, dto.ImageUrl);
+                dto.Description, dto.ImageUrl,
+                dto.OrganizerId); // Pasamos el OrganizerId
 
             return Ok(new { message = "Evento creado con éxito", id = evento.Id });
         }
@@ -61,6 +62,22 @@ public class EventsController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+
+    // ── NUEVO ENDPOINT PARA INSCRIBIRSE ──
+    [HttpPost("{eventId}/enroll")]
+    public async Task<IActionResult> EnrollInEvent(string eventId, [FromBody] EnrollRequestDto dto)
+    {
+        try
+        {
+            await _service.EnrollUserAsync(eventId, dto.UserId, dto.Role);
+            return Ok(new { message = "Inscripción exitosa" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+    // ─────────────────────────────────────
 
     [HttpGet("{id}/stats")]
     public async Task<ActionResult<EventDashboardDto>> GetStats(string id)
@@ -112,6 +129,13 @@ public class EventsController : ControllerBase
         e.EndDate,
         e.ImageUrl,
         Modality = e.Modality(),
+
+        // ── AÑADIDOS LOS ROLES PARA EL FRONTEND ──
+        Organizer = e.Organizer ?? string.Empty,
+        ParticipantsIds = e.Participants?.Select(p => p.Id).ToList() ?? new List<string>(),
+        PublicIds = e.Public?.Select(p => p.Id).ToList() ?? new List<string>(),
+        // ─────────────────────────────────────────
+
         Categories = categorias.Select(c => new
         {
             c.Id,
@@ -160,4 +184,10 @@ public class CreateEventDto
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public string? ImageUrl { get; set; }
+    public string OrganizerId { get; set; } = string.Empty; 
+}
+public class EnrollRequestDto
+{
+    public string UserId { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
 }

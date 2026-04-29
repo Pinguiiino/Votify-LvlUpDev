@@ -30,6 +30,18 @@ public class VotifyDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // ── AÑADIDO: CONFIGURACIÓN MUCHOS A MUCHOS PARA EVITAR ERROR EN POSTGRESQL ──
+        modelBuilder.Entity<Event>()
+            .HasMany(e => e.Participants)
+            .WithMany()
+            .UsingEntity(j => j.ToTable("EventParticipants"));
+
+        modelBuilder.Entity<Event>()
+            .HasMany(e => e.Public)
+            .WithMany()
+            .UsingEntity(j => j.ToTable("EventPublic"));
+        // ────────────────────────────────────────────────────────────────────────────
+
         modelBuilder.Entity<Event>()
             .HasDiscriminator<string>("EventType")
             .HasValue<ModalityEvent>("Modality");
