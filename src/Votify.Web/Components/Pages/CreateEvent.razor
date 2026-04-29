@@ -1,4 +1,6 @@
 @page "/create-event"
+@using Votify.Web.Auth
+@inject CustomAuthStateProvider AuthStateProvider
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @inject NavigationManager Navigation
@@ -124,6 +126,35 @@
     private bool subiendoImagen;
     private const string apiBaseUrl = "https://localhost:7276";
 
+    private async Task<string?> GetTokenAsync()
+    {
+    var customProvider = (CustomAuthStateProvider)AuthStateProvider;
+    var session = await customProvider.GetUserSessionAsync();
+    return session?.Token;
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+{
+    if (firstRender)
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (!user.Identity?.IsAuthenticated ?? true)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        if (!user.IsInRole("Organizer"))
+        {
+            Navigation.NavigateTo("/not-found");
+            return;
+        }
+    }
+}
+
     private async Task OnImagenSeleccionada(InputFileChangeEventArgs e)
     {
         errorImagen = null;
@@ -189,6 +220,12 @@
             };
 
             var http = HttpClientFactory.CreateClient("API");
+                    
+             var token = await GetTokenAsync();
+                    if (!string.IsNullOrEmpty(token))
+                    http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+
             var respuesta = await http.PostAsJsonAsync("/api/events", payload);
 
             if (respuesta.IsSuccessStatusCode)

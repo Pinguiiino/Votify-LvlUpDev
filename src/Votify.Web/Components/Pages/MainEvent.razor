@@ -1,6 +1,7 @@
 @page "/MainEvent"
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components.Authorization
+@using Votify.Web.Auth
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
 @inject AuthenticationStateProvider AuthStateProvider
@@ -15,8 +16,17 @@
     </header>
 
     <div class="toolbar">
-        <a href="/create-event" class="btn-dark" style="text-decoration: none;">+ Crear Evento</a>
-        <a href="/my-projects" class="btn-dark" style="text-decoration: none;">Mis Proyectos</a>
+    <AuthorizeView Roles="Organizer">
+        <Authorized>
+            <a href="/create-event" class="btn-dark" style="text-decoration: none;">+ Crear Evento</a>
+        </Authorized>
+    </AuthorizeView>
+
+    <AuthorizeView Roles="Participant">
+        <Authorized>
+            <a href="/my-projects" class="btn-dark" style="text-decoration: none;">Mis Proyectos</a>
+        </Authorized>
+    </AuthorizeView>
     </div>
 
     @if (isLoading)
@@ -104,13 +114,20 @@
     private string mensajeEstado = "Conectando con el servidor...";
     private string apiBaseUrl = string.Empty;
     private string currentUserId = string.Empty;
+    private bool _rendered = false;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+        if (firstRender && !_rendered)
+        {
+            _rendered = true;
 
-        await LoadEvents();
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            currentUserId = authState.User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
+            await LoadEvents();
+        }
     }
 
     private async Task LoadEvents()
@@ -127,6 +144,7 @@
             {
                 EventosActivos = await http.GetFromJsonAsync<List<EventDto>>("api/events");
                 isLoading = false;
+                StateHasChanged();
                 return;
             }
             catch (HttpRequestException)
@@ -140,6 +158,7 @@
 
         isLoading = false;
         mensajeEstado = "No se pudo conectar con el servidor.";
+        StateHasChanged();
     }
 
     private async Task EnrollAsPublic(string eventId, string eventName)
@@ -153,19 +172,17 @@
         try
         {
             var http = HttpClientFactory.CreateClient("API");
-            var request = new { UserId = currentUserId, Role = "Public" }; 
-            
+            var request = new { UserId = currentUserId, Role = "Public" };
             var response = await http.PostAsJsonAsync($"api/events/{eventId}/enroll", request);
 
             if (response.IsSuccessStatusCode)
             {
-                await JSRuntime.InvokeVoidAsync("alert", $"¡Te has inscrito correctamente al evento '{eventName}' como Público!");
-                
+                await JSRuntime.InvokeVoidAsync("alert",
+                    $"¡Te has inscrito correctamente al evento '{eventName}' como Público!");
+
                 var eventoActualizado = EventosActivos?.FirstOrDefault(e => e.Id == eventId);
                 if (eventoActualizado != null && !eventoActualizado.PublicIds.Contains(currentUserId))
-                {
                     eventoActualizado.PublicIds.Add(currentUserId);
-                }
 
                 StateHasChanged();
             }
@@ -175,7 +192,7 @@
                 await JSRuntime.InvokeVoidAsync("alert", $"Error al inscribirse: {errorMsg}");
             }
         }
-        catch (Exception ex)
+        catch
         {
             await JSRuntime.InvokeVoidAsync("alert", "Error de conexión. Inténtalo de nuevo más tarde.");
         }
@@ -190,7 +207,6 @@
         public DateTime StartDate { get; set; }
         public string? ImageUrl { get; set; }
         public string Modality { get; set; } = string.Empty;
-        
         public string Organizer { get; set; } = string.Empty;
         public List<string> ParticipantsIds { get; set; } = new();
         public List<string> PublicIds { get; set; } = new();

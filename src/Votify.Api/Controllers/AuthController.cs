@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Mvc;
+using Votify.Api.Services;
 using Votify.Domain.UserFolder;
 
 namespace Votify.Api.Controllers
@@ -8,10 +10,12 @@ namespace Votify.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AuthService _service;
+        private readonly TokenService _tokenService;
 
-        public AuthController(AuthService service)
+        public AuthController(AuthService service, TokenService tokenService)
         {
             _service = service;
+            _tokenService = tokenService;
         }
 
         [HttpPost("register")]
@@ -35,12 +39,26 @@ namespace Votify.Api.Controllers
             {
                 var user = await _service.LoginAsync(dto.Email, dto.Password);
 
+                // Determina el rol
+                string role = user switch
+                {
+                    Organizer => "Organizer",
+                    Auditor => "Auditor",
+                    Jury => "Jury",
+                    Participant => "Participant",
+                    _ => "Public"
+                };
+
+                // Genera el token con el rol
+                var token = _tokenService.GenerateToken(user.Id, user.Email, role);
+
                 return Ok(new
                 {
+                    token,        // <- el frontend guarda este token
                     Id = user.Id,
                     Username = user.Name,
                     Email = user.Email,
-                    Role = user is Organizer ? "Organizer" : "GeneralUser"
+                    Role = role
                 });
             }
             catch (Exception ex)

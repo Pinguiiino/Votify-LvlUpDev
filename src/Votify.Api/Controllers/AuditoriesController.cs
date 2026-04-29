@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Votify.Domain.AuditFolder;
 
@@ -15,6 +16,7 @@ namespace Votify.Api.Controllers
         }
 
         [HttpGet("project/{projectId}")]
+        [Authorize(Roles = "Auditor")]
         public async Task<IActionResult> GetProjectAudit(string projectId)
         {
             var auditTrail = await _service.GetProjectAuditAsync(projectId);
@@ -30,6 +32,7 @@ namespace Votify.Api.Controllers
         }
 
         [HttpPost("request/{projectId}")]
+        [Authorize]
         public async Task<IActionResult> RequestAudit(string projectId)
         {
             await _service.RequestAuditAsync(projectId);
@@ -37,6 +40,7 @@ namespace Votify.Api.Controllers
         }
 
         [HttpGet("requested")]
+        [Authorize(Roles = "Auditor")]
         public async Task<IActionResult> GetRequestedProjectIds()
         {
             var ids = await _service.GetRequestedProjectIdsAsync();
@@ -44,6 +48,7 @@ namespace Votify.Api.Controllers
         }
 
         [HttpGet("dashboard/{eventId}")]
+        [Authorize(Roles = "Auditor")]
         public async Task<IActionResult> GetAuditDashboardByEvent(string eventId)
         {
             var requests = await _service.GetDashboardByEventAsync(eventId);

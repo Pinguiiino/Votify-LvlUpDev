@@ -18,6 +18,7 @@ builder.Services.AddHttpClient("API", c => c.BaseAddress = new Uri("https://loca
 builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+builder.Services.AddScoped<CustomAuthStateProvider>();
 
 var app = builder.Build();
 
