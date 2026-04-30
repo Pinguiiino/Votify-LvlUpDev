@@ -1,7 +1,9 @@
 @page "/event/{EventId}/categories"
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthStateProvider
 
 <PageTitle>Categorías del Evento - Votify</PageTitle>
 
@@ -45,11 +47,24 @@
             <div style="display: flex; gap: 0.75rem; align-items: center;">
                 @if (evento.Categories.Any())
                 {
+                    <!-- VER RESULTADOS: Lo ven todos -->
                     <a href="@($"/dashboard/{EventId}")" class="btn-secondary" style="text-decoration:none;">Ver resultados</a>
-                    <a href="@($"/event/{EventId}/create-project")" class="btn-dark">+ Subir proyecto</a>
-                    <a href="@($"/event/{EventId}/audit")" class="btn-dark">Auditar</a>
+                    
+                    <!-- SUBIR PROYECTO: Solo si eres Participante o Público en este evento (NO Organizador) -->
+                    @if (isParticipant || isPublic)
+                    {
+                        <a href="@($"/event/{EventId}/create-project")" class="btn-dark">+ Subir proyecto</a>
+                    }
+                    
+                    <!-- AUDITAR: Solo si tu rol global es Auditor -->
+                    @if (isGlobalAuditor)
+                    {
+                        <a href="@($"/event/{EventId}/audit")" class="btn-dark">Auditar</a>
+                    }
                 }
-                @if (!mostrandoFormulario)
+
+                <!-- CREAR CATEGORÍA: Solo el Creador/Organizador de este evento específico -->
+                @if (isOrganizer && !mostrandoFormulario)
                 {
                     <button class="btn-dark" @onclick="MostrarFormulario">+ Crear categoría</button>
                 }
@@ -63,7 +78,8 @@
             </div>
         }
 
-        @if (mostrandoFormulario)
+        <!-- === CÓDIGO DEL FORMULARIO DE CATEGORÍA (Se mantiene igual, solo lo ve el organizador por el IF de arriba) === -->
+        @if (mostrandoFormulario && isOrganizer)
         {
             <div class="create-cat-panel">
                 <h3 class="panel-title">Nueva categoría</h3>
@@ -125,17 +141,17 @@
                             <div class="model-grid">
                                 @if (ses.VoterType == "Jury")
                                 {
-                                <div class="model-card @(ses.EvaluationType == "WeightedScale" ? "selected" : "")"
-                                     @onclick='() => SelectModel(ses, "WeightedScale", false)'>
-                                    <div class="model-radio"></div>
-                                    <div class="model-icon">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18M3 7h18M6 7l-2 6a2 2 0 0 0 4 0L6 7zM18 7l-2 6a2 2 0 0 0 4 0l-2-6z" />
-                                        </svg>
+                                    <div class="model-card @(ses.EvaluationType == "WeightedScale" ? "selected" : "")"
+                                         @onclick='() => SelectModel(ses, "WeightedScale", false)'>
+                                        <div class="model-radio"></div>
+                                        <div class="model-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18M3 7h18M6 7l-2 6a2 2 0 0 0 4 0L6 7zM18 7l-2 6a2 2 0 0 0 4 0l-2-6z" />
+                                            </svg>
+                                        </div>
+                                        <p class="model-title">Baremo ponderado</p>
+                                        <p class="model-desc">Evaluación multicriterio con pesos para diferenciar la importancia de cada criterio.</p>
                                     </div>
-                                    <p class="model-title">Baremo ponderado</p>
-                                    <p class="model-desc">Evaluación multicriterio con pesos para diferenciar la importancia de cada criterio.</p>
-                                </div>
                                 }
 
                                 <div class="model-card @(ses.EvaluationType == "PointDistribution" ? "selected" : "")"
@@ -350,6 +366,7 @@
             </div>
         }
 
+        <!-- === LISTA DE CATEGORÍAS (Se mantiene igual) === -->
         @if (evento.Categories.Any())
         {
             <div class="categories-grid">
@@ -389,7 +406,7 @@
                                     }
                                 </div>
                                 <a href="@($"/event/{EventId}/categories/{cat.Id}/projects")" class="btn-explore"
-                                   @onclick:stopPropagation="true">
+                                       @onclick:stopPropagation="true">
                                     Explorar proyectos
                                 </a>
                             </div>
@@ -488,12 +505,40 @@
     private string? errorFormulario;
     private CategoryDraft draft = new();
 
-    protected override async Task OnInitializedAsync() => await CargarEvento();
+    // Variables de Permisos
+    private string currentUserId = string.Empty;
+    private bool isGlobalAuditor = false;
+    private bool isOrganizer = false;
+    private bool isParticipant = false;
+    private bool isPublic = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Obtener el ID y el rol global del usuario de la sesión
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        
+        currentUserId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+        
+        // Comprobamos si el token dice que su rol global es Auditor
+        var roleClaim = user.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+        isGlobalAuditor = roleClaim == "Auditor";
+
+        await CargarEvento();
+    }
 
     private async Task CargarEvento()
     {
         var http = HttpClientFactory.CreateClient("API");
         evento = await http.GetFromJsonAsync<EventDetailDto>($"/api/events/{EventId}");
+
+        if (evento != null && !string.IsNullOrEmpty(currentUserId))
+        {
+            // Calcular permisos específicos de este evento
+            isOrganizer = evento.Organizer == currentUserId;
+            isParticipant = evento.ParticipantsIds != null && evento.ParticipantsIds.Contains(currentUserId);
+            isPublic = evento.PublicIds != null && evento.PublicIds.Contains(currentUserId);
+        }
     }
 
     private void ToggleExpand(string catId)
@@ -641,6 +686,13 @@
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public string Modality { get; set; } = string.Empty;
+        
+        // === NUEVOS CAMPOS DEL EVENTO NECESARIOS PARA PERMISOS ===
+        public string Organizer { get; set; } = string.Empty;
+        public List<string> ParticipantsIds { get; set; } = new();
+        public List<string> PublicIds { get; set; } = new();
+        // =========================================================
+        
         public List<CategoryDetailDto> Categories { get; set; } = new();
     }
 
