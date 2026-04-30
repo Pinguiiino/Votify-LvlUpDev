@@ -1,0 +1,368 @@
+@page "/event/{EventId}/categories/{CategoryId}/vote-point-distribution"
+@rendermode InteractiveServer
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+@inject Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage.ProtectedSessionStorage SessionStorage
+@inject IJSRuntime JS
+
+<PageTitle>Reparto de Puntos - Votify</PageTitle>
+
+<div class="pd-container">
+    <header class="pd-header">
+        <button class="back-btn" @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories/{CategoryId}/projects")'>
+            ← Volver a proyectos
+        </button>
+        <h1 class="pd-title">Reparto de Puntos</h1>
+        <p class="pd-subtitle">
+            Distribuye exactamente <strong>@presupuesto puntos</strong> entre los proyectos.
+            Máximo <strong>@maxPorProyecto pts</strong> por proyecto.
+        </p>
+    </header>
+
+    @if (proyectos == null)
+    {
+        <div class="pd-loading">
+            <div class="pd-spinner"></div>
+            <p>Cargando proyectos...</p>
+        </div>
+    }
+    else if (!proyectos.Any())
+    {
+        <div class="pd-empty">
+            <p>No hay proyectos en esta categoría.</p>
+        </div>
+    }
+    else
+    {
+        <div class="pd-budget-bar">
+            <div class="pd-budget-info">
+                <span class="pd-budget-label">Puntos repartidos</span>
+                <span class="pd-budget-used @BudgetClass">@puntosUsados / @presupuesto</span>
+            </div>
+            <div class="pd-budget-track">
+                <div class="pd-budget-fill @BudgetClass" style="width: @Math.Min(100, (double)puntosUsados / presupuesto * 100).ToString("0")%"></div>
+            </div>
+            <div class="pd-budget-remaining @BudgetClass">
+                @if (puntosRestantes == 0)
+                {
+                    <span>✓ Presupuesto completo</span>
+                }
+                else if (puntosRestantes > 0)
+                {
+                    <span>Quedan @puntosRestantes pts por repartir</span>
+                }
+                else
+                {
+                    <span>⚠ Te has pasado @(-puntosRestantes) pts</span>
+                }
+            </div>
+        </div>
+
+        @foreach (var proyecto in proyectos)
+        {
+            var pts = GetPoints(proyecto.Id);
+            var pct = presupuesto > 0 ? (double)pts / presupuesto * 100 : 0;
+            var excede = pts > maxPorProyecto;
+
+            <div class="pd-project-card @(excede ? "pd-card-error" : pts > 0 ? "pd-card-active" : "")">
+                <div class="pd-project-header">
+                    <div class="pd-project-info">
+                        <h3 class="pd-project-title">@proyecto.Title</h3>
+                        @if (!string.IsNullOrWhiteSpace(proyecto.Description))
+                        {
+                            <p class="pd-project-desc">@proyecto.Description</p>
+                        }
+                    </div>
+                    <div class="pd-points-badge @(excede ? "error" : pts > 0 ? "active" : "")">
+                        <span class="pd-points-value">@pts</span>
+                        <span class="pd-points-max">/ @maxPorProyecto</span>
+                    </div>
+                </div>
+
+                <div class="pd-input-row">
+                    <button class="pd-stepper" @onclick="() => AdjustPoints(proyecto.Id, -5)"
+                            disabled="@(pts <= 0)">−5</button>
+                    <button class="pd-stepper" @onclick="() => AdjustPoints(proyecto.Id, -1)"
+                            disabled="@(pts <= 0)">−1</button>
+
+                    <input type="range"
+                           class="pd-slider"
+                           min="0" max="@presupuesto" step="1"
+                           value="@pts"
+                           @oninput="e => SetPoints(proyecto.Id, e.Value?.ToString())" />
+
+                    <button class="pd-stepper" @onclick="() => AdjustPoints(proyecto.Id, 1)"
+                            disabled="@(puntosRestantes <= 0 && pts < maxPorProyecto)">+1</button>
+                    <button class="pd-stepper" @onclick="() => AdjustPoints(proyecto.Id, 5)"
+                            disabled="@(puntosRestantes < 5 && pts < maxPorProyecto)">+5</button>
+
+                    <input type="number" min="0" max="@presupuesto" step="1"
+                           class="pd-number-input @(excede ? "error" : "")"
+                           value="@pts"
+                           @onchange="e => SetPoints(proyecto.Id, e.Value?.ToString())" />
+                </div>
+
+                @if (excede)
+                {
+                    <p class="pd-limit-warning">
+                        ⚠ Máximo @maxPorProyecto pts por proyecto
+                    </p>
+                }
+
+                <div class="pd-project-bar-track">
+                    <div class="pd-project-bar-fill @(excede ? "error" : "")"
+                         style="width: @Math.Min(100, pct).ToString("0.0")%"></div>
+                </div>
+
+                @if (sesion?.AllowComments == true)
+                {
+                    <div class="pd-comment-section">
+                        <label class="pd-comment-label">
+                            Comentario
+                            @if (sesion.RequireComments)
+                            {
+                                <span class="required-star">*</span>
+                            }
+                            else
+                            {
+                                <span class="optional-tag">(opcional)</span>
+                            }
+                        </label>
+                        <textarea class="pd-comment-textarea"
+                                  rows="2"
+                                  maxlength="500"
+                                  @bind="comentarios[proyecto.Id]"
+                                  placeholder="@(sesion.RequireComments ? "Obligatorio..." : "Añade un comentario sobre este proyecto...")" />
+                        <div class="pd-char-count">
+                            @((comentarios.TryGetValue(proyecto.Id, out var txt) ? txt?.Length : 0) ?? 0)/500
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (error != null)
+        {
+            <div class="pd-error-banner">@error</div>
+        }
+
+        <button class="pd-submit-btn"
+                @onclick="EnviarVotos"
+                disabled="@(enviando || puntosRestantes != 0 || hayExcedidos)">
+            @if (enviando)
+            {
+                <span>Guardando...</span>
+            }
+            else if (puntosRestantes != 0)
+            {
+                <span>Debes repartir exactamente @presupuesto puntos (@(puntosRestantes > 0 ? $"faltan {puntosRestantes}" : $"sobran {-puntosRestantes}"))</span>
+            }
+            else if (hayExcedidos)
+            {
+                <span>Algún proyecto supera el máximo permitido</span>
+            }
+            else
+            {
+                <span>✓ Confirmar Reparto</span>
+            }
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public string EventId    { get; set; } = "";
+    [Parameter] public string CategoryId { get; set; } = "";
+
+    private List<ProjectDto>?   proyectos;
+    private VotingSessionDto?   sesion;
+    private string              userId  = "";
+    private string?             error;
+    private bool                enviando = false;
+
+    private int presupuesto   = 100;
+    private int maxPorProyecto = 100;
+
+    private Dictionary<string, int>    puntos     = new();
+    private Dictionary<string, string> comentarios = new();
+
+    private int  puntosUsados    => puntos.Values.Sum();
+    private int  puntosRestantes => presupuesto - puntosUsados;
+    private bool hayExcedidos    => puntos.Any(kv => kv.Value > maxPorProyecto);
+
+    private string BudgetClass => puntosRestantes == 0 ? "complete"
+                                : puntosRestantes <  0 ? "over"
+                                : "under";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var http = HttpClientFactory.CreateClient("API");
+
+        try
+        {
+            var sesiones = await http.GetFromJsonAsync<List<VotingSessionDto>>(
+                $"api/votingsessions/by-category/{CategoryId}");
+            sesion = sesiones?.FirstOrDefault(s =>
+                s.EvaluationType is "1" or "PointDistribution");
+        }
+        catch (Exception ex) { Console.WriteLine(ex.Message); }
+
+        if (sesion != null)
+        {
+            presupuesto    = sesion.PointsPerVoter      ?? 100;
+            maxPorProyecto = sesion.MaxPointsPerProject ?? presupuesto;
+        }
+
+        proyectos = await http.GetFromJsonAsync<List<ProjectDto>>(
+            $"api/projects/by-category/{CategoryId}");
+
+        if (proyectos != null)
+        {
+            foreach (var p in proyectos)
+            {
+                puntos[p.Id]      = 0;
+                comentarios[p.Id] = "";
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        var result = await SessionStorage.GetAsync<string>("votify_uid");
+        userId = result.Success ? result.Value! : Guid.NewGuid().ToString();
+        if (!result.Success) await SessionStorage.SetAsync("votify_uid", userId);
+
+        if (sesion != null)
+        {
+            var http = HttpClientFactory.CreateClient("API");
+            try
+            {
+                var previos = await http.GetFromJsonAsync<List<PointDistributionPrevioDto>>(
+                    $"api/votes/point-distribution?userId={userId}&categoryId={CategoryId}&votingSessionId={sesion.Id}");
+
+                if (previos != null && previos.Any())
+                {
+                    foreach (var v in previos)
+                    {
+                        puntos[v.ProjectId]      = v.Points;
+                        comentarios[v.ProjectId] = v.Comment ?? "";
+                    }
+                    StateHasChanged();
+                }
+            }
+            catch { /* Sin votos previos */ }
+        }
+    }
+
+    private int GetPoints(string projectId)
+        => puntos.TryGetValue(projectId, out var v) ? v : 0;
+
+    private void SetPoints(string projectId, string? raw)
+    {
+        if (int.TryParse(raw, out var val))
+        {
+            puntos[projectId] = Math.Max(0, val);
+        }
+    }
+
+    private void AdjustPoints(string projectId, int delta)
+    {
+        var current = GetPoints(projectId);
+        var next    = current + delta;
+
+        if (next < 0) next = 0;
+
+        if (delta > 0 && puntosRestantes < delta)
+            next = current + puntosRestantes;
+
+        puntos[projectId] = next;
+    }
+
+    private async Task EnviarVotos()
+    {
+        error = null;
+
+        if (sesion == null) { error = "No hay sesión activa."; return; }
+
+        if (puntosRestantes != 0)
+        {
+            error = puntosRestantes > 0
+                ? $"Debes repartir exactamente {presupuesto} puntos. Puntos restantes: {puntosRestantes}"
+                : $"Debes repartir exactamente {presupuesto} puntos. Te has pasado {-puntosRestantes} pts.";
+            return;
+        }
+
+        if (hayExcedidos)
+        {
+            error = $"Algún proyecto supera el máximo de {maxPorProyecto} puntos.";
+            return;
+        }
+
+        if (sesion.RequireComments &&
+            proyectos!.Any(p => puntos[p.Id] > 0 && string.IsNullOrWhiteSpace(comentarios[p.Id])))
+        {
+            error = "El comentario es obligatorio en cada proyecto al que asignes puntos.";
+            return;
+        }
+
+        enviando = true;
+        try
+        {
+            var payload = new
+            {
+                UserId          = userId,
+                CategoryId,
+                VotingSessionId = sesion.Id,
+                Allocations     = proyectos!
+                    .Where(p => puntos[p.Id] > 0)
+                    .Select(p => new
+                    {
+                        ProjectId = p.Id,
+                        Points    = puntos[p.Id],
+                        Comment   = string.IsNullOrWhiteSpace(comentarios[p.Id])
+                                        ? null : comentarios[p.Id].Trim()
+                    }).ToList()
+            };
+
+            var http = HttpClientFactory.CreateClient("API");
+            var resp = await http.PostAsJsonAsync("api/votes/point-distribution", payload);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                await JS.InvokeVoidAsync("alert", "¡Reparto registrado correctamente!");
+                Navigation.NavigateTo($"/event/{EventId}/categories/{CategoryId}/projects");
+            }
+            else
+            {
+                error = await resp.Content.ReadAsStringAsync();
+                error = error?.Trim('"');
+            }
+        }
+        finally { enviando = false; }
+    }
+
+    public class ProjectDto
+    {
+        public string  Id          { get; set; } = "";
+        public string  Title       { get; set; } = "";
+        public string? Description { get; set; }
+    }
+
+    public class VotingSessionDto
+    {
+        public string  Id                  { get; set; } = "";
+        public string  EvaluationType      { get; set; } = "";
+        public bool    AllowComments       { get; set; }
+        public bool    RequireComments     { get; set; }
+        public int?    PointsPerVoter      { get; set; }
+        public int?    MaxPointsPerProject { get; set; }
+    }
+
+    public class PointDistributionPrevioDto
+    {
+        public string  ProjectId { get; set; } = "";
+        public int     Points    { get; set; }
+        public string? Comment   { get; set; }
+    }
+}

@@ -37,6 +37,7 @@ builder.Services.AddScoped<AuditService>();
 
 builder.Services.AddScoped<IWeightedVoteRepository, WeightedVoteRepository>();
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddVotingStrategies();
 
 var jwtKey = builder.Configuration["Jwt:Key"];
 
