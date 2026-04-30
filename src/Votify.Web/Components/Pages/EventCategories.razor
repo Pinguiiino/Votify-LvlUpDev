@@ -47,23 +47,19 @@
             <div style="display: flex; gap: 0.75rem; align-items: center;">
                 @if (evento.Categories.Any())
                 {
-                    <!-- VER RESULTADOS: Lo ven todos -->
                     <a href="@($"/dashboard/{EventId}")" class="btn-secondary" style="text-decoration:none;">Ver resultados</a>
                     
-                    <!-- SUBIR PROYECTO: Solo si eres Participante o Público en este evento (NO Organizador) -->
                     @if (isParticipant || isPublic)
                     {
                         <a href="@($"/event/{EventId}/create-project")" class="btn-dark">+ Subir proyecto</a>
                     }
                     
-                    <!-- AUDITAR: Solo si tu rol global es Auditor -->
                     @if (isGlobalAuditor)
                     {
                         <a href="@($"/event/{EventId}/audit")" class="btn-dark">Auditar</a>
                     }
                 }
 
-                <!-- CREAR CATEGORÍA: Solo el Creador/Organizador de este evento específico -->
                 @if (isOrganizer && !mostrandoFormulario)
                 {
                     <button class="btn-dark" @onclick="MostrarFormulario">+ Crear categoría</button>
@@ -78,7 +74,6 @@
             </div>
         }
 
-        <!-- === CÓDIGO DEL FORMULARIO DE CATEGORÍA (Se mantiene igual, solo lo ve el organizador por el IF de arriba) === -->
         @if (mostrandoFormulario && isOrganizer)
         {
             <div class="create-cat-panel">
@@ -226,10 +221,13 @@
                                         <input type="checkbox" @bind="ses.RequireComments" />
                                         Comentario por proyecto obligatorio
                                     </label>
-                                    <label class="checkbox-row">
-                                        <input type="checkbox" @bind="ses.AllowCommentsPerCriterion" />
-                                        Permitir comentario por criterio
-                                    </label>
+                                    @if (ses.EvaluationType == "WeightedScale")
+                                    {
+                                        <label class="checkbox-row">
+                                            <input type="checkbox" @bind="ses.AllowCommentsPerCriterion" />
+                                            Permitir comentario por criterio
+                                        </label>
+                                    }
                                 </div>
                             }
                         </div>
@@ -366,7 +364,6 @@
             </div>
         }
 
-        <!-- === LISTA DE CATEGORÍAS (Se mantiene igual) === -->
         @if (evento.Categories.Any())
         {
             <div class="categories-grid">
@@ -505,7 +502,6 @@
     private string? errorFormulario;
     private CategoryDraft draft = new();
 
-    // Variables de Permisos
     private string currentUserId = string.Empty;
     private bool isGlobalAuditor = false;
     private bool isOrganizer = false;
@@ -514,13 +510,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Obtener el ID y el rol global del usuario de la sesión
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         
         currentUserId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
         
-        // Comprobamos si el token dice que su rol global es Auditor
         var roleClaim = user.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
         isGlobalAuditor = roleClaim == "Auditor";
 
@@ -534,7 +528,6 @@
 
         if (evento != null && !string.IsNullOrEmpty(currentUserId))
         {
-            // Calcular permisos específicos de este evento
             isOrganizer = evento.Organizer == currentUserId;
             isParticipant = evento.ParticipantsIds != null && evento.ParticipantsIds.Contains(currentUserId);
             isPublic = evento.PublicIds != null && evento.PublicIds.Contains(currentUserId);
@@ -580,6 +573,10 @@
         {
             if (!ses.PointsPerVoter.HasValue) ses.PointsPerVoter = 100;
             if (!ses.MaxPointsPerProject.HasValue) ses.MaxPointsPerProject = 40;
+        }
+        if (model != "WeightedScale")
+        {
+            ses.AllowCommentsPerCriterion = false;
         }
     }
 
@@ -641,7 +638,7 @@
                     s.MaxPointsPerProject,
                     s.AllowComments,
                     s.RequireComments,
-                    s.AllowCommentsPerCriterion,
+                    AllowCommentsPerCriterion = s.EvaluationType == "WeightedScale" && s.AllowCommentsPerCriterion,
                     Criteria = s.Criteria.Select(c => new { c.Name, c.Description, c.Weight })
                 }),
                 Prizes = draft.Prizes.Select(p => new
@@ -686,13 +683,11 @@
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public string Modality { get; set; } = string.Empty;
-        
-        // === NUEVOS CAMPOS DEL EVENTO NECESARIOS PARA PERMISOS ===
+
         public string Organizer { get; set; } = string.Empty;
         public List<string> ParticipantsIds { get; set; } = new();
         public List<string> PublicIds { get; set; } = new();
-        // =========================================================
-        
+
         public List<CategoryDetailDto> Categories { get; set; } = new();
     }
 

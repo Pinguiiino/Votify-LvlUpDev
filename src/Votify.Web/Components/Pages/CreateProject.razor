@@ -344,6 +344,7 @@
         finally
         {
             subiendoImagen = false;
+            StateHasChanged();
         }
     }
 
@@ -435,7 +436,6 @@
             {
                 var error = await response.Content.ReadAsStringAsync();
                 errorTitulo = error.Trim('"');
-
             }
         }
         catch (Exception)

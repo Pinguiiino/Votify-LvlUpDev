@@ -21,12 +21,6 @@
             <a href="/create-event" class="btn-dark" style="text-decoration: none;">+ Crear Evento</a>
         </Authorized>
     </AuthorizeView>
-
-    <AuthorizeView Roles="Participant">
-        <Authorized>
-            <a href="/my-projects" class="btn-dark" style="text-decoration: none;">Mis Proyectos</a>
-        </Authorized>
-    </AuthorizeView>
     </div>
 
     @if (isLoading)

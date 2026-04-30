@@ -1,8 +1,9 @@
 @page "/create-event"
 @using Votify.Web.Auth
-@inject CustomAuthStateProvider AuthStateProvider
+@inject AuthenticationStateProvider AuthStateProvider
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
 @inject IJSRuntime JS
@@ -124,36 +125,34 @@
     private string? errorServidor;
     private string? errorImagen;
     private bool subiendoImagen;
-    private const string apiBaseUrl = "https://localhost:7276";
+    private string apiBaseUrl = string.Empty;
 
-    private async Task<string?> GetTokenAsync()
+    protected override void OnInitialized()
     {
-    var customProvider = (CustomAuthStateProvider)AuthStateProvider;
-    var session = await customProvider.GetUserSessionAsync();
-    return session?.Token;
+        var http = HttpClientFactory.CreateClient("API");
+        apiBaseUrl = http.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
     }
-
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
-{
-    if (firstRender)
     {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        if (!user.Identity?.IsAuthenticated ?? true)
+        if (firstRender)
         {
-            Navigation.NavigateTo("/login");
-            return;
-        }
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
 
-        if (!user.IsInRole("Organizer"))
-        {
-            Navigation.NavigateTo("/not-found");
-            return;
+            if (!user.Identity?.IsAuthenticated ?? true)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            if (!user.IsInRole("Organizer"))
+            {
+                Navigation.NavigateTo("/not-found");
+                return;
+            }
         }
     }
-}
 
     private async Task OnImagenSeleccionada(InputFileChangeEventArgs e)
     {
@@ -196,6 +195,7 @@
         finally
         {
             subiendoImagen = false;
+            StateHasChanged();
         }
     }
 
@@ -220,12 +220,6 @@
             };
 
             var http = HttpClientFactory.CreateClient("API");
-                    
-             var token = await GetTokenAsync();
-                    if (!string.IsNullOrEmpty(token))
-                    http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-
-
             var respuesta = await http.PostAsJsonAsync("/api/events", payload);
 
             if (respuesta.IsSuccessStatusCode)
@@ -254,15 +248,15 @@
 
     public class CreateEventModel : IValidatableObject
     {
-        [Required(ErrorMessage = "Requerido")]
+        [Required(ErrorMessage = "El nombre del evento es obligatorio.")]
         public string Name { get; set; } = string.Empty;
 
         public string Description { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Requerido")]
+        [Required(ErrorMessage = "La modalidad es obligatoria.")]
         public string Modality { get; set; } = string.Empty;
 
-        [Range(1, 1000)]
+        [Range(1, 1000, ErrorMessage = "El número máximo de proyectos debe estar entre 1 y 1000.")]
         public int MaxProjects { get; set; }
 
         [Required(ErrorMessage = "La fecha de inicio es obligatoria.")]
