@@ -1,12 +1,12 @@
 @page "/create-event"
 @using Votify.Web.Auth
-@inject AuthenticationStateProvider AuthStateProvider
-@rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Components.Authorization
+@inject CustomAuthStateProvider CustomAuthProvider
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
 @inject IJSRuntime JS
+@rendermode InteractiveServer
 
 <PageTitle>Crear Nuevo Evento - Votify</PageTitle>
 
@@ -32,18 +32,12 @@
 
             <div class="form-group">
                 <label>Nombre del evento *</label>
-                <InputText class="@($"form-control {(errorServidor != null ? "is-invalid" : "")}")"
+                <InputText class="form-control"
                            placeholder="Ej: Hackathon 2026"
                            @bind-Value="eventModel.Name"
                            @oninput="() => errorServidor = null" />
                 <ValidationMessage For="@(() => eventModel.Name)" />
-
-                @if (errorServidor != null)
-                {
-                    <div class="validation-error" style="color: #dc2626; font-size: 0.85rem; margin-top: 0.25rem;">
-                        @errorServidor
-                    </div>
-                }
+                <!-- Hemos quitado el errorServidor de aquí -->
             </div>
 
             <div class="form-group">
@@ -71,7 +65,9 @@
                         <img src="@(apiBaseUrl + eventModel.ImageUrl)" alt="Vista previa"
                              style="max-width: 200px; max-height: 150px; border-radius: 0.5rem; border: 1px solid #e5e7eb;" />
                         <button type="button" class="btn-delete" style="margin-left: 0.5rem;"
-                                @onclick="() => eventModel.ImageUrl = null">Quitar</button>
+                                @onclick="() => eventModel.ImageUrl = null">
+                            Quitar
+                        </button>
                     </div>
                 }
             </div>
@@ -110,6 +106,14 @@
                 Las categorías y votaciones se configuran una vez creado el evento.
             </p>
 
+            <!-- Error general del servidor reubicado aquí -->
+            @if (errorServidor != null)
+            {
+                <div style="background-color: #fee2e2; border: 1px solid #f87171; color: #b91c1c; padding: 0.75rem; border-radius: 0.5rem; margin-top: 1rem; font-size: 0.9rem;">
+                    @errorServidor
+                </div>
+            }
+
         </div>
 
         <footer class="modal-footer">
@@ -126,18 +130,23 @@
     private string? errorImagen;
     private bool subiendoImagen;
     private string apiBaseUrl = string.Empty;
+    
+    private string currentUserId = string.Empty;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         var http = HttpClientFactory.CreateClient("API");
         apiBaseUrl = http.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
+
+        var authState = await CustomAuthProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var authState = await CustomAuthProvider.GetAuthenticationStateAsync();
             var user = authState.User;
 
             if (!user.Identity?.IsAuthenticated ?? true)
@@ -206,6 +215,8 @@
 
     private async Task ManejarSubmitValido()
     {
+        errorServidor = null; // Limpiamos errores previos
+
         try
         {
             var payload = new
@@ -216,10 +227,22 @@
                 eventModel.MaxProjects,
                 StartDate = eventModel.StartDate!.Value,
                 EndDate = eventModel.EndDate!.Value,
-                eventModel.ImageUrl
+                eventModel.ImageUrl,
+                OrganizerId = currentUserId
             };
 
             var http = HttpClientFactory.CreateClient("API");
+
+            var session = await CustomAuthProvider.GetUserSessionAsync();
+
+            if (session == null || string.IsNullOrEmpty(session.Token))
+            {
+                errorServidor = "⚠️ ERROR LOCAL: El Token está vacío. Tu Login.razor no está guardando la propiedad 'Token' en la sesión.";
+                return;
+            }
+
+            http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", session.Token);
+
             var respuesta = await http.PostAsJsonAsync("/api/events", payload);
 
             if (respuesta.IsSuccessStatusCode)
@@ -228,8 +251,17 @@
             }
             else
             {
+                // Si realmente es un error de nombre duplicado, ahora se mostrará claramente en la caja roja de abajo
                 var errorMsg = await respuesta.Content.ReadAsStringAsync();
-                errorServidor = errorMsg.Trim('"');
+                
+                if (respuesta.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    errorServidor = "No tienes autorización para realizar esta acción. Por favor, vuelve a iniciar sesión.";
+                }
+                else
+                {
+                    errorServidor = string.IsNullOrWhiteSpace(errorMsg) ? "Error desconocido del servidor." : errorMsg.Trim('"');
+                }
             }
         }
         catch (Exception)
@@ -239,12 +271,6 @@
     }
 
     private void Cancelar() => Navigation.NavigateTo("/MainEvent");
-
-    private class CreatedEventResponse
-    {
-        public string? Message { get; set; }
-        public string? Id { get; set; }
-    }
 
     public class CreateEventModel : IValidatableObject
     {
