@@ -1,9 +1,11 @@
 @page "/event/{EventId}/create-project"
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
+@using Votify.Web.Auth
 @using Votify.Web.Helpers
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
+@inject CustomAuthStateProvider CustomAuthProvider
 @inject IJSRuntime JS
 
 <PageTitle>Crear Proyecto - Votify</PageTitle>
@@ -272,6 +274,7 @@
     private bool subiendoImagen = false;
     private string? errorImagen = null;
     private string apiBaseUrl = string.Empty;
+    private string currentUserId = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -279,6 +282,9 @@
 
         projectModel.EventId = EventId;
         cargandoCategorias = true;
+
+        var session = await CustomAuthProvider.GetUserSessionAsync();
+        currentUserId = session?.Id ?? string.Empty;
 
         try
         {
@@ -419,6 +425,7 @@
                 projectModel.Description,
                 projectModel.ProjectType,
                 projectModel.ImageUrl,
+                OwnerId = currentUserId,
                 CategoryIds = categoriasSeleccionadas.ToList(),
                 Materials = projectModel.Materials.Select(m => new
                 {

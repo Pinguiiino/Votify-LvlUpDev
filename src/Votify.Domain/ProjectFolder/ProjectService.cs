@@ -14,6 +14,7 @@ public class ProjectService
     public async Task<Project> CreateProjectAsync(
         string title, string eventId, string? description,
         string projectType, string? imageUrl,
+        string? ownerId,
         List<string> categoryIds,
         List<(MaterialType type, string url, string? desc)> materials)
     {
@@ -30,7 +31,7 @@ public class ProjectService
             throw new ArgumentException(
                 $"Ya existe un proyecto con el título \"{title}\" en este evento. Elige otro nombre.");
 
-        var project = creator.Create(title, eventId, description, imageUrl);
+        var project = creator.Create(title, eventId, ownerId, description, imageUrl);
 
         foreach (var (type, url, desc) in materials)
             project.Materials.Add(new ProjectMaterial(project.Id, type, url, desc));
@@ -49,7 +50,7 @@ public class ProjectService
         => _repository.GetByCategoryAsync(categoryId);
 
     public List<string> GetProjectTypes()
-    => new List<string> { "AI", "Sustainability", "General" };
+        => new List<string> { "AI", "Sustainability", "General" };
 
     public List<string> GetMaterialTypes()
         => Enum.GetNames<MaterialType>().ToList();

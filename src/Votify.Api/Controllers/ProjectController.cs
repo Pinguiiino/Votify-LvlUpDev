@@ -30,6 +30,7 @@ namespace Votify.Api.Controllers
                 var project = await _service.CreateProjectAsync(
                     dto.Title, dto.EventId, dto.Description,
                     dto.ProjectType, dto.ImageUrl,
+                    dto.OwnerId,
                     dto.CategoryIds, materials);
 
                 return Ok(new { message = "Proyecto creado", id = project.Id });
@@ -85,6 +86,7 @@ namespace Votify.Api.Controllers
             p.Title,
             p.Description,
             p.EventId,
+            p.OwnerId,
             p.ImageUrl,
             ProjectType = p.ProjectType(),
             Materials = p.Materials.Select(m => new
@@ -107,6 +109,7 @@ namespace Votify.Api.Controllers
         public string? Description { get; set; }
         public string ProjectType { get; set; } = "AI";
         public string? ImageUrl { get; set; }
+        public string? OwnerId { get; set; }
         public List<string> CategoryIds { get; set; } = new();
         public List<MaterialDto> Materials { get; set; } = new();
     }

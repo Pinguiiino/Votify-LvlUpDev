@@ -40,6 +40,7 @@ public abstract class Project
     public string Title { get; set; }
     public string? Description { get; set; }
     public string EventId { get; set; }
+    public string? OwnerId { get; set; }
     public string? ImageUrl { get; set; }
 
     public virtual List<ProjectCategory> ProjectCategories { get; set; } = new();
@@ -47,11 +48,13 @@ public abstract class Project
 
     protected Project() { }
 
-    protected Project(string title, string eventId, string? description = null, string? imageUrl = null)
+    protected Project(string title, string eventId, string? ownerId = null,
+                      string? description = null, string? imageUrl = null)
     {
         Id = Guid.NewGuid().ToString();
         Title = title;
         EventId = eventId;
+        OwnerId = ownerId;
         Description = description;
         ImageUrl = imageUrl;
     }

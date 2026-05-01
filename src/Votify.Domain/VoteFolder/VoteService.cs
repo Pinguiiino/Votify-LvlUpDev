@@ -1,5 +1,6 @@
 using Votify.Domain.CategoryFolder;
 using Votify.Domain.Factory;
+using Votify.Domain.ProjectFolder;
 using Votify.Domain.VoteFolder.Strategies;
 
 namespace Votify.Domain.VoteFolder
@@ -9,22 +10,25 @@ namespace Votify.Domain.VoteFolder
         private readonly IVoteRepository _repository;
         private readonly IVotingSessionRepository _sessionRepo;
         private readonly ICategoryRepository _categoryRepo;
+        private readonly IProjectRepository _projectRepo;
         private readonly IWeightedVoteRepository _weightedRepo;
         private readonly VotingStrategyResolver _strategyResolver;
 
         public VoteService(IVoteRepository repository,
                            IVotingSessionRepository sessionRepo,
                            ICategoryRepository categoryRepo,
+                           IProjectRepository projectRepo,
                            IWeightedVoteRepository weightedRepo,
                            VotingStrategyResolver strategyResolver)
         {
             _repository = repository;
             _sessionRepo = sessionRepo;
             _categoryRepo = categoryRepo;
+            _projectRepo = projectRepo;
             _weightedRepo = weightedRepo;
             _strategyResolver = strategyResolver;
         }
-        
+
         public async Task CastVotesByStrategyAsync(
         string votingSessionId,
         VoteStrategyInput input)
@@ -38,9 +42,32 @@ namespace Votify.Domain.VoteFolder
             if (!session.IsOpen)
                 throw new InvalidOperationException("La sesión de votación no está abierta.");
 
+            await EnsureSelfVotingAllowedAsync(input);
+
             var strategy = _strategyResolver.Resolve(session.EvaluationType);
             await strategy.ValidateAsync(session, input);
             await strategy.ExecuteAsync(session, input);
+        }
+
+        private async Task EnsureSelfVotingAllowedAsync(VoteStrategyInput input)
+        {
+            var category = await _categoryRepo.GetByIdAsync(input.CategoryId);
+            if (category == null || category.AllowSelfVoting)
+                return;
+
+            var projectIds = input.RankedProjects.Select(r => r.ProjectId)
+                .Concat(input.WeightedProjects.Select(w => w.ProjectId))
+                .Concat(input.PointAllocations.Where(p => p.Points > 0).Select(p => p.ProjectId))
+                .Distinct()
+                .ToList();
+
+            foreach (var projectId in projectIds)
+            {
+                var project = await _projectRepo.GetByIdAsync(projectId);
+                if (project != null && project.OwnerId == input.UserId)
+                    throw new InvalidOperationException(
+                        "No puedes votar tu propio proyecto en esta categoría.");
+            }
         }
 
         public async Task<Vote> CastVoteAsync(string projectId, string categoryId, string eventId, string userId, int topPosition)
@@ -53,6 +80,14 @@ namespace Votify.Domain.VoteFolder
             var category = await _categoryRepo.GetByIdAsync(categoryId);
             if (category == null)
                 throw new InvalidOperationException("Categoría no encontrada.");
+
+            if (!category.AllowSelfVoting)
+            {
+                var project = await _projectRepo.GetByIdAsync(projectId);
+                if (project != null && project.OwnerId == userId)
+                    throw new InvalidOperationException(
+                        "No puedes votar tu propio proyecto en esta categoría.");
+            }
 
             if (session.EvaluationType == EvaluationType.TopN)
             {

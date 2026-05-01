@@ -138,16 +138,16 @@ public static class DbSeeder
         ProjectCreator aiCreator = new AiProjectCreator();
         ProjectCreator sustCreator = new SustainabilityProjectCreator();
 
-        var p1 = aiCreator.Create("MediScan AI", hackUPC.Id, "Detección temprana de enfermedades.");
-        var p2 = aiCreator.Create("EduAdapt", hackUPC.Id, "Plataforma de aprendizaje adaptativo.");
-        var p3 = aiCreator.Create("TrafficFlow", hackUPC.Id, "Optimización de semáforos con IA.");
-        var p4 = aiCreator.Create("RefugeeConnect", hackUPC.Id, "App de integración laboral para refugiados.");
-        var p5 = aiCreator.Create("CuidaMayor", hackUPC.Id, "Plataforma de teleasistencia para mayores.");
-        var p6 = sustCreator.Create("PlastiTrack", hackUPC.Id, "Trazabilidad de plásticos en la cadena de reciclaje.");
-        var p7 = sustCreator.Create("SolarGrid", hackUPC.Id, "Red P2P de energía solar entre vecinos.");
-        var p8 = aiCreator.Create("QuantumSec", fibFair.Id, "Criptografía post-cuántica para IoT.");
-        var p9 = aiCreator.Create("BioPrint3D", fibFair.Id, "Impresión 3D de tejidos biológicos.");
-        var p10 = sustCreator.Create("WaterSense", fibFair.Id, "Sensores IoT para gestión eficiente del agua.");
+        var p1 = aiCreator.Create("MediScan AI", hackUPC.Id, ownerId: part1.Id, description: "Detección temprana de enfermedades.");
+        var p2 = aiCreator.Create("EduAdapt", hackUPC.Id, ownerId: part2.Id, description: "Plataforma de aprendizaje adaptativo.");
+        var p3 = aiCreator.Create("TrafficFlow", hackUPC.Id, ownerId: part3.Id, description: "Optimización de semáforos con IA.");
+        var p4 = aiCreator.Create("RefugeeConnect", hackUPC.Id, ownerId: part4.Id, description: "App de integración laboral para refugiados.");
+        var p5 = aiCreator.Create("CuidaMayor", hackUPC.Id, ownerId: part5.Id, description: "Plataforma de teleasistencia para mayores.");
+        var p6 = sustCreator.Create("PlastiTrack", hackUPC.Id, ownerId: part6.Id, description: "Trazabilidad de plásticos en la cadena de reciclaje.");
+        var p7 = sustCreator.Create("SolarGrid", hackUPC.Id, ownerId: part1.Id, description: "Red P2P de energía solar entre vecinos.");
+        var p8 = aiCreator.Create("QuantumSec", fibFair.Id, ownerId: part2.Id, description: "Criptografía post-cuántica para IoT.");
+        var p9 = aiCreator.Create("BioPrint3D", fibFair.Id, ownerId: part3.Id, description: "Impresión 3D de tejidos biológicos.");
+        var p10 = sustCreator.Create("WaterSense", fibFair.Id, ownerId: part4.Id, description: "Sensores IoT para gestión eficiente del agua.");
 
         context.Projects.AddRange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
         await context.SaveChangesAsync();

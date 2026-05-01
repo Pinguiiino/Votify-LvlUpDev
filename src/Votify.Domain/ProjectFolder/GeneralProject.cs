@@ -4,8 +4,9 @@ namespace Votify.Domain.ProjectFolder
     {
         public GeneralProject() { }
 
-        public GeneralProject(string title, string eventId, string? description = null, string? imageUrl = null)
-            : base(title, eventId, description, imageUrl) { }
+        public GeneralProject(string title, string eventId, string? ownerId = null,
+                              string? description = null, string? imageUrl = null)
+            : base(title, eventId, ownerId, description, imageUrl) { }
 
         public override string ProjectType() => "General";
     }
