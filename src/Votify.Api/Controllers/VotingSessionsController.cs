@@ -49,6 +49,9 @@ namespace Votify.Api.Controllers
                 CriterionType = vs.CriterionType?.ToString(),
                 vs.AllowComments,
                 vs.RequireComments,
+                vs.PointsPerVoter,
+                vs.MaxPointsPerProject,
+                vs.TopN,
                 Criteria = vs.Criteria.Select(cr => new { cr.Id, cr.Name, cr.Description, cr.Weight })
             }));
         }
