@@ -24,12 +24,11 @@ public sealed class PointDistributionVotingStrategy : IVotingStrategy
         int maxPPP  = session.MaxPointsPerProject ?? int.MaxValue;
         int total   = allocations.Sum(a => a.Points);
 
-        if (total != budget)
+        if (total > budget)
         {
             int restantes = budget - total;
             throw new InvalidOperationException(
-                $"Debes repartir exactamente {budget} puntos. " +
-                $"Puntos restantes: {restantes}");
+                $"No puedes repartir más de {budget} puntos en total. Te has pasado {total - budget}.");
         }
 
         var excedido = allocations.FirstOrDefault(a => a.Points > maxPPP);

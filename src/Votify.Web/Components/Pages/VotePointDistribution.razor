@@ -148,14 +148,14 @@
 
         <button class="pd-submit-btn"
                 @onclick="EnviarVotos"
-                disabled="@(enviando || puntosRestantes != 0 || hayExcedidos)">
+                disabled="@(enviando || puntosUsados > presupuesto || hayExcedidos)">
             @if (enviando)
             {
                 <span>Guardando...</span>
             }
-            else if (puntosRestantes != 0)
+            else if (puntosUsados > presupuesto)
             {
-                <span>Debes repartir exactamente @presupuesto puntos (@(puntosRestantes > 0 ? $"faltan {puntosRestantes}" : $"sobran {-puntosRestantes}"))</span>
+                <span>Te has pasado @(puntosUsados - presupuesto) pts del presupuesto</span>
             }
             else if (hayExcedidos)
             {
@@ -189,9 +189,9 @@
     private int  puntosRestantes => presupuesto - puntosUsados;
     private bool hayExcedidos    => puntos.Any(kv => kv.Value > maxPorProyecto);
 
-    private string BudgetClass => puntosRestantes == 0 ? "complete"
-                                : puntosRestantes <  0 ? "over"
-                                : "under";
+    private string BudgetClass => puntosUsados > presupuesto ? "over"
+                            : puntosUsados == presupuesto ? "complete"
+                            : "under";
 
     protected override async Task OnInitializedAsync()
     {
