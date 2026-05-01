@@ -242,9 +242,12 @@
         categoriaNombre = categoriaActual?.Name ?? "la categoría";
 
         var evalType = categoriaActual?.EvaluationType;
-        _voteUrl = evalType == "WeightedScale"
-            ? $"/event/{EventId}/categories/{CategoryId}/vote-weighted"
-            : $"/event/{EventId}/categories/{CategoryId}/vote-ranking";
+        _voteUrl = evalType switch
+        {
+            "WeightedScale" => $"/event/{EventId}/categories/{CategoryId}/vote-weighted",
+            "PointDistribution" => $"/event/{EventId}/categories/{CategoryId}/vote-point-distribution",
+            _ => $"/event/{EventId}/categories/{CategoryId}/vote-ranking"
+        };
 
         if (evalType == "WeightedScale")
         {
@@ -290,21 +293,6 @@
         }
     }
 
-    /*protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            var result = await SessionStorage.GetAsync<string>("votify_uid");
-            _sessionUserId = result.Success ? result.Value! : Guid.NewGuid().ToString();
-            if (!result.Success) await SessionStorage.SetAsync("votify_uid", _sessionUserId);
-            
-            var http = HttpClientFactory.CreateClient("API");
-            var votosPrevios = await http.GetFromJsonAsync<List<VoteResultDto>>($"api/votes/by-user?userId={_sessionUserId}&categoryId={CategoryId}");
-            haVotado = votosPrevios != null && votosPrevios.Any();
-            
-            StateHasChanged();
-        }
-    }*/
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
