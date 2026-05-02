@@ -1,9 +1,10 @@
-﻿@page "/event/{EventId}/categories/{CategoryId}/vote-weighted"
+@page "/event/{EventId}/categories/{CategoryId}/vote-weighted"
 @using System.Globalization
+@using Microsoft.AspNetCore.Components.Authorization
 @rendermode InteractiveServer
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager Navigation
-@inject Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage.ProtectedSessionStorage SessionStorage
+@inject AuthenticationStateProvider AuthStateProvider
 @inject IJSRuntime JS
 
 <PageTitle>Evaluación por Baremo - Votify</PageTitle>
@@ -111,7 +112,7 @@
                                         <button type="button"
                                                 class="rubric-level-btn @(isSelected ? "selected" : "") rubric-level-@level.Key"
                                                 title="@level.Label (@level.Score)"
-                                                @onclick="() => SetScore(proyecto.Id, criterio.Id, level.Score.ToString(System.Globalization.CultureInfo.InvariantCulture))">
+                                                @onclick="() => SetScore(proyecto.Id, criterio.Id, level.Score.ToString(CultureInfo.InvariantCulture))">
                                             <span class="rubric-level-key">@level.Key</span>
                                             <span class="rubric-level-label">@level.Label</span>
                                         </button>
@@ -120,7 +121,6 @@
                             }
                             else
                             {
-                                @* Numeric *@
                                 <div class="score-input-group">
                                     <input type="text"
                                            class="score-input"
@@ -246,9 +246,9 @@
     {
         if (!firstRender) return;
 
-        var result = await SessionStorage.GetAsync<string>("votify_uid");
-        userId = result.Success ? result.Value! : Guid.NewGuid().ToString();
-        if (!result.Success) await SessionStorage.SetAsync("votify_uid", userId);
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+        if (string.IsNullOrEmpty(userId)) return;
 
         if (sesion != null)
         {
@@ -263,7 +263,11 @@
                     if (!scores.ContainsKey(v.ProjectId))
                         scores[v.ProjectId] = new();
                     scores[v.ProjectId][v.CriterionId] = v.Score;
+
+                    if (!scoresText.ContainsKey(v.ProjectId))
+                        scoresText[v.ProjectId] = new();
                     scoresText[v.ProjectId][v.CriterionId] = v.Score.ToString(CultureInfo.InvariantCulture);
+
                     if (!string.IsNullOrEmpty(v.Comment))
                         comentarios[v.ProjectId] = v.Comment;
                 }
@@ -277,12 +281,16 @@
 
     private void SetScore(string projectId, string criterionId, string? raw)
     {
-        if (double.TryParse(raw, System.Globalization.NumberStyles.Any,
-                            System.Globalization.CultureInfo.InvariantCulture, out var val))
+        if (double.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var val))
         {
             val = Math.Clamp(val, 0, 10);
             if (!scores.ContainsKey(projectId)) scores[projectId] = new();
             scores[projectId][criterionId] = val;
+
+            if (!scoresText.ContainsKey(projectId)) scoresText[projectId] = new();
+            scoresText[projectId][criterionId] = val == Math.Floor(val)
+                ? val.ToString("0", CultureInfo.InvariantCulture)
+                : val.ToString("0.#", CultureInfo.InvariantCulture);
         }
     }
 
@@ -290,8 +298,8 @@
     {
         var val = GetScore(projectId, criterionId);
         return val == Math.Floor(val)
-            ? val.ToString("0", System.Globalization.CultureInfo.InvariantCulture)
-            : val.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+            ? val.ToString("0", CultureInfo.InvariantCulture)
+            : val.ToString("0.#", CultureInfo.InvariantCulture);
     }
 
     private void SetCheckbox(string projectId, string criterionId, object? value)
@@ -319,13 +327,34 @@
 
     private void OnInputChanged(string pId, string cId, string? raw)
     {
-        if (string.IsNullOrWhiteSpace(raw)) return;
-        scoresText[pId][cId] = raw;
-        raw = raw.Replace(',', '.');
-
-        if (double.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var val))
+        if (string.IsNullOrWhiteSpace(raw))
         {
-            scores[pId][cId] = Math.Clamp(val, 0, 10);
+            scoresText[pId][cId] = raw ?? "";
+            scores[pId][cId] = 0;
+            return;
+        }
+
+        var normalized = raw.Replace(',', '.');
+
+        if (double.TryParse(normalized, NumberStyles.Any, CultureInfo.InvariantCulture, out var val))
+        {
+            var clamped = Math.Clamp(val, 0, 10);
+            scores[pId][cId] = clamped;
+
+            if (val != clamped)
+            {
+                scoresText[pId][cId] = clamped == Math.Floor(clamped)
+                    ? clamped.ToString("0", CultureInfo.InvariantCulture)
+                    : clamped.ToString("0.#", CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                scoresText[pId][cId] = raw;
+            }
+        }
+        else
+        {
+            scoresText[pId][cId] = raw;
         }
     }
 
@@ -415,4 +444,3 @@
         public string? Comment { get; set; }
     }
 }
-

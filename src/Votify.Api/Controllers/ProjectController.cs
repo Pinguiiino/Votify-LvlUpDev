@@ -55,6 +55,13 @@ namespace Votify.Api.Controllers
             return Ok(projects.Select(ToDto));
         }
 
+        [HttpGet("by-owner/{ownerId}")]
+        public async Task<IActionResult> GetByOwner(string ownerId)
+        {
+            var projects = await _service.GetByOwnerAsync(ownerId);
+            return Ok(projects.Select(ToDto));
+        }
+
         [HttpPost("upload-image")]
         [RequestSizeLimit(5 * 1024 * 1024)]
         public async Task<IActionResult> UploadImage(IFormFile file)

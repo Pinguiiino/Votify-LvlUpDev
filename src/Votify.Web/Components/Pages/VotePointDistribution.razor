@@ -1,8 +1,9 @@
 @page "/event/{EventId}/categories/{CategoryId}/vote-point-distribution"
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Authorization
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager Navigation
-@inject Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage.ProtectedSessionStorage SessionStorage
+@inject AuthenticationStateProvider AuthStateProvider
 @inject IJSRuntime JS
 
 <PageTitle>Reparto de Puntos - Votify</PageTitle>
@@ -225,9 +226,9 @@
     {
         if (!firstRender) return;
 
-        var result = await SessionStorage.GetAsync<string>("votify_uid");
-        userId = result.Success ? result.Value! : Guid.NewGuid().ToString();
-        if (!result.Success) await SessionStorage.SetAsync("votify_uid", userId);
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+        if (string.IsNullOrEmpty(userId)) return;
 
         if (sesion != null)
         {
@@ -247,7 +248,7 @@
                     StateHasChanged();
                 }
             }
-            catch { /* Sin votos previos */ }
+            catch { }
         }
     }
 

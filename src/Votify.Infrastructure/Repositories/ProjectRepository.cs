@@ -48,4 +48,12 @@ public class ProjectRepository : IProjectRepository
     public async Task<bool> TitleExistsInEventAsync(string title, string eventId)
         => await _context.Projects
             .AnyAsync(p => p.Title == title && p.EventId == eventId);
+
+    public async Task<List<Project>> GetByOwnerAsync(string ownerId)
+    => await _context.Projects
+        .Include(p => p.Materials)
+        .Include(p => p.ProjectCategories)
+        .AsNoTracking()
+        .Where(p => p.OwnerId == ownerId)
+        .ToListAsync();
 }

@@ -49,6 +49,9 @@ public class ProjectService
     public Task<List<Project>> GetByCategoryAsync(string categoryId)
         => _repository.GetByCategoryAsync(categoryId);
 
+    public Task<List<Project>> GetByOwnerAsync(string ownerId)
+    => _repository.GetByOwnerAsync(ownerId);
+
     public List<string> GetProjectTypes()
         => new List<string> { "AI", "Sustainability", "General" };
 

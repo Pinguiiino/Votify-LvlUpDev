@@ -1,8 +1,9 @@
 @page "/event/{EventId}/categories/{CategoryId}/vote-ranking"
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
-@inject Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage.ProtectedSessionStorage SessionStorage
+@inject AuthenticationStateProvider AuthStateProvider
 @inject IJSRuntime JS
 
 <PageTitle>Emitir Voto - Votify</PageTitle>
@@ -70,26 +71,26 @@
                                               rows="2"
                                               maxlength="500"
                                               @bind="comentarios[p.Id]"
-                                                  @bind:event="oninput">
+                                              @bind:event="oninput">
                                     </textarea>
-                                        <div class="char-count">@((comentarios.TryGetValue(p.Id, out var txt) ? txt?.Length : 0) ?? 0)/500</div>
-                                    }
+                                    <div class="char-count">@((comentarios.TryGetValue(p.Id, out var txt) ? txt?.Length : 0) ?? 0)/500</div>
+                                }
                                 else
-                                    {
-                                        <span class="empty-text">Haz clic en un proyecto para añadirlo aquí</span>
-                                    }
-                                </div>
+                                {
+                                    <span class="empty-text">Haz clic en un proyecto para añadirlo aquí</span>
+                                }
                             </div>
-                        }
-                    </div>
-
-                    <button class="btn-primary submit-vote-btn" disabled="@(!ProyectosSeleccionados.Any())" @onclick="EnviarVoto">
-                        Confirmar Mi Voto
-                    </button>
+                        </div>
+                    }
                 </div>
+
+                <button class="btn-primary submit-vote-btn" disabled="@(!ProyectosSeleccionados.Any())" @onclick="EnviarVoto">
+                    Confirmar Mi Voto
+                </button>
             </div>
-        }
-    </div>
+        </div>
+    }
+</div>
 
 @code {
     [Parameter] public string EventId { get; set; } = "";
@@ -128,9 +129,9 @@
     {
         if (!firstRender) return;
 
-        var result = await SessionStorage.GetAsync<string>("votify_uid");
-        UserId = result.Success ? result.Value! : Guid.NewGuid().ToString();
-        if (!result.Success) await SessionStorage.SetAsync("votify_uid", UserId);
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        UserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+        if (string.IsNullOrEmpty(UserId)) return;
 
         var http = HttpClientFactory.CreateClient("API");
         var votosPrevios = await http.GetFromJsonAsync<List<VoteResultDto>>(
@@ -200,7 +201,8 @@
         }
         else
         {
-            await JS.InvokeVoidAsync("alert", "Hubo un error al guardar los votos.");
+            var msg = await response.Content.ReadAsStringAsync();
+            await JS.InvokeVoidAsync("alert", string.IsNullOrWhiteSpace(msg) ? "Hubo un error al guardar los votos." : msg.Trim('"'));
         }
     }
 
