@@ -1,7 +1,9 @@
 ﻿@page "/"
 @page "/login"
+@attribute [AllowAnonymous]
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @using Votify.Web.Auth
 @inject NavigationManager Navigation

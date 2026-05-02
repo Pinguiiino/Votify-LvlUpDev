@@ -1,10 +1,9 @@
 ﻿@page "/profile"
-@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @using Votify.Web.Auth
-@attribute [Authorize]
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
+@rendermode InteractiveServer
 
 <PageTitle>Perfil de Usuario - Votify</PageTitle>
 
@@ -13,7 +12,7 @@
         
         <button class="back-btn" @onclick="GoBack" title="Volver al inicio">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
             </svg>
         </button>
 
@@ -69,15 +68,26 @@
     private string userName = "Cargando...";
     private string userEmail = "Cargando...";
 
-    protected override async Task OnInitializedAsync()
+    // CAMBIADO: Usamos OnAfterRenderAsync para evitar el fallo del servidor
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        if (user.Identity != null && user.Identity.IsAuthenticated)
+        if (firstRender)
         {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            // 1. Si el usuario intenta usar la flecha de atrás tras cerrar sesión, lo expulsamos
+            if (!user.Identity?.IsAuthenticated ?? true)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            // 2. Si todo está bien, cargamos sus datos
             userName = user.Identity.Name ?? "Usuario";
             userEmail = user.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "Sin correo";
+            
+            StateHasChanged(); // Avisamos a Blazor de que repinte la pantalla
         }
     }
 
@@ -96,6 +106,7 @@
         var customAuthStateProvider = (CustomAuthStateProvider)AuthStateProvider;
         await customAuthStateProvider.UpdateAuthenticationState(null);
         
-        Navigation.NavigateTo("/");
+        // Destruimos la caché de la página forzando una recarga nativa
+        Navigation.NavigateTo("/login", forceLoad: true);
     }
 }
