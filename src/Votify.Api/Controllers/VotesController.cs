@@ -126,7 +126,6 @@ namespace Votify.Api.Controllers
         public string CategoryId { get; init; } = "";
         public string VotingSessionId { get; init; } = "";
 
-        // Sólo uno de estos tres bloques debe estar relleno según el tipo de votación.
         public List<RankedProjectDto>? RankedProjects { get; init; }
         public List<WeightedProjectScoreDto>? WeightedProjects { get; init; }
         public List<PointAllocationDto>? PointAllocations { get; init; }

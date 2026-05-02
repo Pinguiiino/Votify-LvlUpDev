@@ -14,7 +14,7 @@
         </button>
         <h1 class="pd-title">Reparto de Puntos</h1>
         <p class="pd-subtitle">
-            Distribuye exactamente <strong>@presupuesto puntos</strong> entre los proyectos.
+            Distribuye hasta <strong>@presupuesto puntos</strong> entre los proyectos.
             Máximo <strong>@maxPorProyecto pts</strong> por proyecto.
         </p>
     </header>
@@ -43,17 +43,13 @@
                 <div class="pd-budget-fill @BudgetClass" style="width: @Math.Min(100, (double)puntosUsados / presupuesto * 100).ToString("0")%"></div>
             </div>
             <div class="pd-budget-remaining @BudgetClass">
-                @if (puntosRestantes == 0)
+                @if (puntosRestantes >= 0)
                 {
-                    <span>✓ Presupuesto completo</span>
-                }
-                else if (puntosRestantes > 0)
-                {
-                    <span>Quedan @puntosRestantes pts por repartir</span>
+                    <span>✓ Presupuesto aceptado</span>
                 }
                 else
                 {
-                    <span>⚠ Te has pasado @(-puntosRestantes) pts</span>
+                    <span>⚠ Debes repartir como máximo @presupuesto puntos. Te has pasado @(-puntosRestantes) pts</span>
                 }
             </div>
         </div>
@@ -61,7 +57,7 @@
         @foreach (var proyecto in proyectos)
         {
             var pts = GetPoints(proyecto.Id);
-            var pct = presupuesto > 0 ? (double)pts / presupuesto * 100 : 0;
+            var pct = maxPorProyecto > 0 ? (double)pts / maxPorProyecto * 100 : 0;
             var excede = pts > maxPorProyecto;
 
             <div class="pd-project-card @(excede ? "pd-card-error" : pts > 0 ? "pd-card-active" : "")">
@@ -87,7 +83,7 @@
 
                     <input type="range"
                            class="pd-slider"
-                           min="0" max="@presupuesto" step="1"
+                           min="0" max="@maxPorProyecto" step="1"
                            value="@pts"
                            @oninput="e => SetPoints(proyecto.Id, e.Value?.ToString())" />
 
@@ -96,7 +92,7 @@
                     <button class="pd-stepper" @onclick="() => AdjustPoints(proyecto.Id, 5)"
                             disabled="@(puntosRestantes < 5 && pts < maxPorProyecto)">+5</button>
 
-                    <input type="number" min="0" max="@presupuesto" step="1"
+                    <input type="number" min="0" max="@maxPorProyecto" step="1"
                            class="pd-number-input @(excede ? "error" : "")"
                            value="@pts"
                            @onchange="e => SetPoints(proyecto.Id, e.Value?.ToString())" />
@@ -285,11 +281,9 @@
 
         if (sesion == null) { error = "No hay sesión activa."; return; }
 
-        if (puntosRestantes != 0)
+        if (puntosRestantes < 0)
         {
-            error = puntosRestantes > 0
-                ? $"Debes repartir exactamente {presupuesto} puntos. Puntos restantes: {puntosRestantes}"
-                : $"Debes repartir exactamente {presupuesto} puntos. Te has pasado {-puntosRestantes} pts.";
+            error = $"Debes repartir como máximo {presupuesto} puntos. Te has pasado {-puntosRestantes} pts.";
             return;
         }
 
