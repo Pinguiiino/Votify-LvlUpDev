@@ -127,8 +127,8 @@ public class EventService
                 {
                     if (sesion.EvaluationType == EvaluationType.TopN && sesion.TopN.HasValue)
                         puntos = g.Sum(v => Math.Max(0, (sesion.TopN.Value - v.TopPosition + 1) * 10));
-                    else if (sesion.EvaluationType != EvaluationType.WeightedScale)
-                        puntos = g.Count() * 10;
+                    else if (sesion.EvaluationType == EvaluationType.PointDistribution)
+                        puntos = g.Sum(v => v.Points ?? 0);
                 }
                 return new { g.Key.VotedProjectId, g.Key.CategoryId, puntos };
             })

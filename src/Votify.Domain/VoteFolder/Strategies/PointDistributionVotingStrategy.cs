@@ -61,8 +61,9 @@ public sealed class PointDistributionVotingStrategy : IVotingStrategy
                     projectId:       a.ProjectId,
                     userId:          input.UserId,
                     categoryId:      input.CategoryId,
-                    topPosition:     a.Points,
-                    comment:         string.IsNullOrWhiteSpace(a.Comment) ? null : a.Comment.Trim());
+                    topPosition:     0,
+                    comment:         string.IsNullOrWhiteSpace(a.Comment) ? null : a.Comment.Trim(),
+                    points:          a.Points);
                 voto.GenerateIntegrityHash();
                 return voto;
             }).ToList();

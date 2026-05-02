@@ -139,7 +139,16 @@
                                                 Votante
                                                 <span class="vote-type-pill" style="font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; background: @(c.VoteType == "Expert" ? "#fef3c7" : "#dbeafe"); color: @(c.VoteType == "Expert" ? "#b45309" : "#1e40af"); padding: 0.15rem 0.5rem; border-radius: 9999px;">@(c.VoteType == "Expert" ? "Jurado" : "Público")</span>
                                             </span>
-                                            <span class="comment-position" style="font-size: 0.8rem; color: #6b7280;">Lo situó en el <strong style="color: #374151;">@c.TopPosition&#186; puesto</strong></span>
+                                            <span class="comment-position" style="font-size: 0.8rem; color: #6b7280;">
+                                                @if (c.EvaluationType == "PointDistribution")
+                                                {
+                                                    <span>Le asignó <strong style="color: #374151;">@c.TopPosition pts</strong></span>
+                                                }
+                                                else if (c.TopPosition > 0)
+                                                {
+                                                    <span>Lo situó en el <strong style="color: #374151;">@c.TopPosition&#186; puesto</strong></span>
+                                                }
+                                            </span>
                                         </div>
                                     </div>
                                     <p class="comment-text" style="margin: 0; font-size: 0.95rem; color: #4b5563; line-height: 1.5;">@c.Comment</p>
@@ -371,6 +380,7 @@
         public string Comment { get; set; } = string.Empty;
         public int TopPosition { get; set; }
         public string VoteType { get; set; } = string.Empty;
+        public string EvaluationType { get; set; } = string.Empty;
     }
 
     public class WeightedVotePrevioDto { public string ProjectId { get; set; } = ""; }

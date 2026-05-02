@@ -6,7 +6,7 @@ namespace Votify.Domain.Factory
     {
         public abstract Vote Create(string votingSessionId, string projectId,
                                     string userId, string categoryId,
-                                    int topPosition, string? comment = null);
+                                    int topPosition, string? comment = null, int? points = null);
     }
 }
 

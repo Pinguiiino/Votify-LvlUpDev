@@ -100,7 +100,7 @@ namespace Votify.Api.Controllers
         public async Task<IActionResult> GetCommentsByProject(string projectId)
         {
             var comments = await _service.GetCommentsByProjectAsync(projectId);
-            return Ok(comments.Select(c => new { c.Comment, c.TopPosition, c.VoteType }));
+            return Ok(comments.Select(c => new { c.Comment, c.TopPosition, c.VoteType, c.EvaluationType }));
         }
 
         [HttpGet("weighted")]

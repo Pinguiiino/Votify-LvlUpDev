@@ -11,6 +11,7 @@ public abstract class Vote
     public string UserId { get; set; }
     public string CategoryId { get; set; }
     public int TopPosition { get; set; }
+    public int? Points { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public string? Comment { get; set; }
 
@@ -28,7 +29,7 @@ public abstract class Vote
     public Vote() { }
 
     public Vote(string votingSessionId, string projectId, string userId,
-                string categoryId, int topPosition, string? comment = null)
+                string categoryId, int topPosition, string? comment = null, int? points = null)
     {
         Id = Guid.NewGuid().ToString();
         VotingSessionId = votingSessionId;
@@ -36,6 +37,7 @@ public abstract class Vote
         UserId = userId;
         CategoryId = categoryId;
         TopPosition = topPosition;
+        Points = points;
         CreatedAt = DateTime.UtcNow;
         Comment = comment;
     }

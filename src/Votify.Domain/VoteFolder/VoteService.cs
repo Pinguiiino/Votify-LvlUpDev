@@ -160,20 +160,37 @@ namespace Votify.Domain.VoteFolder
             var votes = await _repository.GetByUserIdAndCategoryAsync(userId, categoryId);
             return votes
                 .Where(v => v.VotingSessionId == votingSessionId)
-                .Select(v => new PointDistributionVoteDto(v.VotedProjectId, v.TopPosition, v.Comment))
+                .Select(v => new PointDistributionVoteDto(v.VotedProjectId, v.Points ?? 0, v.Comment))
                 .ToList();
         }
 
         public async Task<List<CommentDto>> GetCommentsByProjectAsync(string projectId)
         {
             var votes = await _repository.GetByProjectAsync(projectId);
+            var sessionIds = votes.Select(v => v.VotingSessionId).Distinct().ToList();
+            var sessions = new Dictionary<string, VotingSession>();
+            foreach (var sid in sessionIds)
+            {
+                var s = await _sessionRepo.GetByIdAsync(sid);
+                if (s != null) sessions[sid] = s;
+            }
             return votes
                 .Where(v => !string.IsNullOrWhiteSpace(v.Comment))
                 .OrderBy(v => v.TopPosition)
-                .Select(v => new CommentDto(
-                    v.Comment!,
-                    v.TopPosition,
-                    v is ExpertVote ? "Expert" : "Public"))
+                .Select(v =>
+                {
+                    var evalType = sessions.TryGetValue(v.VotingSessionId, out var s)
+                        ? s.EvaluationType.ToString()
+                        : "TopN";
+                    var displayValue = s?.EvaluationType == EvaluationType.PointDistribution
+                        ? v.Points ?? 0
+                        : v.TopPosition;
+                    return new CommentDto(
+                        v.Comment!,
+                        displayValue,
+                        v is ExpertVote ? "Expert" : "Public",
+                        evalType);
+                })
                 .ToList();
         }
 
@@ -186,5 +203,5 @@ namespace Votify.Domain.VoteFolder
 
     public record WeightedVoteDto(string ProjectId, string CriterionId, double Score, string? Comment);
     public record PointDistributionVoteDto(string ProjectId, int Points, string? Comment);
-    public record CommentDto(string Comment, int TopPosition, string VoteType);
+    public record CommentDto(string Comment, int TopPosition, string VoteType, string EvaluationType);
 }
