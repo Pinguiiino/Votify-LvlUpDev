@@ -39,7 +39,6 @@ namespace Votify.Api.Controllers
             {
                 var user = await _service.LoginAsync(dto.Email, dto.Password);
 
-                // Determina el rol
                 string role = user switch
                 {
                     Organizer => "Organizer",
@@ -49,12 +48,11 @@ namespace Votify.Api.Controllers
                     _ => "Public"
                 };
 
-                // Genera el token con el rol
                 var token = _tokenService.GenerateToken(user.Id, user.Email, role);
 
                 return Ok(new
                 {
-                    token,        // <- el frontend guarda este token
+                    token,
                     Id = user.Id,
                     Username = user.Name,
                     Email = user.Email,
@@ -83,6 +81,13 @@ namespace Votify.Api.Controllers
             {
                 return StatusCode(500, "Error interno del servidor.");
             }
+        }
+
+        [HttpGet("check-email")]
+        public async Task<IActionResult> CheckEmail([FromQuery] string email)
+        {
+            var exists = await _service.CheckEmailExistsAsync(email);
+            return Ok(exists);
         }
     }
 

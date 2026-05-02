@@ -62,5 +62,10 @@ namespace Votify.Domain.UserFolder
             user.Password = newPassword;
             await _repository.SaveChangesAsync();
         }
+        public async Task<bool> CheckEmailExistsAsync(string email)
+        {
+            var user = await _repository.GetByEmailAsync(email);
+            return user != null;
+        }
     }
 }

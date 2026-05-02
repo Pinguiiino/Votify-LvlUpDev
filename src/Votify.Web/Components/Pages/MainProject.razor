@@ -10,14 +10,12 @@
 <PageTitle>Proyectos - Votify</PageTitle>
 
 <div class="mainproject-container" style="position: relative;">
-    <header class="hero-section"
-            style="display: flex; justify-content: space-between; align-items: flex-start; text-align: left;">
+    <header class="hero-section" style="display: flex; justify-content: space-between; align-items: flex-start; text-align: left;">
         <div>
             <button class="back-btn" style="align-self: flex-start; margin-bottom: 1rem;"
                     @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories")'>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd"
-                          d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
                 </svg>
                 Volver
             </button>
@@ -26,130 +24,28 @@
             <p class="subtitle" style="margin: 0;">Explora los proyectos y vótalos</p>
         </div>
 
-        @if (votacionActiva && !string.IsNullOrEmpty(_voteUrl))
+        <!-- AQUÍ APLICAMOS LA CONDICIÓN puedeVotar -->
+        @if (votacionActiva && !string.IsNullOrEmpty(_voteUrl) && puedeVotar)
         {
             <button class="btn-dark"
                     style="margin-top: 2.5rem; padding: 0.6rem 1.2rem; font-size: 0.95rem; border-radius: 0.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer;"
                     @onclick="IrAVotar">
                 @if (haVotado)
                 {
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" /></svg>
                     <span>Editar mi Voto</span>
                 }
                 else
                 {
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                        <path d="M10.97 4.97a.75.75 0 0 0-1.071-1.05l-3.992 4.99a.75.75 0 0 0-1.08.02L4.324 8.384a.75.75 0 1 0-1.06 1.06l2.094 2.093 3.473-4.425a.235.235 0 0 0 .02-.022z" />
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" /><path d="M10.97 4.97a.75.75 0 0 0-1.071-1.05l-3.992 4.99a.75.75 0 0 0-1.08.02L4.324 8.384a.75.75 0 1 0-1.06 1.06l2.094 2.093 3.473-4.425a.235.235 0 0 0 .02-.022z" /></svg>
                     <span>Votar Ahora</span>
                 }
             </button>
         }
     </header>
-
-    @if (ProyectosSubidos == null)
-    {
-        <p><em>Cargando proyectos...</em></p>
-    }
-    else if (!ProyectosSubidos.Any())
-    {
-        <p>No hay proyectos disponibles en este momento.</p>
-    }
-    else
-    {
-        <div class="projects-grid">
-            @foreach (var proyecto in ProyectosSubidos)
-            {
-                <div class="project-card" @onclick="() => AbrirPopup(proyecto)">
-                    @if (!string.IsNullOrWhiteSpace(proyecto.ImageUrl))
-                    {
-                        <img src="@(apiBaseUrl + proyecto.ImageUrl)" alt="@proyecto.Title" class="card-image" />
-                    }
-                    else
-                    {
-                        <div class="icon-container">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31z" />
-                            </svg>
-                        </div>
-                    }
-                    <div class="card-info">
-                        <h2 class="card-title">@proyecto.Title</h2>
-                        <p class="card-description">@proyecto.Description</p>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span class="card-modality" style="font-weight: bold; color: #4b5563;">@(Translations.TipoProyecto.GetValueOrDefault(proyecto.ProjectType, proyecto.ProjectType))</span>
-
-                            @if (comentariosPorProyecto.TryGetValue(proyecto.Id, out var count) && count > 0)
-                            {
-                                <span class="comment-count-badge">@count</span>
-                            }
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
-    }
-
-    @if (proyectoSeleccionado != null)
-    {
-        <div class="modal-overlay" @onclick="CerrarPopup">
-            <div class="modal-content" @onclick:stopPropagation="true">
-                <button class="close-btn" @onclick="CerrarPopup">✕</button>
-                <h2 class="modal-title">@proyectoSeleccionado.Title</h2>
-
-                <div class="tabs">
-                    <button class="@(tabActiva == "info" ? "active" : "")" @onclick='() => tabActiva = "info"'>Información</button>
-                    <button class="@(tabActiva == "comentarios" ? "active" : "")" @onclick='() => tabActiva = "comentarios"'>Comentarios (@comentariosProyecto.Count)</button>
-                </div>
-
-                <div class="tab-content" style="margin-top: 1rem;">
-                    @if (tabActiva == "info")
-                    {
-                        <p>@proyectoSeleccionado.Description</p>
-                        @if (!string.IsNullOrWhiteSpace(proyectoSeleccionado.ImageUrl))
-                        {
-                            <img src="@(apiBaseUrl + proyectoSeleccionado.ImageUrl)" alt="@proyectoSeleccionado.Title"
-                                 style="max-width: 100%; border-radius: 0.5rem; margin-top: 1rem;" />
-                        }
-                    }
-                    else if (tabActiva == "comentarios")
-                    {
-                        @if (cargandoComentarios)
-                        {
-                            <p><em>Cargando comentarios...</em></p>
-                        }
-                        else if (!comentariosProyecto.Any())
-                        {
-                            <p>No hay comentarios para este proyecto.</p>
-                        }
-                        else
-                        {
-                            <div class="comments-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
-                                @foreach (var c in comentariosProyecto)
-                                {
-                                    <div class="comment-item" style="background: #f9fafb; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
-                                        <div class="comment-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                                            <div class="comment-avatar" style="width: 30px; height: 30px; background: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #4b5563;">@c.VoteType[0]</div>
-                                            <div class="comment-meta" style="display: flex; flex-direction: column;">
-                                                <span class="comment-author" style="font-weight: 600; font-size: 0.9rem;">Votante <span class="vote-type-pill" style="font-weight: normal; font-size: 0.75rem; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.4rem; border-radius: 1rem;">@c.VoteType</span></span>
-                                                <span class="comment-position" style="font-size: 0.75rem; color: #6b7280;">Lo situó en el @c.TopPosition&#186; puesto</span>
-                                            </div>
-                                        </div>
-                                        <p class="comment-text" style="margin: 0; font-size: 0.9rem; color: #374151;">@c.Comment</p>
-                                    </div>
-                                }
-                            </div>
-                        }
-                    }
-                </div>
-            </div>
-        </div>
-    }
 </div>
 
+<!-- (Mantén tu código HTML del grid de proyectos igual...) -->
 @code {
     [Parameter] public string EventId { get; set; } = string.Empty;
     [Parameter] public string CategoryId { get; set; } = string.Empty;
@@ -163,6 +59,7 @@
     private string categoriaNombre = "la categoría";
 
     private bool votacionActiva = false;
+    private bool puedeVotar = false; // ── NUEVA BANDERA ──
     private bool haVotado = false;
     private int maxVotosPermitidos = 1;
     private string _sessionUserId = string.Empty;
@@ -176,28 +73,25 @@
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _sessionUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+        var userEmail = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? string.Empty;
         _userRole = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? string.Empty;
         _voterTypeForUser = _userRole == "Jury" ? "Jury" : "Public";
 
         var http = HttpClientFactory.CreateClient("API");
         apiBaseUrl = http.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
 
-        var cats = await http.GetFromJsonAsync<List<CategorySimpleDto>>($"api/categories/by-event/{EventId}");
-        var categoriaActual = cats?.FirstOrDefault(c => c.Id == CategoryId);
+        var evento = await http.GetFromJsonAsync<EventDetailDto>($"api/events/{EventId}");
+        var categoriaActual = evento?.Categories.FirstOrDefault(c => c.Id == CategoryId);
         categoriaNombre = categoriaActual?.Name ?? "la categoría";
 
         List<VotingSessionDto>? sesionesActivas = null;
-        try
-        {
-            sesionesActivas = await http.GetFromJsonAsync<List<VotingSessionDto>>(
-                $"api/votingsessions/active/{EventId}");
-        }
+        try { sesionesActivas = await http.GetFromJsonAsync<List<VotingSessionDto>>($"api/votingsessions/active/{EventId}"); }
         catch { }
 
-        var sesionDelUsuario = sesionesActivas?
-            .FirstOrDefault(s => s.CategoryId == CategoryId && s.VoterType == _voterTypeForUser);
+        var sesionDelUsuario = sesionesActivas?.FirstOrDefault(s => s.CategoryId == CategoryId && s.VoterType == _voterTypeForUser);
 
-        if (sesionDelUsuario != null)
+        if (sesionDelUsuario != null && evento != null)
         {
             votacionActiva = sesionDelUsuario.IsActive;
             maxVotosPermitidos = categoriaActual?.TopNProjectsAllowed ?? 1;
@@ -212,6 +106,16 @@
             if (sesionDelUsuario.EvaluationType == "WeightedScale")
             {
                 _sesionWeightedId = sesionDelUsuario.Id;
+            }
+
+            if (_voterTypeForUser == "Public")
+            {
+                puedeVotar = evento.ParticipantsIds.Contains(_sessionUserId) || evento.PublicIds.Contains(_sessionUserId);
+            }
+            else if (_voterTypeForUser == "Jury")
+            {
+                var sesionCompleta = categoriaActual?.VotingSessions.FirstOrDefault(s => s.Id == sesionDelUsuario.Id);
+                puedeVotar = sesionCompleta != null && sesionCompleta.JurorEmails.Contains(userEmail.ToLower());
             }
         }
         else
@@ -240,12 +144,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender) return;
-
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        _sessionUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-
-        if (string.IsNullOrEmpty(_sessionUserId)) return;
+        if (!firstRender || string.IsNullOrEmpty(_sessionUserId)) return;
 
         var http = HttpClientFactory.CreateClient("API");
 
@@ -255,7 +154,7 @@
                 $"api/votes/weighted?userId={_sessionUserId}&votingSessionId={_sesionWeightedId}");
             haVotado = previos != null && previos.Any();
         }
-        else
+        else if (!string.IsNullOrEmpty(_voteUrl))
         {
             var votosPrevios = await http.GetFromJsonAsync<List<VoteResultDto>>(
                 $"api/votes/by-user?userId={_sessionUserId}&categoryId={CategoryId}");
@@ -265,10 +164,7 @@
         StateHasChanged();
     }
 
-    private void IrAVotar()
-    {
-        Navigation.NavigateTo(_voteUrl);
-    }
+    private void IrAVotar() => Navigation.NavigateTo(_voteUrl);
 
     private async Task AbrirPopup(ProjectDto proyecto)
     {
@@ -276,7 +172,6 @@
         tabActiva = "info";
         comentariosProyecto = new();
         cargandoComentarios = true;
-
         StateHasChanged();
 
         var http = HttpClientFactory.CreateClient("API");
@@ -284,17 +179,10 @@
         {
             var resultado = await http.GetFromJsonAsync<List<CommentDto>>($"api/votes/comments/{proyecto.Id}");
             comentariosProyecto = resultado ?? new();
-
             comentariosPorProyecto[proyecto.Id] = comentariosProyecto.Count;
         }
-        catch
-        {
-            comentariosProyecto = new();
-        }
-        finally
-        {
-            cargandoComentarios = false;
-        }
+        catch { comentariosProyecto = new(); }
+        finally { cargandoComentarios = false; }
     }
 
     private void CerrarPopup()
@@ -319,15 +207,31 @@
         public string Url { get; set; } = "";
         public string? Description { get; set; }
     }
-    public class CategorySimpleDto
+
+    public class EventDetailDto
+    {
+        public List<string> ParticipantsIds { get; set; } = new();
+        public List<string> PublicIds { get; set; } = new();
+        public List<CategoryDetailDto> Categories { get; set; } = new();
+    }
+
+    public class CategoryDetailDto
     {
         public string Id { get; set; } = "";
         public string Name { get; set; } = "";
-        public string? Description { get; set; }
-        public bool AllowSelfVoting { get; set; }
-        public int TopNProjectsAllowed { get; set; }
-        public string? EvaluationType { get; set; }
+        public List<VotingSessionFullDto> VotingSessions { get; set; } = new();
+        public int TopNProjectsAllowed => VotingSessions.FirstOrDefault(vs => vs.EvaluationType == "TopN")?.TopN ?? 3;
     }
+
+    public class VotingSessionFullDto
+    {
+        public string Id { get; set; } = "";
+        public string VoterType { get; set; } = "";
+        public string EvaluationType { get; set; } = "";
+        public int? TopN { get; set; }
+        public List<string> JurorEmails { get; set; } = new();
+    }
+
     public class VotingSessionDto
     {
         public string Id { get; set; } = "";
@@ -336,6 +240,7 @@
         public string EvaluationType { get; set; } = "";
         public bool IsActive { get; set; }
     }
+
     public class VoteResultDto { public string VotedProjectId { get; set; } = ""; public int TopPosition { get; set; } }
 
     public class CommentDto
@@ -346,5 +251,4 @@
     }
 
     public class WeightedVotePrevioDto { public string ProjectId { get; set; } = ""; }
-    public class VotingSessionSimpleDto { public string Id { get; set; } = ""; public string EvaluationType { get; set; } = ""; }
 }
