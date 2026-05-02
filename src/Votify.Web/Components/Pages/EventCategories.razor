@@ -211,7 +211,8 @@
                                 <div class="item-row">
                                     <div class="item-row-main" style="grid-template-columns: 2fr 1fr auto;">
                                         <input type="text" class="form-control form-control-sm" placeholder="Nombre" @bind="cr.Name" />
-                                        <input type="number" step="0.05" min="0" max="1" class="form-control form-control-sm" placeholder="Peso" @bind="cr.Weight" />
+                                        <!-- HEMOS AÑADIDO min="0.05" AL INPUT DEL PESO -->
+                                        <input type="number" step="0.05" min="0.05" max="1" class="form-control form-control-sm" placeholder="Peso" @bind="cr.Weight" />
                                         <button type="button" class="btn-remove" @onclick="() => ses.Criteria.Remove(cr)">✕</button>
                                     </div>
                                 </div>
@@ -271,7 +272,7 @@
             </div>
         }
 
-        <!-- === LISTA DE CATEGORÍAS RESTAURADA === -->
+        <!-- === LISTA DE CATEGORÍAS === -->
         @if (evento.Categories.Any())
         {
             <div class="categories-grid">
@@ -290,7 +291,6 @@
                                 </div>
                             </div>
 
-                            <!-- Resumen Visual (Píldoras y Botón) Restaurado -->
                             <div class="cat-summary-row">
                                 <div class="cat-pills">
                                     @foreach (var vs in cat.VotingSessions)
@@ -305,7 +305,6 @@
                                         <span class="pill pill-amber">Combinado (@((cat.JuryWeight ?? 0) * 100)% / @((cat.PublicWeight ?? 0) * 100)%)</span>
                                     }
                                     
-                                    <!-- Contamos los premios sumando los de todas las sesiones de la categoría -->
                                     @{
                                         int totalPremios = cat.VotingSessions.Sum(vs => vs.Prizes.Count);
                                         if (totalPremios > 0)
@@ -327,7 +326,6 @@
                             </div>
                         </div>
 
-                        <!-- Detalles al expandir -->
                         @if (expandedCategoryId == cat.Id)
                         {
                             <div class="cat-card-body">
@@ -520,6 +518,70 @@
     private async Task GuardarCategoria()
     {
         errorFormulario = null;
+        
+        // ── VERIFICACIÓN GLOBAL ──
+        if (string.IsNullOrWhiteSpace(draft.Name))
+        {
+            errorFormulario = "El nombre de la categoría es obligatorio.";
+            return;
+        }
+        if (draft.Sessions.Count == 0)
+        {
+            errorFormulario = "Debe haber al menos una votación.";
+            return;
+        }
+
+        // ── VALIDACIÓN INDIVIDUAL DE SESIONES, PREMIOS, JURADOS Y CRITERIOS ──
+        foreach (var ses in draft.Sessions)
+        {
+            string tipoVotante = ses.VoterType == "Jury" ? "Jurado" : "Público";
+
+            // ¡NUEVA VALIDACIÓN! Exigir al menos un jurado
+            if (ses.VoterType == "Jury" && !ses.JurorEmails.Any())
+            {
+                errorFormulario = "La votación de Jurado requiere al menos un correo de jurado asignado.";
+                return;
+            }
+
+            if (ses.EvaluationType == "WeightedScale" && !ses.Criteria.Any())
+            {
+                errorFormulario = $"La votación de {tipoVotante} requiere al menos un criterio porque usa Baremo Ponderado.";
+                return;
+            }
+
+            if (ses.Criteria.Any())
+            {
+                double sumaPesos = 0;
+                foreach (var cr in ses.Criteria)
+                {
+                    if (string.IsNullOrWhiteSpace(cr.Name))
+                    {
+                        errorFormulario = $"Todos los criterios en la votación de {tipoVotante} deben tener un nombre.";
+                        return;
+                    }
+                    if (cr.Weight <= 0)
+                    {
+                        errorFormulario = $"El peso del criterio '{cr.Name}' debe ser mayor que 0.";
+                        return;
+                    }
+                    sumaPesos += cr.Weight;
+                }
+
+                if (Math.Abs(sumaPesos - 1.0) > 0.001)
+                {
+                    errorFormulario = $"La suma de los pesos de los criterios en la votación de {tipoVotante} debe ser exactamente 1 (actualmente suma {sumaPesos.ToString("0.##")}).";
+                    return;
+                }
+            }
+            
+            if (ses.Prizes.Count == 0)
+            {
+                errorFormulario = $"La votación de {tipoVotante} debe tener al menos un premio.";
+                return;
+            }
+        }
+
+        // ── ENVÍO AL BACKEND ──
         try
         {
             guardando = true;
@@ -562,6 +624,7 @@
         finally { guardando = false; }
     }
 
+    // ... (El resto de clases DTO al final se mantienen exactamente igual)
     public class EventDetailDto
     {
         public string Id { get; set; } = string.Empty;
