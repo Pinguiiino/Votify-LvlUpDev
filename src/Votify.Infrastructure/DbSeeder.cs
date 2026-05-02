@@ -75,15 +75,18 @@ public static class DbSeeder
                                           reminderMinutesBeforeClose: 30);
         sesIAJury.Criteria.Add(new Criterion(sesIAJury.Id, "Innovación técnica", 0.65, "Nivel de novedad y complejidad técnica."));
         sesIAJury.Criteria.Add(new Criterion(sesIAJury.Id, "Impacto potencial", 0.35, "Alcance e impacto esperado del proyecto."));
+        // ── AÑADIDO PREMIO AL JURADO ──
+        sesIAJury.Prizes.Add(new Prize(sesIAJury.Id, 1, "Premio IA — 1er lugar", "1.000€ + mentoría de 6 meses."));
 
         var sesIAPublic = new VotingSession(catIA.Id, "Público - IA", VoterType.Public, EvaluationType.TopN,
                                             hackOpen, hackClose, "Votación popular por ranking.",
                                             topN: 3, allowComments: true,
                                             reminderMinutesBeforeClose: 30);
+        // ── AÑADIDO PREMIO AL PÚBLICO ──
+        sesIAPublic.Prizes.Add(new Prize(sesIAPublic.Id, 2, "Premio IA — 2º lugar", "500€."));
+
         catIA.VotingSessions.Add(sesIAJury);
         catIA.VotingSessions.Add(sesIAPublic);
-        catIA.Prizes.Add(new Prize(catIA.Id, 1, "Premio IA — 1er lugar", "1.000€ + mentoría de 6 meses."));
-        catIA.Prizes.Add(new Prize(catIA.Id, 2, "Premio IA — 2º lugar", "500€."));
 
         var catSocial = new Category(hackUPC.Id, "Proyectos Sociales", "Proyectos con impacto social directo.");
         var sesSocJury = new VotingSession(catSocial.Id, "Jurado - Social", VoterType.Jury, EvaluationType.WeightedScale,
@@ -93,9 +96,9 @@ public static class DbSeeder
                                            reminderMinutesBeforeClose: 30);
         sesSocJury.Criteria.Add(new Criterion(sesSocJury.Id, "Impacto social", 0.50, "Mejora real en la vida de personas."));
         sesSocJury.Criteria.Add(new Criterion(sesSocJury.Id, "Viabilidad", 0.50, "Posibilidad de implantación real."));
+        // ── AÑADIDO PREMIO AL JURADO ──
+        sesSocJury.Prizes.Add(new Prize(sesSocJury.Id, 1, "Premio Social — 1er lugar", "500€ + acceso a incubadora universitaria."));
         catSocial.VotingSessions.Add(sesSocJury);
-        catSocial.Prizes.Add(new Prize(catSocial.Id, 1, "Premio Social — 1er lugar",
-                                       "500€ + acceso a incubadora universitaria.", VoterType.Jury));
 
         var catSost = new Category(hackUPC.Id, "Sostenibilidad", "Proyectos enfocados en medioambiente y economía circular.");
         var sesSostJury = new VotingSession(catSost.Id, "Jurado - Sostenibilidad", VoterType.Jury, EvaluationType.PointDistribution,
@@ -106,9 +109,9 @@ public static class DbSeeder
                                             reminderMinutesBeforeClose: 30);
         sesSostJury.Criteria.Add(new Criterion(sesSostJury.Id, "Reducción de huella", 0.55, "Impacto medioambiental medible."));
         sesSostJury.Criteria.Add(new Criterion(sesSostJury.Id, "Escalabilidad", 0.45, "Capacidad de crecer y replicarse."));
+        // ── AÑADIDO PREMIO AL JURADO ──
+        sesSostJury.Prizes.Add(new Prize(sesSostJury.Id, 1, "Premio Sostenibilidad — 1er lugar", "750€ + presentación en COP31."));
         catSost.VotingSessions.Add(sesSostJury);
-        catSost.Prizes.Add(new Prize(catSost.Id, 1, "Premio Sostenibilidad — 1er lugar",
-                                     "750€ + presentación en COP31.", VoterType.Jury));
 
         var catStartup = new Category(fibFair.Id, "Startups Tecnológicas", "Proyectos con modelo de negocio escalable y base tecnológica.");
         var sesStuJury = new VotingSession(catStartup.Id, "Jurado - Startups", VoterType.Jury, EvaluationType.WeightedScale,
@@ -118,9 +121,9 @@ public static class DbSeeder
                                            reminderMinutesBeforeClose: 60);
         sesStuJury.Criteria.Add(new Criterion(sesStuJury.Id, "Modelo de negocio", 0.60, "Claridad y solidez del plan de negocio."));
         sesStuJury.Criteria.Add(new Criterion(sesStuJury.Id, "Tecnología base", 0.40, "Madurez y diferenciación tecnológica."));
+        // ── AÑADIDO PREMIO AL JURADO ──
+        sesStuJury.Prizes.Add(new Prize(sesStuJury.Id, 1, "Premio Startup — 1er lugar", "2.000€ + ronda de inversores."));
         catStartup.VotingSessions.Add(sesStuJury);
-        catStartup.Prizes.Add(new Prize(catStartup.Id, 1, "Premio Startup — 1er lugar",
-                                        "2.000€ + ronda de inversores.", VoterType.Jury));
 
         var catImpacto = new Category(fibFair.Id, "Impacto Social", "Proyectos que priorizan el bienestar social.");
         var sesImpPublic = new VotingSession(catImpacto.Id, "Público - Impacto", VoterType.Public, EvaluationType.PointDistribution,
@@ -128,9 +131,9 @@ public static class DbSeeder
                                              pointsPerVoter: 50, maxPointsPerProject: 20,
                                              allowComments: true,
                                              reminderMinutesBeforeClose: 60);
+        // ── AÑADIDO PREMIO AL PÚBLICO ──
+        sesImpPublic.Prizes.Add(new Prize(sesImpPublic.Id, 1, "Premio Impacto — 1er lugar", "1.000€ + colaboración con ONG partner."));
         catImpacto.VotingSessions.Add(sesImpPublic);
-        catImpacto.Prizes.Add(new Prize(catImpacto.Id, 1, "Premio Impacto — 1er lugar",
-                                        "1.000€ + colaboración con ONG partner.", VoterType.Public));
 
         context.Categories.AddRange(catIA, catSocial, catSost, catStartup, catImpacto);
         await context.SaveChangesAsync();

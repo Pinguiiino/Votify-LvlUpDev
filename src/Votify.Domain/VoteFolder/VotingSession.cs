@@ -43,7 +43,8 @@ public class VotingSession
     public bool IsOpen => DateTime.UtcNow >= OpenAt && DateTime.UtcNow <= EffectiveCloseAt;
     public int? ReminderMinutesBeforeClose { get; set; }
     public bool IsManuallyAdjusted { get; set; } = false;
-
+    public List<string> JurorEmails { get; set; } = new();
+    public virtual List<Prize> Prizes { get; set; } = new();
     public virtual Category? Category { get; set; }
     public virtual List<Criterion> Criteria { get; set; } = new();
     public virtual List<Vote> Votes { get; set; } = new();

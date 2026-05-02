@@ -24,8 +24,8 @@ public class EventRepository : IEventRepository
     public async Task<Event?> GetByIdAsync(string id)
     {
         return await _context.Events
-            .Include(e => e.Participants) 
-            .Include(e => e.Public)       
+            .Include(e => e.Participants)
+            .Include(e => e.Public)
             .FirstOrDefaultAsync(e => e.Id == id);
     }
 
@@ -33,7 +33,8 @@ public class EventRepository : IEventRepository
         => await _context.Categories
             .Include(c => c.VotingSessions)
                 .ThenInclude(vs => vs.Criteria)
-            .Include(c => c.Prizes)
+            .Include(c => c.VotingSessions) // ── AHORA CARGA LOS PREMIOS DESDE LA SESIÓN ──
+                .ThenInclude(vs => vs.Prizes)
             .Where(c => c.EventId == eventId)
             .AsNoTracking()
             .ToListAsync();

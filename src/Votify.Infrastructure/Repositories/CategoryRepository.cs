@@ -16,7 +16,8 @@ public class CategoryRepository : ICategoryRepository
         => await _context.Categories
             .Include(c => c.VotingSessions)
                 .ThenInclude(vs => vs.Criteria)
-            .Include(c => c.Prizes)
+            .Include(c => c.VotingSessions) // ── AHORA CARGA LOS PREMIOS DESDE LA SESIÓN ──
+                .ThenInclude(vs => vs.Prizes)
             .Where(c => c.EventId == eventId)
             .AsNoTracking()
             .ToListAsync();
@@ -30,7 +31,8 @@ public class CategoryRepository : ICategoryRepository
         => await _context.Categories
             .Include(c => c.VotingSessions)
                 .ThenInclude(vs => vs.Criteria)
-            .Include(c => c.Prizes)
+            .Include(c => c.VotingSessions) // ── AHORA CARGA LOS PREMIOS DESDE LA SESIÓN ──
+                .ThenInclude(vs => vs.Prizes)
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == categoryId);
 

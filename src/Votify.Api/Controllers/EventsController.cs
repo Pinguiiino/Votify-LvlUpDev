@@ -163,15 +163,15 @@ public class EventsController : ControllerBase
                 vs.AllowCommentsPerCriterion,
                 vs.OpenAt,
                 vs.CloseAt,
-                Criteria = vs.Criteria.Select(cr => new { cr.Id, cr.Name, cr.Weight, cr.Description })
-            }),
-            Prizes = c.Prizes.Select(p => new
-            {
-                p.Id,
-                p.Position,
-                p.Name,
-                p.Description,
-                TargetVoter = p.TargetVoter?.ToString()
+                Criteria = vs.Criteria.Select(cr => new { cr.Id, cr.Name, cr.Weight, cr.Description }),
+                JurorEmails = vs.JurorEmails,
+                Prizes = vs.Prizes.Select(p => new
+                {
+                    p.Id,
+                    p.Position,
+                    p.Name,
+                    p.Description
+                })
             })
         })
     };

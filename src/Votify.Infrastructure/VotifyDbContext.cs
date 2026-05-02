@@ -89,9 +89,9 @@ public class VotifyDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Prize>()
-            .HasOne(p => p.Category)
-            .WithMany(c => c.Prizes)
-            .HasForeignKey(p => p.CategoryId)
+            .HasOne(p => p.VotingSession)
+            .WithMany(vs => vs.Prizes)
+            .HasForeignKey(p => p.VotingSessionId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<ProjectCategory>()

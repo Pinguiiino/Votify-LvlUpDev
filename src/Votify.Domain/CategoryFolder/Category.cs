@@ -18,7 +18,6 @@ public class Category
     public double? PublicWeight { get; set; }
 
     public virtual List<VotingSession> VotingSessions { get; set; } = new();
-    public virtual List<Prize> Prizes { get; set; } = new();
     public virtual List<ProjectCategory> ProjectCategories { get; set; } = new();
 
     public Category() { }

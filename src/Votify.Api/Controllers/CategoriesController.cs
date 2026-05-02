@@ -62,21 +62,19 @@ public class CategoriesController : ControllerBase
                     OpenAt = v.OpenAt,
                     CloseAt = v.CloseAt,
                     ReminderMinutesBeforeClose = v.ReminderMinutesBeforeClose,
+                    JurorEmails = v.JurorEmails, // ── CORREOS ASIGNADOS AQUÍ ──
                     Criteria = v.Criteria.Select(c => new CreateCriterionData
                     {
                         Name = c.Name,
                         Description = c.Description,
                         Weight = c.Weight
+                    }).ToList(),
+                    Prizes = v.Prizes.Select(p => new CreatePrizeData // ── PREMIOS MOVIDOS AQUÍ ──
+                    {
+                        Position = p.Position,
+                        Name = p.Name,
+                        Description = p.Description
                     }).ToList()
-                }).ToList(),
-                Prizes = dto.Prizes.Select(p => new CreatePrizeData
-                {
-                    Position = p.Position,
-                    Name = p.Name,
-                    Description = p.Description,
-                    TargetVoter = string.IsNullOrWhiteSpace(p.TargetVoter)
-                        ? null
-                        : Enum.Parse<VoterType>(p.TargetVoter, ignoreCase: true)
                 }).ToList()
             };
 
@@ -115,15 +113,15 @@ public class CategoriesController : ControllerBase
             vs.AllowCommentsPerCriterion,
             vs.OpenAt,
             vs.CloseAt,
-            Criteria = vs.Criteria.Select(cr => new { cr.Id, cr.Name, cr.Weight, cr.Description })
-        }),
-        Prizes = c.Prizes.Select(p => new
-        {
-            p.Id,
-            p.Position,
-            p.Name,
-            p.Description,
-            TargetVoter = p.TargetVoter?.ToString()
+            JurorEmails = vs.JurorEmails, // ── CORREOS EXPUESTOS AQUÍ ──
+            Criteria = vs.Criteria.Select(cr => new { cr.Id, cr.Name, cr.Weight, cr.Description }),
+            Prizes = vs.Prizes.Select(p => new // ── PREMIOS EXPUESTOS AQUÍ ──
+            {
+                p.Id,
+                p.Position,
+                p.Name,
+                p.Description
+            })
         })
     };
 
@@ -149,7 +147,6 @@ public class CreateCategoryDto
     public double? JuryWeight { get; set; }
     public double? PublicWeight { get; set; }
     public List<CreateVotingSessionDto> VotingSessions { get; set; } = new();
-    public List<CreatePrizeDto> Prizes { get; set; } = new();
 }
 
 public class CreateVotingSessionDto
@@ -169,6 +166,8 @@ public class CreateVotingSessionDto
     public DateTime? CloseAt { get; set; }
     public int? ReminderMinutesBeforeClose { get; set; }
     public List<CreateCriterionDto> Criteria { get; set; } = new();
+    public List<CreatePrizeDto> Prizes { get; set; } = new();
+    public List<string> JurorEmails { get; set; } = new();
 }
 
 public class CreateCriterionDto
@@ -183,5 +182,4 @@ public class CreatePrizeDto
     public int Position { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public string? TargetVoter { get; set; }
 }
