@@ -10,7 +10,7 @@
 
 <PageTitle>Tus proyectos - Votify</PageTitle>
 
-<div class="myprojects-container">
+<div class="myprojects-container" style="position: relative;">
     <header class="hero-section">
         <button class="back-btn" style="align-self: flex-start;" @onclick='() => Navigation.NavigateTo($"/MainEvent")'>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -40,12 +40,10 @@
             var estadoEvento = GetEventStatus(evento);
 
             <div class="event-section" style="margin-bottom: 3rem;">
-                <h2
-                    style="font-size: 1.4rem; color: #111827; margin-bottom: 1.25rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <h2 style="font-size: 1.4rem; color: #111827; margin-bottom: 1.25rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" style="color: #2563eb;"
                          viewBox="0 0 16 16">
-                        <path
-                        d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
+                        <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
                     </svg>
                     @nombreEvento
                     <span class="@StatusCssClass(estadoEvento)">@StatusLabel(estadoEvento)</span>
@@ -62,8 +60,7 @@
                             else
                             {
                                 <div class="icon-container">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
-                                         viewBox="0 0 16 16">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
                                         <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31z" />
                                     </svg>
                                 </div>
@@ -86,81 +83,89 @@
             </div>
         }
     }
+</div> <!-- Cerramos el contenedor principal AQUÍ -->
+<!-- === MODAL FLOTANTE ARREGLADO Y ESTILIZADO === -->
+@if (proyectoSeleccionado != null)
+{
+    <div class="modal-overlay" @onclick="CerrarPopup" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(17, 24, 39, 0.7); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(4px);">
+        
+        <div class="modal-content" @onclick:stopPropagation="true" style="background: white; width: 90%; max-width: 650px; border-radius: 1rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); padding: 2rem; position: relative; max-height: 85vh; overflow-y: auto;">
+            
+            <button class="close-btn" @onclick="CerrarPopup" style="position: absolute; top: 1.5rem; right: 1.5rem; width: 2rem; height: 2rem; border-radius: 50%; border: none; background: #f3f4f6; color: #4b5563; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">✕</button>
 
-    @if (proyectoSeleccionado != null)
-    {
-        <div class="modal-overlay" @onclick="CerrarPopup">
-            <div class="modal-content" @onclick:stopPropagation="true">
-                <button class="close-btn" @onclick="CerrarPopup">✕</button>
-                <h2 class="modal-title">@proyectoSeleccionado.Title</h2>
+            <h2 class="modal-title" style="font-size: 1.5rem; font-weight: 800; color: #111827; margin-top: 0; margin-bottom: 1.5rem; padding-right: 2rem;">@proyectoSeleccionado.Title</h2>
 
-                <div class="tabs">
-                    <button class="@(tabActiva == "info" ? "active" : "")" @onclick='() => tabActiva = "info"'>Información</button>
-                    <button class="@(tabActiva == "comentarios" ? "active" : "")" @onclick='() => tabActiva = "comentarios"'>Comentarios (@comentariosProyecto.Count)</button>
-                </div>
+            <div class="tabs" style="display: flex; gap: 1.5rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 1.5rem;">
+                <button class="@(tabActiva == "info" ? "active" : "")" style="background: none; border: none; padding: 0.5rem 0; font-size: 0.95rem; font-weight: 600; cursor: pointer; color: @(tabActiva == "info" ? "#111827" : "#6b7280"); border-bottom: @(tabActiva == "info" ? "2px solid #111827" : "2px solid transparent"); transition: all 0.2s;" @onclick='() => tabActiva = "info"'>Información</button>
+                <button class="@(tabActiva == "comentarios" ? "active" : "")" style="background: none; border: none; padding: 0.5rem 0; font-size: 0.95rem; font-weight: 600; cursor: pointer; color: @(tabActiva == "comentarios" ? "#111827" : "#6b7280"); border-bottom: @(tabActiva == "comentarios" ? "2px solid #111827" : "2px solid transparent"); transition: all 0.2s;" @onclick='() => tabActiva = "comentarios"'>Comentarios (@comentariosProyecto.Count)</button>
+            </div>
 
-                <div class="tab-content" style="margin-top: 1rem;">
-                    @if (tabActiva == "info")
+            <div class="tab-content">
+                @if (tabActiva == "info")
+                {
+                    <p style="color: #4b5563; line-height: 1.6; margin: 0;">@proyectoSeleccionado.Description</p>
+                    @if (!string.IsNullOrWhiteSpace(proyectoSeleccionado.ImageUrl))
                     {
-                        <p>@proyectoSeleccionado.Description</p>
-                        @if (!string.IsNullOrWhiteSpace(proyectoSeleccionado.ImageUrl))
-                        {
-                            <img src="@(apiBaseUrl + proyectoSeleccionado.ImageUrl)" alt="@proyectoSeleccionado.Title"
-                                 style="max-width: 100%; border-radius: 0.5rem; margin-top: 1rem;" />
-                        }
-
-                        @if (!proyectosAuditados.Contains(proyectoSeleccionado.Id))
-                        {
-                            <button class="btn-outline" style="margin-top: 1rem;"
-                                    @onclick="() => PedirAuditoria(proyectoSeleccionado)">
-                                Solicitar auditoría
-                            </button>
-                        }
-                        else
-                        {
-                            <p style="margin-top: 1rem; color: #16a34a; font-weight: 600;">✓ Auditoría solicitada</p>
-                        }
+                        <img src="@(apiBaseUrl + proyectoSeleccionado.ImageUrl)" alt="@proyectoSeleccionado.Title"
+                             style="width: 100%; border-radius: 0.75rem; margin-top: 1.5rem; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);" />
                     }
-                    else if (tabActiva == "comentarios")
+
+                    <!-- Botón de auditoría -->
+                    @if (!proyectosAuditados.Contains(proyectoSeleccionado.Id))
                     {
-                        @if (cargandoComentarios)
-                        {
+                        <button class="btn-outline" style="margin-top: 1.5rem; display: block; width: fit-content; padding: 0.5rem 1rem; border: 1.5px solid #d1d5db; background: transparent; color: #111827; border-radius: 0.5rem; font-weight: 600; cursor: pointer;"
+                                @onclick="() => PedirAuditoria(proyectoSeleccionado)">
+                            Solicitar auditoría
+                        </button>
+                    }
+                    else
+                    {
+                        <p style="margin-top: 1.5rem; color: #16a34a; font-weight: 600; display: flex; align-items: center; gap: 0.4rem;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" /></svg>
+                            Auditoría solicitada
+                        </p>
+                    }
+                }
+                else if (tabActiva == "comentarios")
+                {
+                    @if (cargandoComentarios)
+                    {
+                        <div style="display: flex; justify-content: center; padding: 2rem 0; color: #6b7280;">
                             <p><em>Cargando comentarios...</em></p>
-                        }
-                        else if (!comentariosProyecto.Any())
-                        {
-                            <p>No hay comentarios para este proyecto.</p>
-                        }
-                        else
-                        {
-                            <div class="comments-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
-                                @foreach (var c in comentariosProyecto)
-                                {
-                                    <div class="comment-item" style="background: #f9fafb; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
-                                        <div class="comment-header"
-                                             style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                                            <div class="comment-avatar"
-                                                 style="width: 30px; height: 30px; background: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #4b5563;">
-                                                @c.VoteType[0]</div>
-                                            <div class="comment-meta" style="display: flex; flex-direction: column;">
-                                                <span class="comment-author" style="font-weight: 600; font-size: 0.9rem;">Votante <span
-                                                    class="vote-type-pill"
-                                                    style="font-weight: normal; font-size: 0.75rem; background: #dbeafe; color: #1e40af; padding: 0.1rem 0.4rem; border-radius: 1rem;">@c.VoteType</span></span>
-                                                <span class="comment-position" style="font-size: 0.75rem; color: #6b7280;">Lo situó en el
-                                                    @c.TopPosition&#186; puesto</span>
-                                            </div>
-                                        </div>
-                                        <p class="comment-text" style="margin: 0; font-size: 0.9rem; color: #374151;">@c.Comment</p>
-                                    </div>
-                                }
-                            </div>
-                        }
+                        </div>
                     }
-                </div>
+                    else if (!comentariosProyecto.Any())
+                    {
+                        <div style="text-align: center; padding: 3rem 0; color: #9ca3af; background: #f9fafb; border-radius: 0.5rem; border: 1px dashed #d1d5db;">
+                            <p style="margin: 0;">No hay comentarios para este proyecto.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="comments-list" style="display: flex; flex-direction: column; gap: 1rem;">
+                            @foreach (var c in comentariosProyecto)
+                            {
+                                <div class="comment-item" style="background: #f9fafb; padding: 1.25rem; border-radius: 0.75rem; border: 1px solid #e5e7eb;">
+                                    <div class="comment-header" style="display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.75rem;">
+                                        <div class="comment-avatar" style="width: 36px; height: 36px; background: #e0e7ff; color: #4338ca; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;">@c.VoteType[0]</div>
+                                        <div class="comment-meta" style="display: flex; flex-direction: column; gap: 0.1rem;">
+                                            <span class="comment-author" style="font-weight: 700; font-size: 0.95rem; color: #111827; display: flex; align-items: center; gap: 0.5rem;">
+                                                Votante
+                                                <span class="vote-type-pill" style="font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; background: @(c.VoteType == "Expert" ? "#fef3c7" : "#dbeafe"); color: @(c.VoteType == "Expert" ? "#b45309" : "#1e40af"); padding: 0.15rem 0.5rem; border-radius: 9999px;">@(c.VoteType == "Expert" ? "Jurado" : "Público")</span>
+                                            </span>
+                                            <span class="comment-position" style="font-size: 0.8rem; color: #6b7280;">Lo situó en el <strong style="color: #374151;">@c.TopPosition&#186; puesto</strong></span>
+                                        </div>
+                                    </div>
+                                    <p class="comment-text" style="margin: 0; font-size: 0.95rem; color: #4b5563; line-height: 1.5;">@c.Comment</p>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
             </div>
         </div>
-    }
-</div>
+    </div>
+}
 
 @code {
     private List<string> proyectosAuditados = new();
