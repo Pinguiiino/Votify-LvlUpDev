@@ -606,7 +606,6 @@
     private void OnSessionOpenAtChange(SessionDraft ses, string? value)
     {
         ses.OpenAt = string.IsNullOrEmpty(value) ? null : DateTime.Parse(value).ToUniversalTime();
-        // If close is now <= open, clear it
         if (ses.OpenAt.HasValue && ses.CloseAt.HasValue && ses.CloseAt <= ses.OpenAt)
             ses.CloseAt = null;
     }

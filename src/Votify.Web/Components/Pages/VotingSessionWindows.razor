@@ -438,6 +438,11 @@
 
             if (openAt < DateTime.UtcNow)
             { errorEditor = "La fecha de apertura no puede ser anterior a la fecha actual."; return; }
+            if (openAt.HasValue && openAt > eventoEnd.ToUniversalTime())
+            {
+                errorEditor = $"La fecha de apertura no puede superar el fin del evento ({eventoEnd:dd/MM/yyyy}).";
+                return;
+            }
             if (openAt < eventoStart.ToUniversalTime())
             { errorEditor = "La fecha de apertura no puede ser anterior al inicio del evento."; return; }
         }
