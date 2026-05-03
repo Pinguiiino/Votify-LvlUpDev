@@ -58,6 +58,12 @@
                     {
                         <a href="@($"/event/{EventId}/audit")" class="btn-dark">Auditar</a>
                     }
+                    @if (isOrganizer)
+                    {
+                        <a href="@($"/event/{EventId}/voting-windows")" class="btn-secondary" style="text-decoration:none;">
+                            🕐 Ventanas de votación
+                        </a>
+                    }
                 }
 
                 @if (isOrganizer && !mostrandoFormulario)
@@ -415,6 +421,24 @@
                                             </div>
                                         }
 
+                                        <div style="margin-top: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 0.9rem 1rem; display: flex; align-items: center; gap: 0.6rem; font-size: 0.82rem; color: #475569;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z" />
+                                                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z" />
+                                            </svg>
+                                            @if (vs.OpenAt.HasValue && vs.CloseAt.HasValue)
+                                            {
+                                                <span>
+                                                    Ventana: <strong>@vs.OpenAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>
+                                                    — <strong>@vs.CloseAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span style="color: #94a3b8; font-style: italic;">Sin ventana temporal configurada</span>
+                                            }
+                                        </div>
+
                                         @if (vs.Prizes.Any())
                                         {
                                             <div class="prizes-list" style="margin-top:1rem; border-top:1px dashed #e2e8f0; padding-top:1rem;">
@@ -579,6 +603,19 @@
         _ => vs.EvaluationType
     };
 
+    private void OnSessionOpenAtChange(SessionDraft ses, string? value)
+    {
+        ses.OpenAt = string.IsNullOrEmpty(value) ? null : DateTime.Parse(value).ToUniversalTime();
+        // If close is now <= open, clear it
+        if (ses.OpenAt.HasValue && ses.CloseAt.HasValue && ses.CloseAt <= ses.OpenAt)
+            ses.CloseAt = null;
+    }
+
+    private void OnSessionCloseAtChange(SessionDraft ses, string? value)
+    {
+        ses.CloseAt = string.IsNullOrEmpty(value) ? null : DateTime.Parse(value).ToUniversalTime();
+    }
+
     private async Task GuardarCategoria()
     {
         errorFormulario = null;
@@ -597,6 +634,24 @@
         foreach (var ses in draft.Sessions)
         {
             string tipoVotante = ses.VoterType == "Jury" ? "Jurado" : "Público";
+
+            if (ses.OpenAt.HasValue && ses.CloseAt.HasValue && ses.CloseAt <= ses.OpenAt)
+            {
+                errorFormulario = $"La votación de {tipoVotante}: la fecha de cierre debe ser posterior a la de apertura.";
+                return;
+            }
+
+            if (ses.OpenAt.HasValue && ses.OpenAt < DateTime.UtcNow)
+            {
+                errorFormulario = $"La votación de {tipoVotante}: la fecha de apertura no puede ser anterior a la actual.";
+                return;
+            }
+
+            if (ses.CloseAt.HasValue && evento != null && ses.CloseAt > evento.EndDate.ToUniversalTime())
+            {
+                errorFormulario = $"La votación de {tipoVotante}: la fecha de cierre no puede superar el fin del evento ({evento.EndDate:dd/MM/yyyy}).";
+                return;
+            }
 
             if (ses.VoterType == "Jury" && !ses.JurorEmails.Any())
             {
@@ -675,6 +730,8 @@
                     s.AllowComments,
                     s.RequireComments,
                     s.AllowCommentsPerCriterion,
+                    OpenAt = s.OpenAt,
+                    CloseAt = s.CloseAt,
                     JurorEmails = s.VoterType == "Jury" ? s.JurorEmails : new List<string>(),
                     Criteria = s.Criteria.Select(c => new { c.Name, c.Weight }),
                     Prizes = s.Prizes.Select(p => new { p.Position, p.Name, p.Description })
@@ -740,6 +797,8 @@
         public List<string> JurorEmails { get; set; } = new();
         public List<CriterionDetailDto> Criteria { get; set; } = new();
         public List<PrizeDetailDto> Prizes { get; set; } = new();
+        public DateTime? OpenAt { get; set; }
+        public DateTime? CloseAt { get; set; }
     }
 
     public class CriterionDetailDto
@@ -785,6 +844,8 @@
         public List<PrizeDraft> Prizes { get; set; } = new();
         public string? InputCorreoJurado { get; set; }
         public string? JurorError { get; set; }
+        public DateTime? OpenAt { get; set; }
+        public DateTime? CloseAt { get; set; }
     }
 
     public class CriterionDraft { public string Name { get; set; } = string.Empty; public double Weight { get; set; } }
