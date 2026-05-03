@@ -1,0 +1,508 @@
+@page "/event/{EventId}/voting-windows"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Ventanas de Votación - Votify</PageTitle>
+
+<link rel="stylesheet" href="css/voting-windows.css" />
+
+<div class="vw-page">
+
+    <header class="vw-header">
+        <button class="vw-back-btn" @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories")'>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+            </svg>
+            Volver al evento
+        </button>
+        <div class="vw-header-content">
+            <h1 class="vw-page-title">Ventanas de Votación</h1>
+            @if (!string.IsNullOrEmpty(eventoNombre))
+            {
+                <p class="vw-page-subtitle">@eventoNombre</p>
+            }
+        </div>
+    </header>
+
+    @if (cargando)
+    {
+        <div class="vw-loading">
+            <div class="vw-spinner"></div>
+            <p>Cargando sesiones de votación...</p>
+        </div>
+    }
+    else if (!isOrganizer)
+    {
+        <div class="vw-access-denied">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+            </svg>
+            <p>No tienes permisos para gestionar las ventanas de votación.</p>
+        </div>
+    }
+    else if (!sesiones.Any())
+    {
+        <div class="vw-empty">
+            <p>Este evento no tiene sesiones de votación configuradas aún.</p>
+            <a href="@($"/event/{EventId}/categories")" class="vw-btn-primary">Ir a categorías</a>
+        </div>
+    }
+    else
+    {
+        <div class="vw-sessions-list">
+            @foreach (var group in sesiones.GroupBy(s => s.CategoryName))
+            {
+                <div class="vw-category-group">
+                    <h2 class="vw-category-title">@group.Key</h2>
+
+                    @foreach (var ses in group)
+                    {
+                        var status    = GetStatusKey(ses);
+                        var hasWindow = ses.OpenAt.HasValue && ses.CloseAt.HasValue;
+
+                        bool canOpen   = hasWindow && (status == "scheduled" || status == "closed");
+                        bool canPause  = hasWindow && status == "open";
+                        bool canResume = hasWindow && status == "paused";
+                        bool canClose  = hasWindow && (status == "open" || status == "paused");
+
+                        <div class="vw-session-card">
+                            <div class="vw-session-header">
+                                <div class="vw-session-title-block">
+                                    <div class="vw-session-name-row">
+                                        <h3 class="vw-session-name">@ses.Name</h3>
+                                        <span class="vw-status-badge vw-status-@status">
+                                            @GetStatusDot(status) @GetStatusLabel(status)
+                                        </span>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(ses.Description))
+                                    {
+                                        <p class="vw-session-desc">@ses.Description</p>
+                                    }
+                                </div>
+                                <button class="vw-edit-btn" title="Editar ventana temporal" @onclick="() => AbrirEditor(ses)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="vw-dates-row">
+                                <div class="vw-date-block vw-date-open">
+                                    <div class="vw-date-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5 1.5 0 0 0 6.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-8A1.5 1.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0z"/>
+                                            <path d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <span class="vw-date-label">Apertura</span>
+                                        @if (ses.OpenAt.HasValue)
+                                        {
+                                            <p class="vw-date-value">@ses.OpenAt.Value.ToLocalTime().ToString("dd MMM yyyy", new System.Globalization.CultureInfo("es-ES"))</p>
+                                            <p class="vw-date-time">@ses.OpenAt.Value.ToLocalTime().ToString("HH:mm") hrs</p>
+                                        }
+                                        else { <p class="vw-date-none">Sin configurar</p> }
+                                    </div>
+                                </div>
+
+                                <div class="vw-dates-separator">
+                                    <div class="vw-dates-line"></div>
+                                    <span class="vw-voter-type-pill @(ses.VoterType == "Jury" ? "jury" : "public")">
+                                        @(ses.VoterType == "Jury" ? "Jurado" : "Público")
+                                    </span>
+                                    <div class="vw-dates-line"></div>
+                                </div>
+
+                                <div class="vw-date-block vw-date-close">
+                                    <div class="vw-date-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                                            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <span class="vw-date-label">Cierre</span>
+                                        @if (ses.CloseAt.HasValue)
+                                        {
+                                            <p class="vw-date-value">@ses.CloseAt.Value.ToLocalTime().ToString("dd MMM yyyy", new System.Globalization.CultureInfo("es-ES"))</p>
+                                            <p class="vw-date-time">@ses.CloseAt.Value.ToLocalTime().ToString("HH:mm") hrs</p>
+                                        }
+                                        else { <p class="vw-date-none">Sin configurar</p> }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="vw-manual-control">
+                                <div class="vw-manual-label-block">
+                                    <span class="vw-manual-label">Control Manual</span>
+                                    @if (!hasWindow)
+                                    {
+                                        <span class="vw-manual-hint">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16" style="flex-shrink:0;">
+                                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                                            </svg>
+                                            Define las fechas para activar los controles
+                                        </span>
+                                    }
+                                </div>
+
+                                <div class="vw-manual-buttons">
+                                    <button class="vw-ctrl-btn vw-ctrl-open"
+                                            disabled="@(!canOpen)"
+                                            @onclick='() => AccionManual(ses, "open")'>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M10.804 8 5 4.633v6.734zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696z"/>
+                                        </svg>
+                                        Abrir
+                                    </button>
+
+                                    <button class="vw-ctrl-btn vw-ctrl-pause"
+                                            disabled="@(!canPause)"
+                                            @onclick='() => AccionManual(ses, "pause")'>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/>
+                                        </svg>
+                                        Pausar
+                                    </button>
+
+                                    <button class="vw-ctrl-btn vw-ctrl-resume"
+                                            disabled="@(!canResume)"
+                                            @onclick='() => AccionManual(ses, "resume")'>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5 1.5 0 0 0 6.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-8A1.5 1.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0z"/>
+                                            <path d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+                                        </svg>
+                                        Reanudar
+                                    </button>
+
+                                    <button class="vw-ctrl-btn vw-ctrl-close"
+                                            disabled="@(!canClose)"
+                                            @onclick='() => AccionManual(ses, "close")'>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+                                        </svg>
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </div>
+
+                            @if (errorPorSesion.TryGetValue(ses.Id, out var err) && err != null)
+                            {
+                                <div class="vw-inline-error">@err</div>
+                            }
+
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+</div>
+
+@if (sesionEditando != null)
+{
+    <div class="vw-modal-overlay" @onclick="CerrarEditor">
+        <div class="vw-modal" @onclick:stopPropagation="true">
+
+            <div class="vw-modal-header">
+                <div class="vw-modal-title-row">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" style="color:#6366f1;">
+                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                    </svg>
+                    <h2 class="vw-modal-title">Editar Ventana de Votación</h2>
+                </div>
+            </div>
+
+            <div class="vw-modal-body">
+
+                <div class="vw-form-group">
+                    <label class="vw-form-label">Nombre *</label>
+                    <input type="text" class="vw-form-input" @bind="editNombre" placeholder="Ej: Votación Demo Day 2026" />
+                </div>
+
+                <div class="vw-form-group">
+                    <label class="vw-form-label">Descripción (opcional)</label>
+                    <textarea class="vw-form-textarea" rows="3" @bind="editDescripcion" placeholder="Descripción opcional..."></textarea>
+                </div>
+
+                <div class="vw-time-window-block">
+                    <div class="vw-time-window-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+                        </svg>
+                        Periodo de Activación Automática
+                    </div>
+
+                    <div class="vw-dates-grid">
+                        <div class="vw-form-group">
+                            <label class="vw-form-label-sm">Fecha y hora de apertura</label>
+                            <input type="datetime-local"
+                                   class="vw-form-input"
+                                   min="@fechaMinIso"
+                                   max="@fechaEventoCierreIso"
+                                   value="@editOpenAt"
+                                   @onchange="e => OnOpenAtChange(e.Value?.ToString())" />
+                        </div>
+                        <div class="vw-form-group">
+                            <label class="vw-form-label-sm">Fecha y hora de cierre</label>
+                            <input type="datetime-local"
+                                   class="vw-form-input"
+                                   min="@(string.IsNullOrEmpty(editOpenAt) ? fechaMinIso : editOpenAt)"
+                                   max="@fechaEventoCierreIso"
+                                   value="@editCloseAt"
+                                   @onchange="e => editCloseAt = e.Value?.ToString() ?? string.Empty" />
+                        </div>
+                    </div>
+                </div>
+
+                @if (errorEditor != null)
+                {
+                    <div class="vw-error-banner">@errorEditor</div>
+                }
+
+            </div>
+
+            <div class="vw-modal-footer">
+                <button class="vw-btn-primary" disabled="@guardandoEditor" @onclick="GuardarEditor">
+                    @(guardandoEditor ? "Guardando..." : "Guardar Cambios")
+                </button>
+                <button class="vw-btn-ghost" @onclick="CerrarEditor">Cancelar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string EventId { get; set; } = string.Empty;
+
+    private bool   cargando    = true;
+    private bool   isOrganizer = false;
+    private string eventoNombre = string.Empty;
+    private DateTime eventoStart;
+    private DateTime eventoEnd;
+
+    private List<VotingWindowDto> sesiones = new();
+    private Dictionary<string, string?> errorPorSesion = new();
+
+    private VotingWindowDto? sesionEditando;
+    private string  editNombre      = string.Empty;
+    private string  editDescripcion = string.Empty;
+    private string  editOpenAt      = string.Empty;
+    private string  editCloseAt     = string.Empty;
+    private string? errorEditor;
+    private bool    guardandoEditor = false;
+
+    private string fechaMinIso          => DateTime.Now.ToString("yyyy-MM-ddTHH:mm");
+    private string fechaEventoCierreIso => eventoEnd.ToString("yyyy-MM-ddTHH:mm");
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+        var http   = HttpClientFactory.CreateClient("API");
+
+        try
+        {
+            var evento = await http.GetFromJsonAsync<EventDetailDto>($"api/events/{EventId}");
+            if (evento != null)
+            {
+                eventoNombre = evento.Name;
+                eventoStart  = evento.StartDate;
+                eventoEnd    = evento.EndDate;
+                isOrganizer  = evento.Organizer == userId;
+            }
+        }
+        catch { }
+
+        if (isOrganizer)
+        {
+            try
+            {
+                var all = await http.GetFromJsonAsync<List<VotingWindowDto>>($"api/votingsessions/active/{EventId}");
+                sesiones = all ?? new();
+                foreach (var s in sesiones)
+                    errorPorSesion[s.Id] = null;
+            }
+            catch { }
+        }
+
+        cargando = false;
+    }
+
+    private static string GetStatusKey(VotingWindowDto ses)
+    {
+        if (ses.ManualStatus == "closed") return "closed";
+        if (ses.ManualStatus == "paused") return "paused";
+        if (ses.ManualStatus == "open")   return "open";
+
+        if (!ses.OpenAt.HasValue || !ses.CloseAt.HasValue) return "unconfigured";
+
+        var now = DateTime.UtcNow;
+        if (now > ses.CloseAt.Value)  return "closed";
+        if (now >= ses.OpenAt.Value)  return "open";
+        return "scheduled";
+    }
+
+    private static string GetStatusLabel(string key) => key switch
+    {
+        "open"         => "Abierta",
+        "paused"       => "Pausada",
+        "closed"       => "Cerrada",
+        "scheduled"    => "Programada",
+        _              => "Sin configurar"
+    };
+
+    private static string GetStatusDot(string key) => key switch
+    {
+        "open"      => "●",
+        "paused"    => "⏸",
+        "closed"    => "■",
+        "scheduled" => "◷",
+        _           => "○"
+    };
+
+    private async Task AccionManual(VotingWindowDto ses, string accion)
+    {
+        errorPorSesion[ses.Id] = null;
+        try
+        {
+            var http = HttpClientFactory.CreateClient("API");
+            var resp = await http.PostAsJsonAsync($"api/votingsessions/{ses.Id}/manual-status",
+                                                  new { Action = accion });
+            if (resp.IsSuccessStatusCode)
+            {
+                ses.ManualStatus = accion switch
+                {
+                    "open"   => "open",
+                    "pause"  => "paused",
+                    "resume" => "open",
+                    "close"  => "closed",
+                    _        => ses.ManualStatus
+                };
+                StateHasChanged();
+            }
+            else
+            {
+                errorPorSesion[ses.Id] = (await resp.Content.ReadAsStringAsync()).Trim('"');
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorPorSesion[ses.Id] = $"Error: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private void AbrirEditor(VotingWindowDto ses)
+    {
+        sesionEditando  = ses;
+        editNombre      = ses.Name;
+        editDescripcion = ses.Description ?? string.Empty;
+        editOpenAt  = ses.OpenAt.HasValue  ? ses.OpenAt.Value.ToLocalTime().ToString("yyyy-MM-ddTHH:mm")  : string.Empty;
+        editCloseAt = ses.CloseAt.HasValue ? ses.CloseAt.Value.ToLocalTime().ToString("yyyy-MM-ddTHH:mm") : string.Empty;
+        errorEditor = null;
+    }
+
+    private void CerrarEditor() { sesionEditando = null; errorEditor = null; }
+
+    private void OnOpenAtChange(string? value)
+    {
+        editOpenAt = value ?? string.Empty;
+        if (!string.IsNullOrEmpty(editCloseAt) && !string.IsNullOrEmpty(editOpenAt)
+            && DateTime.TryParse(editCloseAt, out var close)
+            && DateTime.TryParse(editOpenAt,  out var open)
+            && close <= open)
+        {
+            editCloseAt = string.Empty;
+        }
+    }
+
+    private async Task GuardarEditor()
+    {
+        errorEditor = null;
+
+        if (string.IsNullOrWhiteSpace(editNombre))
+        { errorEditor = "El nombre de la votación es obligatorio."; return; }
+
+        DateTime? openAt = null, closeAt = null;
+
+        if (!string.IsNullOrEmpty(editOpenAt))
+        {
+            if (!DateTime.TryParse(editOpenAt, out var o))
+            { errorEditor = "Fecha de apertura inválida."; return; }
+            openAt = o.ToUniversalTime();
+
+            if (openAt < DateTime.UtcNow)
+            { errorEditor = "La fecha de apertura no puede ser anterior a la fecha actual."; return; }
+            if (openAt < eventoStart.ToUniversalTime())
+            { errorEditor = "La fecha de apertura no puede ser anterior al inicio del evento."; return; }
+        }
+
+        if (!string.IsNullOrEmpty(editCloseAt))
+        {
+            if (!DateTime.TryParse(editCloseAt, out var c))
+            { errorEditor = "Fecha de cierre inválida."; return; }
+            closeAt = c.ToUniversalTime();
+        }
+
+        if (openAt.HasValue && closeAt.HasValue && closeAt <= openAt)
+        { errorEditor = "La fecha de cierre debe ser posterior a la de apertura."; return; }
+
+        if (closeAt.HasValue && closeAt > eventoEnd.ToUniversalTime())
+        { errorEditor = $"La fecha de cierre no puede superar el fin del evento ({eventoEnd:dd/MM/yyyy})."; return; }
+
+        try
+        {
+            guardandoEditor = true;
+            var http = HttpClientFactory.CreateClient("API");
+            var resp = await http.PutAsJsonAsync($"api/votingsessions/{sesionEditando!.Id}",
+                new { Name = editNombre, Description = editDescripcion, OpenAt = openAt, CloseAt = closeAt });
+
+            if (resp.IsSuccessStatusCode)
+            {
+                sesionEditando.Name        = editNombre;
+                sesionEditando.Description = editDescripcion;
+                sesionEditando.OpenAt      = openAt;
+                sesionEditando.CloseAt     = closeAt;
+                CerrarEditor();
+            }
+            else
+            {
+                errorEditor = (await resp.Content.ReadAsStringAsync()).Trim('"');
+            }
+        }
+        catch (Exception ex) { errorEditor = $"Error: {ex.Message}"; }
+        finally { guardandoEditor = false; }
+    }
+
+    public class VotingWindowDto
+    {
+        public string    Id           { get; set; } = string.Empty;
+        public string    CategoryId   { get; set; } = string.Empty;
+        public string    CategoryName { get; set; } = string.Empty;
+        public string    Name         { get; set; } = string.Empty;
+        public string?   Description  { get; set; }
+        public string    VoterType    { get; set; } = string.Empty;
+        public string    EvaluationType { get; set; } = string.Empty;
+        public DateTime? OpenAt       { get; set; }
+        public DateTime? CloseAt      { get; set; }
+        public bool      IsActive     { get; set; }
+        public string?   ManualStatus { get; set; }
+    }
+
+    public class EventDetailDto
+    {
+        public string   Id        { get; set; } = string.Empty;
+        public string   Name      { get; set; } = string.Empty;
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate   { get; set; }
+        public string   Organizer { get; set; } = string.Empty;
+    }
+}
