@@ -192,7 +192,6 @@
         _sessionUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
         var userEmail = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? string.Empty;
         _userRole = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? string.Empty;
-        _voterTypeForUser = _userRole == "Jury" ? "Jury" : "Public";
 
         var http = HttpClientFactory.CreateClient("API");
         apiBaseUrl = http.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
@@ -208,6 +207,9 @@
 
         var evento = await http.GetFromJsonAsync<EventDetailDto>($"api/events/{EventId}");
         var categoriaActual = evento?.Categories.FirstOrDefault(c => c.Id == CategoryId);
+
+        var esJurado = categoriaActual?.VotingSessions.Any(s => s.JurorEmails.Contains(userEmail.ToLower())) == true;
+        _voterTypeForUser = esJurado ? "Jury" : "Public";
 
         List<VotingSessionDto>? sesionesActivas = null;
         try { sesionesActivas = await http.GetFromJsonAsync<List<VotingSessionDto>>($"api/votingsessions/active/{EventId}"); }
