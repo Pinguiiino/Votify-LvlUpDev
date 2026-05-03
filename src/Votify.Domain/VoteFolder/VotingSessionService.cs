@@ -20,4 +20,7 @@ public class VotingSessionService
 
     public Task<List<VotingSession>> GetByCategoryAsync(string categoryId)
         => _repository.GetByCategoryAsync(categoryId);
+
+    public Task UpdateAsync(VotingSession session)
+            => _repository.UpdateAsync(session);
 }

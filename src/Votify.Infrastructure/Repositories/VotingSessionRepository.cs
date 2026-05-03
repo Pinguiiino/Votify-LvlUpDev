@@ -38,5 +38,11 @@ namespace Votify.Infrastructure.Repositories
                              now <= (vs.AdjustedCloseAt ?? vs.CloseAt))
                 .ToListAsync();
         }
+
+        public async Task UpdateAsync(VotingSession session)
+        {
+            _context.VotingSessions.Update(session);
+            await _context.SaveChangesAsync();
+        }
     }
 }
