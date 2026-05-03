@@ -130,7 +130,7 @@ public class EventService
                     else if (sesion.EvaluationType == EvaluationType.PointDistribution)
                         puntos = g.Sum(v => v.Points ?? 0);
                 }
-                return new { g.Key.VotedProjectId, g.Key.CategoryId, puntos };
+                return new { g.Key.VotedProjectId, g.Key.CategoryId, g.Key.VotingSessionId, puntos };
             })
             .Where(x => x.puntos > 0)
             .ToList();
@@ -140,7 +140,7 @@ public class EventService
             .Select(vs => vs.Id)
             .ToList();
 
-        var rankingWeighted = new List<(string ProjectId, string CategoryId, double Score)>();
+        var rankingWeighted = new List<(string ProjectId, string CategoryId, string VotingSessionId, double Score)>();
 
         if (weightedSessionIds.Any())
         {
@@ -165,6 +165,7 @@ public class EventService
                     .Select(g => (
                         ProjectId: g.Key,
                         CategoryId: categoryId,
+                        VotingSessionId: sessionId, // Conservamos la sesión
                         Score: g.Average(wv =>
                             wv.CriterionScores.Sum(cs =>
                                 cs.Score * (weightMap.TryGetValue(cs.CriterionId, out var w) ? w : 0)))
@@ -176,22 +177,32 @@ public class EventService
 
         var ranking = new List<ProjectResultDto>();
 
-        foreach (var grupo in rankingTopN.GroupBy(x => new { x.VotedProjectId, x.CategoryId }))
+        foreach (var grupo in rankingTopN.GroupBy(x => new { x.VotedProjectId, x.CategoryId, x.VotingSessionId }))
         {
+            string catNombre = categoriasInfo.GetValueOrDefault(grupo.Key.CategoryId, "General");
+            string sesionNombre = sesionesInfo.GetValueOrDefault(grupo.Key.VotingSessionId)?.Name ?? "Votación";
+
+            string tituloCompuesto = $"{catNombre}|{sesionNombre}";
+
             ranking.Add(new ProjectResultDto
             {
                 Nombre = proyectosInfo.GetValueOrDefault(grupo.Key.VotedProjectId, "Proyecto"),
-                Categoria = categoriasInfo.GetValueOrDefault(grupo.Key.CategoryId, "General"),
+                Categoria = tituloCompuesto,
                 Puntos = grupo.Sum(x => x.puntos)
             });
         }
 
-        foreach (var grupo in rankingWeighted.GroupBy(x => new { x.ProjectId, x.CategoryId }))
+        foreach (var grupo in rankingWeighted.GroupBy(x => new { x.ProjectId, x.CategoryId, x.VotingSessionId }))
         {
             var puntos = (int)Math.Round(grupo.Sum(x => x.Score) * 10);
+
+            string catNombre = categoriasInfo.GetValueOrDefault(grupo.Key.CategoryId, "General");
+            string sesionNombre = sesionesInfo.GetValueOrDefault(grupo.Key.VotingSessionId)?.Name ?? "Votación";
+            string tituloCompuesto = $"{catNombre}|{sesionNombre}";
+
             var existente = ranking.FirstOrDefault(r =>
                 r.Nombre == proyectosInfo.GetValueOrDefault(grupo.Key.ProjectId, "") &&
-                r.Categoria == categoriasInfo.GetValueOrDefault(grupo.Key.CategoryId, ""));
+                r.Categoria == tituloCompuesto);
 
             if (existente != null)
                 existente.Puntos += puntos;
@@ -199,7 +210,7 @@ public class EventService
                 ranking.Add(new ProjectResultDto
                 {
                     Nombre = proyectosInfo.GetValueOrDefault(grupo.Key.ProjectId, "Proyecto"),
-                    Categoria = categoriasInfo.GetValueOrDefault(grupo.Key.CategoryId, "General"),
+                    Categoria = tituloCompuesto,
                     Puntos = puntos
                 });
         }

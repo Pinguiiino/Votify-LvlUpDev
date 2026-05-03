@@ -185,7 +185,7 @@
             }
             else
             {
-                <span>✓ Confirmar Evaluación</span>
+                <span>✓ @(sesion?.VoterType == "Jury" ? "Emitir Veredicto" : "Confirmar Evaluación")</span>
             }
         </button>
     }
@@ -472,6 +472,7 @@
         public bool AllowComments { get; set; }
         public bool RequireComments { get; set; }
         public bool AllowCommentsPerCriterion { get; set; }
+        public string VoterType { get; set; } = string.Empty;
         public List<CriterionDto> Criteria { get; set; } = new();
     }
 

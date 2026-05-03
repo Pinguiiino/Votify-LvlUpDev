@@ -88,32 +88,32 @@
                                                   rows="2"
                                                   maxlength="500"
                                                   @bind="comentarios[p.Id]"
-                                                  @bind:event="oninput">
+                                                      @bind:event="oninput">
                                         </textarea>
-                                        <div class="char-count">@((comentarios.TryGetValue(p.Id, out var txt) ? txt?.Length : 0) ?? 0)/500</div>
+                                            <div class="char-count">@((comentarios.TryGetValue(p.Id, out var txt) ? txt?.Length : 0) ?? 0)/500</div>
+                                        }
                                     }
-                                }
-                                else
-                                {
-                                    <span class="empty-text">Haz clic en un proyecto para añadirlo aquí</span>
-                                }
+                                    else
+                                    {
+                                        <span class="empty-text">Haz clic en un proyecto para añadirlo aquí</span>
+                                    }
+                                </div>
                             </div>
-                        </div>
+                        }
+                    </div>
+
+                    @if (error != null)
+                    {
+                        <div class="error-banner">@error</div>
                     }
+
+                    <button class="btn-primary submit-vote-btn" disabled="@(!ProyectosSeleccionados.Any())" @onclick="EnviarVoto">
+                        @(_voterTypeForUser == "Jury" ? "Emitir Veredicto" : "Confirmar Mi Voto")
+                    </button>
                 </div>
-
-                @if (error != null)
-                {
-                    <div class="error-banner">@error</div>
-                }
-
-                <button class="btn-primary submit-vote-btn" disabled="@(!ProyectosSeleccionados.Any())" @onclick="EnviarVoto">
-                    Confirmar Mi Voto
-                </button>
             </div>
-        </div>
-    }
-</div>
+        }
+    </div>
 
 @code {
     [Parameter] public string EventId { get; set; } = "";
@@ -122,6 +122,8 @@
     private int TopN = 3;
     private string SessionId = "";
     private string UserId = "";
+    private string _userRole = string.Empty;
+    private string _voterTypeForUser = string.Empty;
     private string? error;
 
     private VotingSessionDto? sesion;
@@ -131,19 +133,30 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        UserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+        var userEmail = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? string.Empty;
+        
         var http = HttpClientFactory.CreateClient("API");
 
-        var cats = await http.GetFromJsonAsync<List<CategorySimpleDto>>($"api/categories/by-event/{EventId}");
-        var categoriaActual = cats?.FirstOrDefault(c => c.Id == CategoryId);
-        if (categoriaActual != null) TopN = categoriaActual.TopNProjectsAllowed;
+        var evento = await http.GetFromJsonAsync<EventDetailDto>($"api/events/{EventId}");
+        var categoriaActual = evento?.Categories.FirstOrDefault(c => c.Id == CategoryId);
+        
+        bool esJuradoAsignado = categoriaActual?.VotingSessions.Any(s => s.VoterType == "Jury" && s.JurorEmails.Contains(userEmail.ToLower())) == true;
+        _voterTypeForUser = esJuradoAsignado ? "Jury" : "Public";
 
         try
         {
             var sesiones = await http.GetFromJsonAsync<List<VotingSessionDto>>(
                 $"api/votingsessions/by-category/{CategoryId}");
-            sesion = sesiones?.FirstOrDefault(s =>
-                s.EvaluationType is "TopN" or "2");
-            if (sesion != null) SessionId = sesion.Id;
+                
+            sesion = sesiones?.FirstOrDefault(s => s.VoterType == _voterTypeForUser && s.EvaluationType == "TopN");
+            
+            if (sesion != null)
+            {
+                SessionId = sesion.Id;
+                if (sesion.TopN.HasValue) TopN = sesion.TopN.Value;
+            }
         }
         catch { }
 
@@ -152,17 +165,14 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender) return;
-
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        UserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-        if (string.IsNullOrEmpty(UserId)) return;
+        if (!firstRender || string.IsNullOrEmpty(UserId) || string.IsNullOrEmpty(SessionId)) return;
 
         var http = HttpClientFactory.CreateClient("API");
+        
         var votosPrevios = await http.GetFromJsonAsync<List<VoteResultDto>>(
-            $"api/votes/by-user?userId={UserId}&categoryId={CategoryId}");
+            $"api/votes/by-user?userId={UserId}&categoryId={CategoryId}&votingSessionId={SessionId}");
 
-        if (votosPrevios != null && votosPrevios.Any() && ProyectosDisponibles != null)
+        if (votosPrevios != null && votosPrevios.Any() && ProyectosDisponibles != null && !ProyectosSeleccionados.Any())
         {
             foreach (var voto in votosPrevios.OrderBy(v => v.TopPosition))
             {
@@ -242,22 +252,32 @@
         }
     }
 
+    public class EventDetailDto
+    {
+        public List<CategoryDetailDto> Categories { get; set; } = new();
+    }
+
+    public class CategoryDetailDto
+    {
+        public string Id { get; set; } = "";
+        public List<VotingSessionFullDto> VotingSessions { get; set; } = new();
+    }
+
+    public class VotingSessionFullDto
+    {
+        public string Id { get; set; } = "";
+        public string VoterType { get; set; } = "";
+        public List<string> JurorEmails { get; set; } = new();
+    }
+
     public class VotingSessionDto
     {
         public string Id { get; set; } = string.Empty;
+        public string VoterType { get; set; } = string.Empty;
         public string EvaluationType { get; set; } = string.Empty;
         public bool AllowComments { get; set; }
         public bool RequireComments { get; set; }
         public int? TopN { get; set; }
-    }
-
-    public class CategorySimpleDto
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
-        public bool AllowSelfVoting { get; set; }
-        public int TopNProjectsAllowed { get; set; }
     }
 
     public class ProjectDto

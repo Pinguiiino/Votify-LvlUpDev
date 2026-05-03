@@ -6,23 +6,21 @@
 
 <PageTitle>Dashboard del Evento</PageTitle>
 
-<div class="container-fluid p-4">
+<div class="container-fluid p-4" style="max-width: 1200px; margin: 0 auto;">
     <button class="back-btn"
-            style="margin-bottom: 1.5rem; background: none; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;"
+            style="margin-bottom: 1.5rem; background: none; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #4b5563; padding: 0;"
             @onclick="Volver">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-            <path fill-rule="evenodd"
-                  d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
+            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
         </svg>
         Volver a Categorías
     </button>
 
-    <h2 class="mb-4">Resultados de la Votación</h2>
+    <h2 class="mb-4" style="font-weight: 800; color: #111827;">Resultados de la Votación</h2>
 
     @if (errorMessage != null)
     {
-        <div class="alert alert-danger"
-             style="background-color: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 0.5rem;">
+        <div class="alert alert-danger" style="background-color: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 0.5rem;">
             @errorMessage
         </div>
     }
@@ -35,79 +33,94 @@
     }
     else
     {
-        <div class="row">
-            <div class="col-12 mb-4">
-                <div class="card shadow-sm h-100"
-                     style="border: none; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                    <div class="card-body" style="padding: 2rem;">
-                        <h5 class="card-title mb-4" style="font-weight: bold; font-size: 1.25rem;">Top Proyectos por
-                            Categoría (Ponderado)</h5>
-                        
-                            @if (!stats.Ranking.Any())
-                            {
-                                <div style="text-align: center; padding: 3rem 0; color: #9ca3af;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor"
-                                         viewBox="0 0 16 16" style="margin-bottom: 1rem;">
-                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                                        <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z" />
+        @if (!stats.Ranking.Any())
+        {
+            <div style="text-align: center; padding: 4rem 0; color: #9ca3af; background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16" style="margin-bottom: 1rem;">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                    <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z" />
+                </svg>
+                <p style="font-size: 1.1rem;">Aún no hay votos registrados para este evento.</p>
+            </div>
+        }
+        else
+        {
+            // Agrupamos primero por Nombre de la Categoría principal (lo que hay antes del | )
+            var categoriasAgrupadas = stats.Ranking
+                .GroupBy(p => p.Categoria.Contains('|') ? p.Categoria.Split('|')[0] : p.Categoria)
+                .ToList();
+
+            @foreach (var grupoCategoria in categoriasAgrupadas)
+            {
+                <div class="category-results-block" style="margin-bottom: 3.5rem; background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                    
+                    <!-- Título de la Categoría -->
+                    <h3 style="font-size: 1.5rem; font-weight: 800; color: #1e40af; margin-bottom: 1.5rem; border-bottom: 2px solid #bfdbfe; padding-bottom: 0.75rem;">
+                        @grupoCategoria.Key
+                    </h3>
+
+                    <!-- Agrupamos internamente por Sesión (Jurado, Público, etc) lo que hay después del | -->
+                    @{
+                        var sesionesDeCategoria = grupoCategoria
+                            .GroupBy(p => p.Categoria.Contains('|') ? p.Categoria.Split('|')[1] : "General")
+                            .ToList();
+                    }
+
+                    <div class="row" style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin: 0;">
+                        @foreach (var grupoSesion in sesionesDeCategoria)
+                        {
+                            <div style="flex: 1; min-width: 300px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; overflow: hidden;">
+                                
+                                <div style="background: #f1f5f9; padding: 1rem; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 0.5rem;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M4 11a1 1 0 1 1 2 0v1a1 1 0 1 1-2 0v-1zm6-4a1 1 0 1 1 2 0v5a1 1 0 1 1-2 0V7zM7 9a1 1 0 0 1 2 0v3a1 1 0 1 1-2 0V9z" />
+                                        <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z" />
+                                        <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z" />
                                     </svg>
-                                    <p>Aún no hay votos registrados para este evento.</p>
+                                    @grupoSesion.Key
                                 </div>
-                            }
-                            else
-                            {
-                                @foreach (var grupoCategoria in stats.Ranking.GroupBy(p => p.Categoria))
-                                {
-                                    <div class="mb-5">
-                                        <h6 class="text-primary border-bottom pb-2 mb-3"
-                                            style="font-size: 1.2rem; font-weight: 600; color: #2563eb !important; border-bottom: 2px solid #e5e7eb !important;">
-                                            @grupoCategoria.Key
-                                        </h6>
-                                    
-                                        <div class="table-responsive">
-                                            <table class="table table-hover mb-0" style="width: 100%;">
-                                                <thead class="table-light" style="background-color: #f9fafb;">
-                                                    <tr>
-                                                        <th style="width: 15%; padding: 1rem;">Posición</th>
-                                                        <th style="width: 65%; padding: 1rem;">Proyecto</th>
-                                                        <th class="text-end" style="width: 20%; padding: 1rem; text-align: right;">
-                                                            Puntos</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @{
-                                                            int posicion = 1;
-                                                            foreach (var proyecto in grupoCategoria.OrderByDescending(p => p.Puntos))
-                                                            {
-                                                                <tr style="border-bottom: 1px solid #f3f4f6;">
-                                                                    <td style="padding: 1rem;">
-                                                                        <strong
-                                                                            style="font-size: 1.1rem; color: @(posicion == 1 ? "#d4af37" : posicion == 2 ? "#9ca3af" : posicion == 3 ? "#cd7f32" : "inherit");">
-                                                                            @(posicion == 1 ? "🥇" : posicion == 2 ? "🥈" : posicion == 3 ? "🥉" :
-                                                        "") #@posicion
-                                                                        </strong>
-                                                                    </td>
-                                                                    <td class="fw-bold text-dark" style="padding: 1rem; font-weight: 600;">
-                                                                        @proyecto.Nombre</td>
-                                                                        <td class="text-end fw-bold"
-                                                                            style="padding: 1rem; text-align: right; color: #2563eb; font-weight: bold;">
-                                                                            @proyecto.Puntos pts</td>
-                                                                        </tr>
-                                                                        posicion++;
-                                                                    }
-                                                                }
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table mb-0" style="width: 100%; border-collapse: collapse;">
+                                        <thead style="background-color: transparent;">
+                                            <tr>
+                                                <th style="width: 15%; padding: 0.75rem 1rem; border-bottom: 2px solid #e2e8f0; color: #64748b; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Posición</th>
+                                                <th style="width: 60%; padding: 0.75rem 1rem; border-bottom: 2px solid #e2e8f0; color: #64748b; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Proyecto</th>
+                                                <th class="text-end" style="width: 25%; padding: 0.75rem 1rem; border-bottom: 2px solid #e2e8f0; color: #64748b; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; text-align: right;">Puntos</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @{
+                                                int posicion = 1;
+                                                foreach (var proyecto in grupoSesion.OrderByDescending(p => p.Puntos))
+                                                {
+                                                    <tr style="border-bottom: 1px solid #f1f5f9; transition: background-color 0.2s;">
+                                                        <td style="padding: 0.85rem 1rem;">
+                                                            <strong style="font-size: 1.1rem; color: @(posicion == 1 ? "#d4af37" : posicion == 2 ? "#9ca3af" : posicion == 3 ? "#cd7f32" : "#64748b");">
+                                                                @(posicion == 1 ? "🥇" : posicion == 2 ? "🥈" : posicion == 3 ? "🥉" : "") @posicion
+                                                            </strong>
+                                                        </td>
+                                                        <td style="padding: 0.85rem 1rem; font-weight: 600; color: #334155;">
+                                                            @proyecto.Nombre
+                                                        </td>
+                                                        <td class="text-end" style="padding: 0.85rem 1rem; text-align: right; color: #0284c7; font-weight: 700;">
+                                                            @proyecto.Puntos pts
+                                                        </td>
+                                                    </tr>
+                                                    posicion++;
+                                                }
                                             }
-                                        }
-                                    </div>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
+            }
+        }
+    }
+</div>
 
 @code {
     [Parameter] public string EventoId { get; set; } = string.Empty;
