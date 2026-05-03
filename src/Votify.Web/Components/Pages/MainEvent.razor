@@ -80,7 +80,7 @@
                             {
                                 <span style="display: block; font-size: 0.85rem; color: #9333ea; font-weight: 600; text-align: center;">✓ Inscrito como Público</span>
                             }
-                            else
+                            else if (currentUserRole != "Organizer")
                             {
                                 <button class="btn-outline" style="width: 100%; padding: 0.6rem; font-size: 0.9rem;" 
                                         @onclick='() => EnrollAsPublic(evento.Id, evento.Name)'>
@@ -108,6 +108,7 @@
     private string mensajeEstado = "Conectando con el servidor...";
     private string apiBaseUrl = string.Empty;
     private string currentUserId = string.Empty;
+    private string currentUserRole = string.Empty; 
     private bool _rendered = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -119,6 +120,8 @@
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             currentUserId = authState.User.FindFirst(
                 System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            currentUserRole = authState.User.FindFirst(
+                System.Security.Claims.ClaimTypes.Role)?.Value ?? string.Empty;
 
             await LoadEvents();
         }

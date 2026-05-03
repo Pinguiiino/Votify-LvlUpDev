@@ -85,8 +85,8 @@
             }
         </div>
     }
-</div> <!-- Cerramos el mainproject-container AQUÍ para liberar el modal -->
-<!-- === MODAL FLOTANTE ARREGLADO Y ESTILIZADO === -->
+</div>
+
 @if (proyectoSeleccionado != null)
 {
     <div class="modal-overlay" @onclick="CerrarPopup" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(17, 24, 39, 0.7); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(4px);">
@@ -167,7 +167,6 @@
     [Parameter] public string CategoryId { get; set; } = string.Empty;
     private string _voteUrl = "";
     private string _sesionWeightedId = "";
-    private string _userRole = string.Empty;
     private string _voterTypeForUser = string.Empty;
 
     private List<ProjectDto>? ProyectosSubidos;
@@ -191,11 +190,11 @@
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         _sessionUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
         var userEmail = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? string.Empty;
-        _userRole = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? string.Empty;
 
         var http = HttpClientFactory.CreateClient("API");
         apiBaseUrl = http.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
 
+        // 1. Obtener info general
         try
         {
             var cats = await http.GetFromJsonAsync<List<CategorySimpleDto>>($"api/categories/by-event/{EventId}");
@@ -205,49 +204,63 @@
         }
         catch { }
 
+        // 2. Obtener detalles del evento y categoría actual
         var evento = await http.GetFromJsonAsync<EventDetailDto>($"api/events/{EventId}");
         var categoriaActual = evento?.Categories.FirstOrDefault(c => c.Id == CategoryId);
 
-        var esJurado = categoriaActual?.VotingSessions.Any(s => s.JurorEmails.Contains(userEmail.ToLower())) == true;
-        _voterTypeForUser = esJurado ? "Jury" : "Public";
+        // 3. LÓGICA DE PRIORIDAD PARA EL BOTÓN
+        bool esJuradoAsignado = categoriaActual?.VotingSessions.Any(s => s.VoterType == "Jury" && s.JurorEmails.Contains(userEmail.ToLower())) == true;
+        bool estaInscritoEvento = evento?.ParticipantsIds.Contains(_sessionUserId) == true || evento?.PublicIds.Contains(_sessionUserId) == true;
 
-        List<VotingSessionDto>? sesionesActivas = null;
-        try { sesionesActivas = await http.GetFromJsonAsync<List<VotingSessionDto>>($"api/votingsessions/active/{EventId}"); }
-        catch { }
-
-        var sesionDelUsuario = sesionesActivas?.FirstOrDefault(s => s.CategoryId == CategoryId && s.VoterType == _voterTypeForUser);
-
-        if (sesionDelUsuario != null && evento != null)
+        if (esJuradoAsignado)
         {
-            votacionActiva = sesionDelUsuario.IsActive;
-
-            _voteUrl = sesionDelUsuario.EvaluationType switch
-            {
-                "WeightedScale" => $"/event/{EventId}/categories/{CategoryId}/vote-weighted",
-                "PointDistribution" => $"/event/{EventId}/categories/{CategoryId}/vote-point-distribution",
-                _ => $"/event/{EventId}/categories/{CategoryId}/vote-ranking"
-            };
-
-            if (sesionDelUsuario.EvaluationType == "WeightedScale")
-            {
-                _sesionWeightedId = sesionDelUsuario.Id;
-            }
-
-            if (_voterTypeForUser == "Public")
-            {
-                puedeVotar = evento.ParticipantsIds.Contains(_sessionUserId) || evento.PublicIds.Contains(_sessionUserId);
-            }
-            else if (_voterTypeForUser == "Jury")
-            {
-                var sesionCompleta = categoriaActual?.VotingSessions.FirstOrDefault(s => s.Id == sesionDelUsuario.Id);
-                puedeVotar = sesionCompleta != null && sesionCompleta.JurorEmails.Contains(userEmail.ToLower());
-            }
+            _voterTypeForUser = "Jury";
+            puedeVotar = true;
+        }
+        else if (estaInscritoEvento)
+        {
+            _voterTypeForUser = "Public";
+            puedeVotar = true;
         }
         else
         {
-            votacionActiva = false;
+            _voterTypeForUser = string.Empty;
+            puedeVotar = false; // Ni es jurado, ni está inscrito -> No puede votar.
         }
 
+        // 4. Si tiene permiso para votar, buscamos SU sesión de votación correspondiente
+        if (puedeVotar)
+        {
+            List<VotingSessionDto>? sesionesActivas = null;
+            try { sesionesActivas = await http.GetFromJsonAsync<List<VotingSessionDto>>($"api/votingsessions/active/{EventId}"); }
+            catch { }
+
+            var sesionDelUsuario = sesionesActivas?.FirstOrDefault(s => s.CategoryId == CategoryId && s.VoterType == _voterTypeForUser);
+
+            if (sesionDelUsuario != null && sesionDelUsuario.IsActive)
+            {
+                votacionActiva = true;
+
+                _voteUrl = sesionDelUsuario.EvaluationType switch
+                {
+                    "WeightedScale" => $"/event/{EventId}/categories/{CategoryId}/vote-weighted",
+                    "PointDistribution" => $"/event/{EventId}/categories/{CategoryId}/vote-point-distribution",
+                    _ => $"/event/{EventId}/categories/{CategoryId}/vote-ranking"
+                };
+
+                if (sesionDelUsuario.EvaluationType == "WeightedScale")
+                {
+                    _sesionWeightedId = sesionDelUsuario.Id;
+                }
+            }
+            else
+            {
+                votacionActiva = false;
+                puedeVotar = false; // Hay permiso, pero la votación para su rol no está activa
+            }
+        }
+
+        // 5. Cargar proyectos de la categoría
         ProyectosSubidos = await http.GetFromJsonAsync<List<ProjectDto>>($"api/projects/by-category/{CategoryId}");
 
         if (ProyectosSubidos != null)
