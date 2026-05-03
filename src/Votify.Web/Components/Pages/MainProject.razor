@@ -1,5 +1,6 @@
 @page "/event/{EventId}/categories/{CategoryId}/projects"
 @rendermode InteractiveServer
+@implements IDisposable
 @using Votify.Web.Helpers
 @using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager Navigation
@@ -325,6 +326,23 @@
     }
 
     private void IrAVotar() => Navigation.NavigateTo(_voteUrl);
+
+    private System.Threading.Timer? _timer;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (!firstRender) return;
+    
+        _timer = new System.Threading.Timer(_ =>
+        {
+            InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
 
     private async Task AbrirPopup(ProjectDto proyecto)
     {

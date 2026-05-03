@@ -1,6 +1,7 @@
 @page "/event/{EventId}/voting-windows"
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components.Authorization
+@implements IDisposable
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
 @inject AuthenticationStateProvider AuthStateProvider
@@ -395,6 +396,23 @@
             errorPorSesion[ses.Id] = $"Error: {ex.Message}";
             StateHasChanged();
         }
+    }
+
+    private System.Threading.Timer? _timer;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (!firstRender) return;
+    
+        _timer = new System.Threading.Timer(_ =>
+        {
+            InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
     }
 
     private void AbrirEditor(VotingWindowDto ses)
