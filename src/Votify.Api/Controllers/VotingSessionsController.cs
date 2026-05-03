@@ -30,6 +30,9 @@ namespace Votify.Api.Controllers
                 CategoryName = vs.Category!.Name,
                 VoterType = vs.VoterType.ToString(),
                 EvaluationType = vs.EvaluationType.ToString(),
+                vs.AllowComments,
+                vs.RequireComments,
+                vs.AllowCommentsPerCriterion,
                 StartDate = vs.OpenAt,
                 EndDate = vs.EffectiveCloseAt,
                 IsActive = now >= vs.OpenAt && now <= vs.EffectiveCloseAt
@@ -45,10 +48,12 @@ namespace Votify.Api.Controllers
             return Ok(sesiones.Select(vs => new
             {
                 vs.Id,
+                VoterType = vs.VoterType.ToString(),
                 EvaluationType = vs.EvaluationType.ToString(),
                 CriterionType = vs.CriterionType?.ToString(),
                 vs.AllowComments,
                 vs.RequireComments,
+                vs.AllowCommentsPerCriterion,
                 vs.PointsPerVoter,
                 vs.MaxPointsPerProject,
                 vs.TopN,

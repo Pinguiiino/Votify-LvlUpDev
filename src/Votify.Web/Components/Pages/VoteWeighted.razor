@@ -74,7 +74,7 @@
                 <div class="criteria-rows">
                     @foreach (var criterio in criterios)
                     {
-                        <div class="criterion-row">
+                        <div class="criterion-row" style="@(sesion?.AllowCommentsPerCriterion == true ? "flex-wrap: wrap; align-items: flex-start;" : "")">
                             <div class="criterion-info">
                                 <span class="criterion-label">@criterio.Name</span>
                                 <span class="criterion-weight-badge">@((criterio.Weight * 100).ToString("0"))%</span>
@@ -128,6 +128,18 @@
                                            value="@scoresText[proyecto.Id][criterio.Id]"
                                            @oninput="e => OnInputChanged(proyecto.Id, criterio.Id, e.Value?.ToString())" />
                                     <span class="score-max">/ 10</span>
+                                </div>
+                            }
+
+                            @if (sesion?.AllowCommentsPerCriterion == true)
+                            {
+                                <div class="criterion-comment-row" style="flex-basis: 100%; margin-top: 0.5rem;">
+                                    <textarea rows="1"
+                                              maxlength="300"
+                                              style="width: 100%; padding: 0.4rem 0.6rem; border: 1px solid #e5e7eb; border-radius: 0.4rem; font-size: 0.85rem; resize: vertical; font-family: inherit; box-sizing: border-box;"
+                                              placeholder="Comentario sobre este criterio (opcional)..."
+                                              value="@GetCriterionComment(proyecto.Id, criterio.Id)"
+                                              @oninput="e => SetCriterionComment(proyecto.Id, criterio.Id, e.Value?.ToString())" />
                                 </div>
                             }
                         </div>
@@ -194,6 +206,7 @@
     private Dictionary<string, Dictionary<string, double>> scores = new();
     private Dictionary<string, string> comentarios = new();
     private Dictionary<string, Dictionary<string, string>> scoresText = new();
+    private Dictionary<string, Dictionary<string, string>> comentariosCriterio = new();
 
     private static readonly List<RubricLevel> RubricLevels = new()
     {
@@ -238,6 +251,7 @@
                 scores[p.Id] = criterios.ToDictionary(c => c.Id, _ => 0.0);
                 scoresText[p.Id] = criterios.ToDictionary(c => c.Id, _ => "0");
                 comentarios[p.Id] = "";
+                comentariosCriterio[p.Id] = criterios.ToDictionary(c => c.Id, _ => "");
             }
         }
     }
@@ -270,6 +284,13 @@
 
                     if (!string.IsNullOrEmpty(v.Comment))
                         comentarios[v.ProjectId] = v.Comment;
+
+                    if (!string.IsNullOrEmpty(v.CriterionComment))
+                    {
+                        if (!comentariosCriterio.ContainsKey(v.ProjectId))
+                            comentariosCriterio[v.ProjectId] = new();
+                        comentariosCriterio[v.ProjectId][v.CriterionId] = v.CriterionComment;
+                    }
                 }
                 StateHasChanged();
             }
@@ -304,6 +325,18 @@
 
     private void SetCheckbox(string projectId, string criterionId, object? value)
         => SetScore(projectId, criterionId, (value is bool b && b) ? "10" : "0");
+
+    private string GetCriterionComment(string projectId, string criterionId)
+        => comentariosCriterio.TryGetValue(projectId, out var d) && d.TryGetValue(criterionId, out var v)
+            ? v
+            : string.Empty;
+
+    private void SetCriterionComment(string projectId, string criterionId, string? text)
+    {
+        if (!comentariosCriterio.ContainsKey(projectId))
+            comentariosCriterio[projectId] = new();
+        comentariosCriterio[projectId][criterionId] = text ?? string.Empty;
+    }
 
     private double CalcularScore(string projectId)
     {
@@ -386,7 +419,12 @@
                     CriterionScores = criterios.Select(c => new
                     {
                         CriterionId = c.Id,
-                        Score = GetScore(p.Id, c.Id)
+                        Score = GetScore(p.Id, c.Id),
+                        Comment = sesion.AllowCommentsPerCriterion
+                            ? (string.IsNullOrWhiteSpace(GetCriterionComment(p.Id, c.Id))
+                                ? null
+                                : GetCriterionComment(p.Id, c.Id).Trim())
+                            : null
                     }).ToList()
                 }).ToList()
             };
@@ -433,6 +471,7 @@
         public string? CriterionType { get; set; }
         public bool AllowComments { get; set; }
         public bool RequireComments { get; set; }
+        public bool AllowCommentsPerCriterion { get; set; }
         public List<CriterionDto> Criteria { get; set; } = new();
     }
 
@@ -442,5 +481,6 @@
         public string CriterionId { get; set; } = "";
         public double Score { get; set; }
         public string? Comment { get; set; }
+        public string? CriterionComment { get; set; }
     }
 }

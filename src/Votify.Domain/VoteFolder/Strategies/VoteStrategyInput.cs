@@ -22,6 +22,6 @@ public sealed record WeightedProjectInput(
     string? Comment,
     IReadOnlyList<CriterionScoreInput> CriterionScores);
 
-public sealed record CriterionScoreInput(string CriterionId, double Score);
+public sealed record CriterionScoreInput(string CriterionId, double Score, string? Comment = null);
 
 public sealed record PointAllocationInput(string ProjectId, int Points, string? Comment);

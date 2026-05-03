@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -34,16 +34,18 @@ public class WeightedCriterionScore
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string WeightedVoteId { get; set; } = "";
     public string CriterionId { get; set; } = "";
-    public double Score { get; set; }  // 0–10
+    public double Score { get; set; }
+    public string? Comment { get; set; }
 
     public virtual WeightedVote? WeightedVote { get; set; }
 
     public WeightedCriterionScore() { }
 
-    public WeightedCriterionScore(string weightedVoteId, string criterionId, double score)
+    public WeightedCriterionScore(string weightedVoteId, string criterionId, double score, string? comment = null)
     {
         WeightedVoteId = weightedVoteId;
         CriterionId = criterionId;
         Score = score;
+        Comment = comment;
     }
 }

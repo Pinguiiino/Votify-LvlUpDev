@@ -1,63 +1,66 @@
 @page "/event/{EventId}/categories/{CategoryId}/vote-ranking"
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components.Authorization
-@inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IJSRuntime JS
 
-<PageTitle>Emitir Voto - Votify</PageTitle>
+<PageTitle>Votación - Votify</PageTitle>
 
 <div class="ranking-container">
     <header class="ranking-header">
         <button class="back-btn" @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories/{CategoryId}/projects")'>
             ← Volver a proyectos
         </button>
-        <h1>Establece tu Top @TopN</h1>
-        <p>Selecciona los proyectos en orden de preferencia (1º, 2º, 3º...) y añade un comentario opcional a cada uno.</p>
+        <h1 class="ranking-title">Votación por ranking</h1>
+        <p class="ranking-subtitle">
+            Selecciona hasta <strong>@TopN proyectos</strong> y ordénalos según tu preferencia.
+        </p>
     </header>
 
     @if (ProyectosDisponibles == null)
     {
-        <p>Cargando proyectos...</p>
+        <div class="ranking-loading">
+            <div class="spinner"></div>
+            <p>Cargando proyectos...</p>
+        </div>
+    }
+    else if (!ProyectosDisponibles.Any())
+    {
+        <div class="ranking-empty">
+            <p>No hay proyectos en esta categoría.</p>
+        </div>
     }
     else
     {
-        <div class="ranking-layout">
-
-            <div class="projects-pool">
-                <h3>Proyectos Disponibles</h3>
-                <div class="pool-list">
-                    @foreach (var p in ProyectosDisponibles.Where(x => !ProyectosSeleccionados.Contains(x)))
+        <div class="ranking-grid">
+            <div class="ranking-projects-column">
+                <h3 class="column-title">Proyectos disponibles</h3>
+                <div class="projects-list">
+                    @foreach (var p in ProyectosDisponibles.Where(p => !ProyectosSeleccionados.Contains(p)))
                     {
-                        <div class="pool-card" @onclick="() => SeleccionarProyecto(p)">
-                            <div class="pool-card-info">
-                                <strong>@p.Title</strong>
-                                @if (!string.IsNullOrWhiteSpace(p.Description))
-                                {
-                                    <span class="pool-card-desc">@p.Description</span>
-                                }
-                            </div>
-                            <span class="add-icon">+</span>
+                        <div class="project-card-mini" @onclick="() => SeleccionarProyecto(p)">
+                            <strong>@p.Title</strong>
+                            @if (!string.IsNullOrWhiteSpace(p.Description))
+                            {
+                                <p class="project-desc-mini">@p.Description</p>
+                            }
                         </div>
-                    }
-                    @if (!ProyectosDisponibles.Any(x => !ProyectosSeleccionados.Contains(x)))
-                    {
-                        <p class="pool-empty">Todos los proyectos están en tu ranking.</p>
                     }
                 </div>
             </div>
 
-            <div class="top-n-slots">
-                <h3>Tu Voto</h3>
+            <div class="ranking-slots-column">
+                <h3 class="column-title">Tu ranking</h3>
                 <div class="slots-list">
-                    @for (int i = 0; i < TopN; i++)
+                    @for (int index = 0; index < TopN; index++)
                     {
-                        int index = i;
-                        var p = ProyectosSeleccionados.Count > index ? ProyectosSeleccionados[index] : null;
+                        var i = index;
+                        var p = i < ProyectosSeleccionados.Count ? ProyectosSeleccionados[i] : null;
 
                         <div class="slot-card @(p != null ? "filled" : "empty")">
-                            <div class="slot-number">@(index + 1)º</div>
+                            <div class="slot-number">@(i + 1)º</div>
 
                             <div class="slot-body">
                                 @if (p != null)
@@ -66,14 +69,29 @@
                                         <strong class="slot-title">@p.Title</strong>
                                         <button class="remove-btn" @onclick="() => QuitarProyecto(p)" title="Quitar">✕</button>
                                     </div>
-                                    <textarea class="comment-textarea"
-                                              placeholder="Comentario anónimo opcional..."
-                                              rows="2"
-                                              maxlength="500"
-                                              @bind="comentarios[p.Id]"
-                                              @bind:event="oninput">
-                                    </textarea>
-                                    <div class="char-count">@((comentarios.TryGetValue(p.Id, out var txt) ? txt?.Length : 0) ?? 0)/500</div>
+
+                                    @if (sesion?.AllowComments == true)
+                                    {
+                                        <label class="comment-label-inline">
+                                            Comentario
+                                            @if (sesion.RequireComments)
+                                            {
+                                                <span class="required-star">*</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="optional-tag">(opcional)</span>
+                                            }
+                                        </label>
+                                        <textarea class="comment-textarea"
+                                                  placeholder="@(sesion.RequireComments ? "Comentario obligatorio..." : "Comentario anónimo opcional...")"
+                                                  rows="2"
+                                                  maxlength="500"
+                                                  @bind="comentarios[p.Id]"
+                                                  @bind:event="oninput">
+                                        </textarea>
+                                        <div class="char-count">@((comentarios.TryGetValue(p.Id, out var txt) ? txt?.Length : 0) ?? 0)/500</div>
+                                    }
                                 }
                                 else
                                 {
@@ -83,6 +101,11 @@
                         </div>
                     }
                 </div>
+
+                @if (error != null)
+                {
+                    <div class="error-banner">@error</div>
+                }
 
                 <button class="btn-primary submit-vote-btn" disabled="@(!ProyectosSeleccionados.Any())" @onclick="EnviarVoto">
                     Confirmar Mi Voto
@@ -99,10 +122,11 @@
     private int TopN = 3;
     private string SessionId = "";
     private string UserId = "";
+    private string? error;
 
+    private VotingSessionDto? sesion;
     private List<ProjectDto>? ProyectosDisponibles;
     private List<ProjectDto> ProyectosSeleccionados = new();
-
     private Dictionary<string, string> comentarios = new();
 
     protected override async Task OnInitializedAsync()
@@ -116,8 +140,9 @@
         try
         {
             var sesiones = await http.GetFromJsonAsync<List<VotingSessionDto>>(
-                    $"api/votingsessions/active/{EventId}");
-            var sesion = sesiones?.FirstOrDefault(s => s.CategoryId == CategoryId);
+                $"api/votingsessions/by-category/{CategoryId}");
+            sesion = sesiones?.FirstOrDefault(s =>
+                s.EvaluationType is "TopN" or "2");
             if (sesion != null) SessionId = sesion.Id;
         }
         catch { }
@@ -170,6 +195,15 @@
 
     private async Task EnviarVoto()
     {
+        error = null;
+
+        if (sesion?.RequireComments == true &&
+            ProyectosSeleccionados.Any(p => string.IsNullOrWhiteSpace(comentarios.TryGetValue(p.Id, out var c) ? c : null)))
+        {
+            error = "El comentario es obligatorio en cada proyecto seleccionado.";
+            return;
+        }
+
         var http = HttpClientFactory.CreateClient("API");
 
         var rankedProjects = ProyectosSeleccionados
@@ -177,9 +211,11 @@
             {
                 ProjectId = p.Id,
                 Position = index + 1,
-                Comment = comentarios.TryGetValue(p.Id, out var c) && !string.IsNullOrWhiteSpace(c)
-                                ? c.Trim()
-                                : (string?)null
+                Comment = (sesion?.AllowComments == true &&
+                           comentarios.TryGetValue(p.Id, out var c) &&
+                           !string.IsNullOrWhiteSpace(c))
+                            ? c.Trim()
+                            : (string?)null
             })
             .ToList();
 
@@ -202,17 +238,17 @@
         else
         {
             var msg = await response.Content.ReadAsStringAsync();
-            await JS.InvokeVoidAsync("alert", string.IsNullOrWhiteSpace(msg) ? "Hubo un error al guardar los votos." : msg.Trim('"'));
+            error = string.IsNullOrWhiteSpace(msg) ? "Hubo un error al guardar los votos." : msg.Trim('"');
         }
     }
 
     public class VotingSessionDto
     {
         public string Id { get; set; } = string.Empty;
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-        public string CategoryId { get; set; } = string.Empty;
-        public bool IsActive { get; set; }
+        public string EvaluationType { get; set; } = string.Empty;
+        public bool AllowComments { get; set; }
+        public bool RequireComments { get; set; }
+        public int? TopN { get; set; }
     }
 
     public class CategorySimpleDto

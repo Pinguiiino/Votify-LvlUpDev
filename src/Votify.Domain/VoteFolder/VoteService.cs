@@ -128,7 +128,7 @@ namespace Votify.Domain.VoteFolder
         [Obsolete("Usa CastVotesByStrategyAsync con WeightedScale input.")]
         public async Task CastWeightedVotesAsync(
         string userId, string categoryId, string votingSessionId,
-        List<(string ProjectId, string? Comment, List<(string CriterionId, double Score)> Scores)> projectEvals)
+        List<(string ProjectId, string? Comment, List<(string CriterionId, double Score, string? Comment)> Scores)> projectEvals)
         {
             var input = new VoteStrategyInput
             {
@@ -137,7 +137,7 @@ namespace Votify.Domain.VoteFolder
                 WeightedProjects = projectEvals.Select(e => new WeightedProjectInput(
                     e.ProjectId,
                     e.Comment,
-                    e.Scores.Select(s => new CriterionScoreInput(s.CriterionId, s.Score)).ToArray()
+                    e.Scores.Select(s => new CriterionScoreInput(s.CriterionId, s.Score, s.Comment)).ToArray()
                 )).ToArray()
             };
             await CastVotesByStrategyAsync(votingSessionId, input);
@@ -148,7 +148,7 @@ namespace Votify.Domain.VoteFolder
         {
             var votes = await _weightedRepo.GetByUserAndSessionAsync(userId, votingSessionId);
             return votes.SelectMany(wv => wv.CriterionScores.Select(cs => new WeightedVoteDto(
-                wv.ProjectId, cs.CriterionId, cs.Score, wv.Comment))).ToList();
+                wv.ProjectId, cs.CriterionId, cs.Score, wv.Comment, cs.Comment))).ToList();
         }
 
         public Task<List<Vote>> GetUserVotesAsync(string userId, string categoryId)
@@ -201,7 +201,7 @@ namespace Votify.Domain.VoteFolder
         }
     }
 
-    public record WeightedVoteDto(string ProjectId, string CriterionId, double Score, string? Comment);
+    public record WeightedVoteDto(string ProjectId, string CriterionId, double Score, string? Comment, string? CriterionComment = null);
     public record PointDistributionVoteDto(string ProjectId, int Points, string? Comment);
     public record CommentDto(string Comment, int TopPosition, string VoteType, string EvaluationType);
 }

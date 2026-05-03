@@ -32,8 +32,14 @@ public sealed class WeightedVotingStrategy : IVotingStrategy
                 string.IsNullOrWhiteSpace(e.Comment) ? null : e.Comment.Trim());
 
             foreach (var cs in e.CriterionScores)
+            {
+                var criterionComment = session.AllowCommentsPerCriterion && !string.IsNullOrWhiteSpace(cs.Comment)
+                    ? cs.Comment.Trim()
+                    : null;
+
                 wv.CriterionScores.Add(
-                    new WeightedCriterionScore(wv.Id, cs.CriterionId, Math.Clamp(cs.Score, 0, 10)));
+                    new WeightedCriterionScore(wv.Id, cs.CriterionId, Math.Clamp(cs.Score, 0, 10), criterionComment));
+            }
 
             return wv;
         }).ToList();

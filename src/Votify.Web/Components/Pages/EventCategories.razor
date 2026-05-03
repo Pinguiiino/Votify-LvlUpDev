@@ -48,12 +48,12 @@
                 @if (evento.Categories.Any())
                 {
                     <a href="@($"/dashboard/{EventId}")" class="btn-secondary" style="text-decoration:none;">Ver resultados</a>
-                    
+
                     @if (isParticipant || isPublic)
                     {
                         <a href="@($"/event/{EventId}/create-project")" class="btn-dark">+ Subir proyecto</a>
                     }
-                    
+
                     @if (isGlobalAuditor)
                     {
                         <a href="@($"/event/{EventId}/audit")" class="btn-dark">Auditar</a>
@@ -70,7 +70,8 @@
         @if (!evento.Categories.Any() && !mostrandoFormulario)
         {
             <div class="empty-state">
-                <p>Este evento todavía no tiene categorías. Crea la primera para empezar.</p>
+                <p>Este evento todavía no tiene categorías.
+                    Crea la primera para empezar.</p>
             </div>
         }
 
@@ -135,20 +136,20 @@
                                 @if (ses.VoterType == "Jury")
                                 {
                                     <div class="model-card @(ses.EvaluationType == "WeightedScale" ? "selected" : "")"
-                                         @onclick='() => SelectModel(ses, "WeightedScale", false)'>
+                                         @onclick='() => SelectModel(ses, "WeightedScale")'>
                                         <div class="model-radio"></div>
                                         <p class="model-title">Baremo ponderado</p>
                                     </div>
                                 }
 
                                 <div class="model-card @(ses.EvaluationType == "PointDistribution" ? "selected" : "")"
-                                     @onclick='() => SelectModel(ses, "PointDistribution", false)'>
+                                     @onclick='() => SelectModel(ses, "PointDistribution")'>
                                     <div class="model-radio"></div>
                                     <p class="model-title">Reparto de puntos</p>
                                 </div>
 
                                 <div class="model-card @(ses.EvaluationType == "TopN" ? "selected" : "")"
-                                     @onclick='() => SelectModel(ses, "TopN", false)'>
+                                     @onclick='() => SelectModel(ses, "TopN")'>
                                     <div class="model-radio"></div>
                                     <p class="model-title">Selección Top-N</p>
                                 </div>
@@ -174,50 +175,76 @@
                                     </div>
                                 </div>
                             }
-                        </div>
 
-                        @if (ses.VoterType == "Jury")
-                        {
-                            <div class="form-group" style="background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0;">
-                                <label style="display: flex; justify-content: space-between;">
-                                    Jurados Asignados
-                                    <span style="font-weight: normal; color: #64748b; font-size: 0.8rem;">(Introduce sus correos)</span>
-                                </label>
-                                
-                                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
-                                    <input type="email" class="form-control form-control-sm" placeholder="correo@ejemplo.com" @bind="nuevoCorreoJurado" />
-                                    <button type="button" class="btn-dark" style="padding: 0.35rem 1rem;" @onclick="async () => await AddJuror(ses)">Añadir</button>
-                                </div>
-
-                                @if (ses.JurorEmails.Any())
-                                {
-                                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                                        @foreach (var email in ses.JurorEmails)
-                                        {
-                                            <span style="background: white; border: 1px solid #cbd5e1; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem;">
-                                                @email
-                                                <button type="button" style="background: none; border: none; color: #ef4444; cursor: pointer; font-weight: bold; padding: 0;" @onclick="() => ses.JurorEmails.Remove(email)">×</button>
-                                            </span>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        }
-
-                        <div class="form-group">
-                            <label>Criterios</label>
-                            @foreach (var cr in ses.Criteria)
+                            @if (ses.EvaluationType == "WeightedScale")
                             {
-                                <div class="item-row">
-                                    <div class="item-row-main" style="grid-template-columns: 2fr 1fr auto;">
-                                        <input type="text" class="form-control form-control-sm" placeholder="Nombre" @bind="cr.Name" />
-                                        <!-- HEMOS AÑADIDO min="0.05" AL INPUT DEL PESO -->
-                                        <input type="number" step="0.05" min="0.05" max="1" class="form-control form-control-sm" placeholder="Peso" @bind="cr.Weight" />
-                                        <button type="button" class="btn-remove" @onclick="() => ses.Criteria.Remove(cr)">✕</button>
+                                <div class="model-config" style="margin-top: 0.75rem;">
+                                    <label class="field-label">Tipo de criterio</label>
+                                    <div class="criterion-type-grid" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                        <div class="model-card @(ses.CriterionType == "Numeric" ? "selected" : "")"
+                                             style="flex: 1; min-width: 140px; min-height: auto; padding: 0.65rem 0.85rem;"
+                                             @onclick='() => ses.CriterionType = "Numeric"'>
+                                            <p class="model-title" style="font-size: 0.85rem; margin: 0;"># Numérico</p>
+                                            <p class="model-desc" style="font-size: 0.75rem; margin: 0.15rem 0 0;">Puntuación 0–10 por criterio</p>
+                                        </div>
+                                        <div class="model-card @(ses.CriterionType == "Checklist" ? "selected" : "")"
+                                             style="flex: 1; min-width: 140px; min-height: auto; padding: 0.65rem 0.85rem;"
+                                             @onclick='() => ses.CriterionType = "Checklist"'>
+                                            <p class="model-title" style="font-size: 0.85rem; margin: 0;">✓ Checklist</p>
+                                            <p class="model-desc" style="font-size: 0.75rem; margin: 0.15rem 0 0;">Cumple / no cumple</p>
+                                        </div>
+                                        <div class="model-card @(ses.CriterionType == "Rubric" ? "selected" : "")"
+                                             style="flex: 1; min-width: 140px; min-height: auto; padding: 0.65rem 0.85rem;"
+                                             @onclick='() => ses.CriterionType = "Rubric"'>
+                                            <p class="model-title" style="font-size: 0.85rem; margin: 0;">▤ Rúbrica</p>
+                                            <p class="model-desc" style="font-size: 0.75rem; margin: 0.15rem 0 0;">Niveles D / C / B / A / S</p>
+                                        </div>
                                     </div>
                                 </div>
                             }
-                            <button type="button" class="btn-ghost" @onclick="() => ses.Criteria.Add(new CriterionDraft())">+ Añadir criterio</button>
+                        </div>
+
+                        @if (ses.EvaluationType == "WeightedScale")
+                        {
+                            <div class="form-group" style="margin-top: 1.5rem; border-top: 1px dashed #cbd5e1; padding-top: 1rem;">
+                                <label>Criterios de evaluación</label>
+                                @foreach (var cr in ses.Criteria)
+                                {
+                                    <div class="item-row">
+                                        <div class="item-row-main">
+                                            <input type="text" class="form-control form-control-sm" placeholder="Nombre" @bind="cr.Name" />
+                                            <input type="number" step="0.05" min="0.05" max="1" class="form-control form-control-sm" placeholder="Peso" @bind="cr.Weight" />
+                                            <button type="button" class="btn-remove" @onclick="() => ses.Criteria.Remove(cr)">✕</button>
+                                        </div>
+                                    </div>
+                                }
+                                <button type="button" class="btn-ghost" @onclick="() => ses.Criteria.Add(new CriterionDraft())">+ Añadir criterio</button>
+                            </div>
+                        }
+
+                        <div class="form-group" style="background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0;">
+                            <label style="margin-bottom: 0.5rem;">Comentarios</label>
+
+                            <label class="checkbox-row">
+                                <input type="checkbox" @bind="ses.AllowComments" />
+                                Permitir comentario por proyecto
+                            </label>
+
+                            @if (ses.AllowComments)
+                            {
+                                <label class="checkbox-row" style="margin-left: 1.5rem; margin-top: 0.4rem;">
+                                    <input type="checkbox" @bind="ses.RequireComments" />
+                                    Hacerlo obligatorio
+                                </label>
+                            }
+
+                            @if (ses.EvaluationType == "WeightedScale")
+                            {
+                                <label class="checkbox-row" style="margin-top: 0.4rem;">
+                                    <input type="checkbox" @bind="ses.AllowCommentsPerCriterion" />
+                                    Permitir comentario por criterio
+                                </label>
+                            }
                         </div>
 
                         <div class="form-group" style="margin-top: 1.5rem; border-top: 1px dashed #cbd5e1; padding-top: 1rem;">
@@ -237,6 +264,26 @@
                             }
                             <button type="button" class="btn-ghost" @onclick="() => AddPrize(ses)">+ Añadir premio</button>
                         </div>
+
+                        @if (ses.VoterType == "Jury")
+                        {
+                            <div class="form-group" style="margin-top: 1.5rem; border-top: 1px dashed #cbd5e1; padding-top: 1rem;">
+                                <label>Correos de jurado</label>
+                                <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+                                    <input type="email" class="form-control form-control-sm" placeholder="correo@ejemplo.com"
+                                           @bind="nuevoCorreoJurado" @bind:event="oninput"
+                                           @onkeydown='async e => { if (e.Key == "Enter") await AddJuror(ses); }' />
+                                    <button type="button" class="btn-ghost" @onclick="() => AddJuror(ses)">Añadir</button>
+                                </div>
+                                @foreach (var email in ses.JurorEmails)
+                                {
+                                    <div class="juror-chip">
+                                        <span>@email</span>
+                                        <button type="button" class="btn-remove" @onclick="() => ses.JurorEmails.Remove(email)">✕</button>
+                                    </div>
+                                }
+                            </div>
+                        }
 
                     </div>
                 }
@@ -272,17 +319,15 @@
             </div>
         }
 
-        <!-- === LISTA DE CATEGORÍAS === -->
         @if (evento.Categories.Any())
         {
             <div class="categories-grid">
                 @foreach (var cat in evento.Categories)
                 {
                     <div class="category-card @(expandedCategoryId == cat.Id ? "expanded" : "")">
-                        
                         <div class="cat-card-header" @onclick="() => ToggleExpand(cat.Id)">
                             <div class="cat-title-row">
-                                <div>
+                                <div style="flex:1; min-width:0;">
                                     <h3 class="cat-name">@cat.Name</h3>
                                     @if (!string.IsNullOrWhiteSpace(cat.Description))
                                     {
@@ -290,83 +335,60 @@
                                     }
                                 </div>
                             </div>
-
                             <div class="cat-summary-row">
                                 <div class="cat-pills">
                                     @foreach (var vs in cat.VotingSessions)
                                     {
-                                        <span class="pill pill-blue">
-                                            @(vs.VoterType == "Jury" ? "Jurado" : "Público") · @FormatEval(vs)
+                                        <span class="pill @(vs.VoterType == "Public" ? "pill-green" : "pill-blue")">
+                                            @(vs.VoterType == "Jury" ? "Jurado" : "Público") — @FormatEval(vs)
                                         </span>
                                     }
-                                    
                                     @if (cat.CombineResults)
                                     {
-                                        <span class="pill pill-amber">Combinado (@((cat.JuryWeight ?? 0) * 100)% / @((cat.PublicWeight ?? 0) * 100)%)</span>
+                                        <span class="pill pill-amber">Combinada @((cat.JuryWeight * 100)?.ToString("0"))% / @((cat.PublicWeight * 100)?.ToString("0"))%</span>
                                     }
-                                    
-                                    @{
-                                        int totalPremios = cat.VotingSessions.Sum(vs => vs.Prizes.Count);
-                                        if (totalPremios > 0)
-                                        {
-                                            <span class="pill pill-amber">@totalPremios premio@(totalPremios != 1 ? "s" : "")</span>
-                                        }
-                                    }
-
                                     @if (cat.AllowSelfVoting)
                                     {
-                                        <span class="pill pill-green">Autovoto permitido</span>
+                                        <span class="pill" style="background:#f3f4f6; color:#374151;">Autovoto permitido</span>
                                     }
                                 </div>
-                                
-                                <a href="@($"/event/{EventId}/categories/{cat.Id}/projects")" class="btn-explore"
-                                       @onclick:stopPropagation="true">
-                                    Explorar proyectos
-                                </a>
+                                <span style="color:#6b7280; font-size:0.85rem;">@(expandedCategoryId == cat.Id ? "▲" : "▼")</span>
                             </div>
                         </div>
 
                         @if (expandedCategoryId == cat.Id)
                         {
                             <div class="cat-card-body">
+                                @if (cat.CombineResults)
+                                {
+                                    <div class="detail-section">
+                                        <p class="detail-title">Resultados combinados</p>
+                                        <span style="font-size:0.85rem; color:#374151;">
+                                            Jurado: @((cat.JuryWeight * 100)?.ToString("0"))% / Público: @((cat.PublicWeight * 100)?.ToString("0"))%
+                                        </span>
+                                    </div>
+                                }
+
                                 @foreach (var vs in cat.VotingSessions)
                                 {
                                     <div class="detail-section">
-                                        <h4 class="detail-title">
-                                            @(vs.VoterType == "Jury" ? "Votación del jurado" : "Votación del público") — @FormatEval(vs)
-                                        </h4>
-                                        
-                                        @if (vs.VoterType == "Jury" && vs.JurorEmails.Any())
-                                        {
-                                            <div style="font-size: 0.85rem; margin-bottom: 1rem; color: #475569; background-color: #f8fafc; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #e2e8f0;">
-                                                <strong style="color: #0f172a;">Jurados asignados:</strong>
-                                                <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.4rem;">
-                                                    @foreach (var email in vs.JurorEmails)
-                                                    {
-                                                        <span style="background-color: white; border: 1px solid #cbd5e1; padding: 0.1rem 0.5rem; border-radius: 99px; font-size: 0.75rem;">@email</span>
-                                                    }
-                                                </div>
-                                            </div>
-                                        }
+                                        <p class="detail-title">
+                                            <span class="voter-tag @(vs.VoterType == "Public" ? "public" : "")">
+                                                @(vs.VoterType == "Jury" ? "Jurado" : "Público")
+                                            </span>
+                                            <span style="color:#374151; text-transform:none; letter-spacing:0; font-weight:600;">@FormatEval(vs)</span>
+                                        </p>
 
                                         @if (vs.Criteria.Any())
                                         {
-                                            <div class="criteria-list" style="margin-bottom: 1rem;">
-                                                @foreach (var cr in vs.Criteria.OrderByDescending(c => c.Weight))
+                                            <div class="criteria-list">
+                                                @foreach (var cr in vs.Criteria)
                                                 {
                                                     <div class="criterion-item">
                                                         <div class="criterion-info">
                                                             <div class="criterion-name-row">
                                                                 <span class="criterion-name">@cr.Name</span>
-                                                                @if (!string.IsNullOrWhiteSpace(vs.CriterionType))
-                                                                {
-                                                                    <span class="criterion-type-badge">@vs.CriterionType</span>
-                                                                }
                                                             </div>
-                                                            @if (!string.IsNullOrWhiteSpace(cr.Description))
-                                                            {
-                                                                <p class="criterion-desc">@cr.Description</p>
-                                                            }
                                                         </div>
                                                         <div class="weight-display">
                                                             <div class="weight-bar-container">
@@ -381,19 +403,19 @@
 
                                         @if (vs.Prizes.Any())
                                         {
-                                            <div class="prizes-list" style="margin-top: 0.5rem; border-top: 1px dashed #e2e8f0; padding-top: 1rem;">
-                                                <h5 style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #b45309; margin: 0 0 0.5rem 0;">Premios de esta votación:</h5>
+                                            <div class="prizes-list" style="margin-top:1rem; border-top:1px dashed #e2e8f0; padding-top:1rem;">
+                                                <h5 style="font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#b45309; margin:0 0 0.5rem 0;">Premios de esta votación:</h5>
                                                 @foreach (var pr in vs.Prizes.OrderBy(p => p.Position))
                                                 {
-                                                    <div class="prize-item" style="padding: 0.6rem 1rem;">
-                                                        <div class="prize-position" style="font-size: 1.1rem;">
+                                                    <div class="prize-item">
+                                                        <div class="prize-position">
                                                             @(pr.Position == 1 ? "🥇" : pr.Position == 2 ? "🥈" : pr.Position == 3 ? "🥉" : $"#{pr.Position}")
                                                         </div>
                                                         <div class="prize-info">
-                                                            <span class="prize-name" style="font-size: 0.85rem;">@pr.Name</span>
+                                                            <span class="prize-name">@pr.Name</span>
                                                             @if (!string.IsNullOrWhiteSpace(pr.Description))
                                                             {
-                                                                <p class="prize-desc" style="font-size: 0.75rem;">@pr.Description</p>
+                                                                <p class="prize-desc">@pr.Description</p>
                                                             }
                                                         </div>
                                                     </div>
@@ -401,6 +423,16 @@
                                             </div>
                                         }
                                     </div>
+                                }
+
+                                @if (isOrganizer || cat.VotingSessions.Any(vs =>
+                                    (vs.VoterType == "Jury" && vs.JurorEmails.Contains(currentUserId)) ||
+                                    (vs.VoterType == "Public" && (isParticipant || isPublic))))
+                                {
+                                    <a href="@($"/event/{EventId}/categories/{cat.Id}/projects")"
+                                       class="btn-primary" style="display:inline-block; text-decoration:none; align-self:flex-start;">
+                                        Ver proyectos y votar →
+                                    </a>
                                 }
                             </div>
                         }
@@ -421,7 +453,7 @@
     private bool guardando;
     private string? errorFormulario;
     private CategoryDraft draft = new();
-    
+
     private string nuevoCorreoJurado = string.Empty;
 
     private string currentUserId = string.Empty;
@@ -467,7 +499,20 @@
         });
     }
 
-    private void SelectModel(SessionDraft ses, string model, bool disabled) { if (!disabled) ses.EvaluationType = model; }
+    private void SelectModel(SessionDraft ses, string model)
+    {
+        ses.EvaluationType = model;
+
+        if (model != "WeightedScale")
+        {
+            ses.CriterionType = null;
+            ses.AllowCommentsPerCriterion = false;
+        }
+        else if (string.IsNullOrEmpty(ses.CriterionType))
+        {
+            ses.CriterionType = "Numeric";
+        }
+    }
 
     private void AddPrize(SessionDraft ses)
     {
@@ -518,8 +563,7 @@
     private async Task GuardarCategoria()
     {
         errorFormulario = null;
-        
-        // ── VERIFICACIÓN GLOBAL ──
+
         if (string.IsNullOrWhiteSpace(draft.Name))
         {
             errorFormulario = "El nombre de la categoría es obligatorio.";
@@ -531,12 +575,10 @@
             return;
         }
 
-        // ── VALIDACIÓN INDIVIDUAL DE SESIONES, PREMIOS, JURADOS Y CRITERIOS ──
         foreach (var ses in draft.Sessions)
         {
             string tipoVotante = ses.VoterType == "Jury" ? "Jurado" : "Público";
 
-            // ¡NUEVA VALIDACIÓN! Exigir al menos un jurado
             if (ses.VoterType == "Jury" && !ses.JurorEmails.Any())
             {
                 errorFormulario = "La votación de Jurado requiere al menos un correo de jurado asignado.";
@@ -573,15 +615,24 @@
                     return;
                 }
             }
-            
+
             if (ses.Prizes.Count == 0)
             {
                 errorFormulario = $"La votación de {tipoVotante} debe tener al menos un premio.";
                 return;
             }
+
+            if (!ses.AllowComments)
+            {
+                ses.RequireComments = false;
+            }
+
+            if (ses.EvaluationType != "WeightedScale")
+            {
+                ses.AllowCommentsPerCriterion = false;
+            }
         }
 
-        // ── ENVÍO AL BACKEND ──
         try
         {
             guardando = true;
@@ -598,9 +649,13 @@
                 {
                     s.VoterType,
                     s.EvaluationType,
+                    s.CriterionType,
                     s.TopN,
                     s.PointsPerVoter,
                     s.MaxPointsPerProject,
+                    s.AllowComments,
+                    s.RequireComments,
+                    s.AllowCommentsPerCriterion,
                     JurorEmails = s.VoterType == "Jury" ? s.JurorEmails : new List<string>(),
                     Criteria = s.Criteria.Select(c => new { c.Name, c.Weight }),
                     Prizes = s.Prizes.Select(p => new { p.Position, p.Name, p.Description })
@@ -624,7 +679,6 @@
         finally { guardando = false; }
     }
 
-    // ... (El resto de clases DTO al final se mantienen exactamente igual)
     public class EventDetailDto
     {
         public string Id { get; set; } = string.Empty;
@@ -661,6 +715,9 @@
         public int? TopN { get; set; }
         public int? PointsPerVoter { get; set; }
         public int? MaxPointsPerProject { get; set; }
+        public bool AllowComments { get; set; }
+        public bool RequireComments { get; set; }
+        public bool AllowCommentsPerCriterion { get; set; }
         public List<string> JurorEmails { get; set; } = new();
         public List<CriterionDetailDto> Criteria { get; set; } = new();
         public List<PrizeDetailDto> Prizes { get; set; } = new();
@@ -697,9 +754,13 @@
     {
         public string VoterType { get; set; } = "Jury";
         public string EvaluationType { get; set; } = "WeightedScale";
+        public string? CriterionType { get; set; } = "Numeric";
         public int? TopN { get; set; }
         public int? PointsPerVoter { get; set; }
         public int? MaxPointsPerProject { get; set; }
+        public bool AllowComments { get; set; }
+        public bool RequireComments { get; set; }
+        public bool AllowCommentsPerCriterion { get; set; }
         public List<string> JurorEmails { get; set; } = new();
         public List<CriterionDraft> Criteria { get; set; } = new();
         public List<PrizeDraft> Prizes { get; set; } = new();

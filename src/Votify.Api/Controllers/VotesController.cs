@@ -60,12 +60,12 @@ namespace Votify.Api.Controllers
                             s.ProjectId,
                             s.Comment,
                             s.CriterionScores
-                                .Select(cs => new CriterionScoreInput(cs.CriterionId, cs.Score))
+                                .Select(cs => new CriterionScoreInput(cs.CriterionId, cs.Score, cs.Comment))
                                 .ToArray()))
                         .ToArray()
                 };
                 await _service.CastVotesByStrategyAsync(dto.VotingSessionId, input);
-                return Ok(new { message = "Evaluación registrada." });
+                return Ok(new { message = "EvaluaciÃ³n registrada." });
             }
             catch (Exception ex) { return BadRequest(ex.Message); }
         }
@@ -140,7 +140,7 @@ namespace Votify.Api.Controllers
             WeightedProjects = WeightedProjects?
                 .Select(s => new WeightedProjectInput(
                     s.ProjectId, s.Comment,
-                    s.CriterionScores.Select(cs => new CriterionScoreInput(cs.CriterionId, cs.Score)).ToArray()))
+                    s.CriterionScores.Select(cs => new CriterionScoreInput(cs.CriterionId, cs.Score, cs.Comment)).ToArray()))
                 .ToArray() ?? Array.Empty<WeightedProjectInput>(),
             PointAllocations = PointAllocations?
                 .Select(a => new PointAllocationInput(a.ProjectId, a.Points, a.Comment))
@@ -151,7 +151,7 @@ namespace Votify.Api.Controllers
     public record RankedProjectDto(string ProjectId, int Position, string? Comment);
     public record BatchVoteRequest(string CategoryId, string EventId, string UserId, string VotingSessionId, List<RankedProjectDto> RankedProjects);
 
-    public record WeightedCriterionScoreDto(string CriterionId, double Score);
+    public record WeightedCriterionScoreDto(string CriterionId, double Score, string? Comment = null);
     public record WeightedProjectScoreDto(string ProjectId, string? Comment, List<WeightedCriterionScoreDto> CriterionScores);
     public record WeightedBatchRequest(string UserId, string CategoryId, string VotingSessionId, List<WeightedProjectScoreDto> Scores);
 
