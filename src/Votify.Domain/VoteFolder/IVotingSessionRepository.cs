@@ -6,5 +6,6 @@ namespace Votify.Domain.VoteFolder
         Task<List<VotingSession>> GetByCategoryAsync(string categoryId);
         Task<List<VotingSession>> GetByEventAsync(string eventId);
         Task<List<VotingSession>> GetActiveByEventAsync(string eventId);
+        Task UpdateAsync(VotingSession session);
     }
 }

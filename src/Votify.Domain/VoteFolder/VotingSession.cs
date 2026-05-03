@@ -40,7 +40,18 @@ public class VotingSession
     public DateTime CloseAt { get; set; }
     public DateTime? AdjustedCloseAt { get; set; }
     public DateTime EffectiveCloseAt => AdjustedCloseAt ?? CloseAt;
-    public bool IsOpen => DateTime.UtcNow >= OpenAt && DateTime.UtcNow <= EffectiveCloseAt;
+    public string? ManualStatus { get; set; }
+    public bool IsOpen
+    {
+        get
+        {
+            if (ManualStatus == "closed") return false;
+            if (ManualStatus == "paused") return false;
+            if (ManualStatus == "open") return true;
+            var now = DateTime.UtcNow;
+            return now >= OpenAt && now <= EffectiveCloseAt;
+        }
+    }
     public int? ReminderMinutesBeforeClose { get; set; }
     public bool IsManuallyAdjusted { get; set; } = false;
     public List<string> JurorEmails { get; set; } = new();
