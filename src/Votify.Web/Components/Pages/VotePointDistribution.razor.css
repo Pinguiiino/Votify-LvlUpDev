@@ -1,4 +1,4 @@
-﻿.pd-container {
+.pd-container {
     max-width: 720px;
     margin: 2rem auto;
     padding: 2rem;
@@ -431,4 +431,123 @@
     .pd-slider {
         min-width: 60px;
     }
+}
+
+.criteria-reference {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 0.6rem;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.criteria-reference[open] {
+    padding-bottom: 1.1rem;
+}
+
+.criteria-reference-summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    color: #92400e;
+    font-size: 0.92rem;
+}
+
+.criteria-reference-summary::-webkit-details-marker {
+    display: none;
+}
+
+.criteria-reference-summary::before {
+    content: "▸";
+    font-size: 0.75rem;
+    color: #b45309;
+    transition: transform 0.15s;
+    margin-right: 0.25rem;
+}
+
+.criteria-reference[open] .criteria-reference-summary::before {
+    transform: rotate(90deg);
+}
+
+.criteria-reference-hint {
+    font-size: 0.78rem;
+    color: #b45309;
+    background: #fef3c7;
+    border-radius: 9999px;
+    padding: 0.1rem 0.55rem;
+    margin-left: auto;
+}
+
+.criteria-reference-help {
+    margin: 0.5rem 0 0.85rem;
+    font-size: 0.82rem;
+    color: #78350f;
+    line-height: 1.4;
+}
+
+.criteria-reference-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.criteria-reference-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    align-items: center;
+    background: white;
+    border: 1px solid #fde68a;
+    border-radius: 0.45rem;
+    padding: 0.55rem 0.8rem;
+}
+
+.criteria-reference-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.criteria-reference-name {
+    font-weight: 600;
+    color: #111827;
+    font-size: 0.9rem;
+}
+
+.criteria-reference-desc {
+    font-size: 0.78rem;
+    color: #6b7280;
+    margin-top: 0.15rem;
+}
+
+.criteria-reference-weight {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 130px;
+}
+
+.criteria-reference-bar-track {
+    width: 80px;
+    height: 6px;
+    background: #fef3c7;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.criteria-reference-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+    border-radius: 9999px;
+}
+
+.criteria-reference-weight-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #b45309;
+    min-width: 35px;
+    text-align: right;
 }

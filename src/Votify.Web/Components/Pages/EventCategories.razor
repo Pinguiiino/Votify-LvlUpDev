@@ -379,6 +379,25 @@
                         @if (expandedCategoryId == cat.Id)
                         {
                             <div class="cat-card-body">
+                                @if (isOrganizer && PuedeEditarVotaciones(cat))
+                                {
+                                    <div style="display:flex; justify-content:flex-end; margin-bottom: 0.75rem;">
+                                        <a href="@($"/event/{EventId}/categories/{cat.Id}/edit-voting")"
+                                           class="btn-secondary"
+                                           style="text-decoration:none; font-size:0.85rem;">
+                                            ✎ Editar tipos de votación
+                                        </a>
+                                    </div>
+                                }
+                                else if (isOrganizer)
+                                {
+                                    <div style="display:flex; justify-content:flex-end; margin-bottom: 0.75rem;">
+                                        <span style="font-size:0.78rem; color:#94a3b8; font-style:italic;">
+                                            No se pueden editar los tipos de votación: alguna ventana ya ha comenzado.
+                                        </span>
+                                    </div>
+                                }
+
                                 @if (cat.CombineResults)
                                 {
                                     <div class="detail-section">
@@ -602,6 +621,13 @@
         "TopN" => $"Top {vs.TopN}",
         _ => vs.EvaluationType
     };
+
+    private static bool PuedeEditarVotaciones(CategoryDetailDto cat)
+    {
+        if (cat.VotingSessions == null || cat.VotingSessions.Count == 0) return false;
+        var ahora = DateTime.UtcNow;
+        return cat.VotingSessions.All(vs => !vs.OpenAt.HasValue || vs.OpenAt.Value > ahora);
+    }
 
     private void OnSessionOpenAtChange(SessionDraft ses, string? value)
     {
