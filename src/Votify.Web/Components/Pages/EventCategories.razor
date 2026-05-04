@@ -440,22 +440,33 @@
                                             </div>
                                         }
 
-                                        <div style="margin-top: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 0.9rem 1rem; display: flex; align-items: center; gap: 0.6rem; font-size: 0.82rem; color: #475569;">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                                <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z" />
-                                                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z" />
-                                            </svg>
-                                            @if (vs.OpenAt.HasValue && vs.CloseAt.HasValue)
-                                            {
-                                                <span>
-                                                    Ventana: <strong>@vs.OpenAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>
-                                                    — <strong>@vs.CloseAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>
-                                                </span>
+                                        <div style="margin-top: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 0.9rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; font-size: 0.82rem; color: #475569;">
+                                            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
+                                                    <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z" />
+                                                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z" />
+                                                </svg>
+                                                @if (vs.OpenAt.HasValue && vs.CloseAt.HasValue)
+                                                {
+                                                    <span>
+                                                        Ventana: <strong>@vs.OpenAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>
+                                                        — <strong>@vs.CloseAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span style="color: #94a3b8; font-style: italic;">Sin ventana temporal configurada</span>
+                                                }
+                                            </div>
+
+                                            @{
+                                                var estadoKey = GetVsStatusKey(vs);
                                             }
-                                            else
-                                            {
-                                                <span style="color: #94a3b8; font-style: italic;">Sin ventana temporal configurada</span>
-                                            }
+                                            <span style="font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.65rem; border-radius: 99px;
+                                                background: @(estadoKey == "open" ? "#dcfce7" : estadoKey == "paused" ? "#fef9c3" : estadoKey == "closed" ? "#f1f5f9" : estadoKey == "scheduled" ? "#e0e7ff" : "#fff7ed");
+                                                color: @(estadoKey == "open" ? "#15803d" : estadoKey == "paused" ? "#a16207" : estadoKey == "closed" ? "#64748b" : estadoKey == "scheduled" ? "#4338ca" : "#c2410c");">
+                                                @(estadoKey == "open" ? "● Abierta" : estadoKey == "paused" ? "⏸ Pausada" : estadoKey == "closed" ? "■ Cerrada" : estadoKey == "scheduled" ? "◷ Programada" : "○ Sin configurar")
+                                            </span>
                                         </div>
 
                                         @if (vs.Prizes.Any())
@@ -641,6 +652,20 @@
         ses.CloseAt = string.IsNullOrEmpty(value) ? null : DateTime.Parse(value).ToUniversalTime();
     }
 
+    private static string GetVsStatusKey(VotingSessionDto vs)
+    {
+        if (vs.ManualStatus == "closed") return "closed";
+        if (vs.ManualStatus == "paused") return "paused";
+        if (vs.ManualStatus == "open") return "open";
+
+        if (!vs.OpenAt.HasValue || !vs.CloseAt.HasValue) return "unconfigured";
+
+        var now = DateTime.UtcNow;
+        if (now > vs.CloseAt.Value) return "closed";
+        if (now >= vs.OpenAt.Value) return "open";
+        return "scheduled";
+    }
+
     private async Task GuardarCategoria()
     {
         errorFormulario = null;
@@ -824,6 +849,7 @@
         public List<PrizeDetailDto> Prizes { get; set; } = new();
         public DateTime? OpenAt { get; set; }
         public DateTime? CloseAt { get; set; }
+        public string? ManualStatus { get; set; }
     }
 
     public class CriterionDetailDto
