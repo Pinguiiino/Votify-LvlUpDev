@@ -179,7 +179,16 @@
                                     </div>
                                     <div>
                                         <label class="field-label">Máx. por proyecto</label>
-                                        <input type="number" min="1" class="form-control form-control-sm" @bind="ses.MaxPointsPerProject" style="max-width: 100px;" />
+                                        <input type="number" min="1" class="form-control form-control-sm"
+                                               @bind="ses.MaxPointsPerProject" style="max-width: 100px;
+                                        @(ses.MaxPointsPerProject > ses.PointsPerVoter && ses.PointsPerVoter > 0
+                                                                                       ? "border-color: #ef4444;" : "")" />
+                                        @if (ses.MaxPointsPerProject > ses.PointsPerVoter && ses.PointsPerVoter > 0)
+                                        {
+                                            <span style="color: #ef4444; font-size: 0.78rem; display:block; margin-top:0.2rem;">
+                                                No puede superar el total (@ses.PointsPerVoter pts)
+                                            </span>
+                                        }
                                     </div>
                                 </div>
                             }
@@ -754,6 +763,25 @@
             if (ses.EvaluationType != "WeightedScale")
             {
                 ses.AllowCommentsPerCriterion = false;
+            }
+
+            if (ses.EvaluationType == "PointDistribution")
+            {
+                if (ses.PointsPerVoter == null || ses.PointsPerVoter <= 0)
+                {
+                    errorFormulario = $"La votación de {tipoVotante}: el total de puntos debe ser mayor que 0.";
+                    return;
+                }
+                if (ses.MaxPointsPerProject == null || ses.MaxPointsPerProject <= 0)
+                {
+                    errorFormulario = $"La votación de {tipoVotante}: el máximo por proyecto debe ser mayor que 0.";
+                    return;
+                }
+                if (ses.MaxPointsPerProject > ses.PointsPerVoter)
+                {
+                    errorFormulario = $"La votación de {tipoVotante}: el máximo por proyecto ({ses.MaxPointsPerProject}) no puede superar el total de puntos ({ses.PointsPerVoter}).";
+                    return;
+                }
             }
         }
 
