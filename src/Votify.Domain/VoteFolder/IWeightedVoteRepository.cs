@@ -7,4 +7,5 @@ public interface IWeightedVoteRepository
     Task RemoveByUserAndSessionAsync(string userId, string votingSessionId);
     Task AddRangeAsync(IEnumerable<WeightedVote> votes);
     Task SaveChangesAsync();
+    Task<List<WeightedVote>> GetByProjectAsync(string projectId);
 }

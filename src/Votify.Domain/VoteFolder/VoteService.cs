@@ -166,32 +166,65 @@ namespace Votify.Domain.VoteFolder
 
         public async Task<List<CommentDto>> GetCommentsByProjectAsync(string projectId)
         {
-            var votes = await _repository.GetByProjectAsync(projectId);
-            var sessionIds = votes.Select(v => v.VotingSessionId).Distinct().ToList();
+            var normalVotes = await _repository.GetByProjectAsync(projectId);
+
+            var weightedVotes = await _weightedRepo.GetByProjectAsync(projectId);
+
+            var sessionIds = normalVotes.Select(v => v.VotingSessionId)
+                .Concat(weightedVotes.Select(wv => wv.VotingSessionId))
+                .Distinct()
+                .ToList();
+
             var sessions = new Dictionary<string, VotingSession>();
             foreach (var sid in sessionIds)
             {
                 var s = await _sessionRepo.GetByIdAsync(sid);
                 if (s != null) sessions[sid] = s;
             }
-            return votes
+
+            var finalComments = new List<CommentDto>();
+
+            var normalComments = normalVotes
                 .Where(v => !string.IsNullOrWhiteSpace(v.Comment))
-                .OrderBy(v => v.TopPosition)
                 .Select(v =>
                 {
-                    var evalType = sessions.TryGetValue(v.VotingSessionId, out var s)
-                        ? s.EvaluationType.ToString()
-                        : "TopN";
+                    var sessionExists = sessions.TryGetValue(v.VotingSessionId, out var s);
+                    var evalType = sessionExists ? s.EvaluationType.ToString() : "TopN";
+
+                    var voterType = sessionExists && s.VoterType == VoterType.Jury ? "Expert" : "Public";
+
                     var displayValue = s?.EvaluationType == EvaluationType.PointDistribution
                         ? v.Points ?? 0
                         : v.TopPosition;
+
                     return new CommentDto(
                         v.Comment!,
                         displayValue,
-                        v is ExpertVote ? "Expert" : "Public",
+                        voterType,
                         evalType);
-                })
-                .ToList();
+                });
+
+            finalComments.AddRange(normalComments);
+
+            var weightedComments = weightedVotes
+                .Where(wv => !string.IsNullOrWhiteSpace(wv.Comment))
+                .Select(wv =>
+                {
+                    var sessionExists = sessions.TryGetValue(wv.VotingSessionId, out var s);
+                    var evalType = sessionExists ? s.EvaluationType.ToString() : "WeightedScale";
+
+                    var voterType = sessionExists && s.VoterType == VoterType.Jury ? "Expert" : "Public";
+
+                    return new CommentDto(
+                        wv.Comment!,
+                        0,
+                        voterType,
+                        evalType);
+                });
+
+            finalComments.AddRange(weightedComments);
+
+            return finalComments.OrderByDescending(c => c.VoteType == "Expert").ThenBy(c => c.TopPosition).ToList();
         }
 
         public async Task<List<string>> GetVotesByUserInCategoryAsync(string userId, string categoryId)

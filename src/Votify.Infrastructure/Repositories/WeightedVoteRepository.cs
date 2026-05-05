@@ -36,4 +36,10 @@ public class WeightedVoteRepository : IWeightedVoteRepository
 
     public async Task SaveChangesAsync()
         => await _ctx.SaveChangesAsync();
+
+    public async Task<List<WeightedVote>> GetByProjectAsync(string projectId)
+        => await _ctx.WeightedVotes
+            .Include(wv => wv.CriterionScores)
+            .Where(wv => wv.ProjectId == projectId)
+            .ToListAsync();
 }
