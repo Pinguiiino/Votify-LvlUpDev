@@ -50,6 +50,8 @@ public class CategoryService
         var openAt = data.OpenAt ?? evento.StartDate;
         var closeAt = data.CloseAt ?? evento.EndDate;
 
+        ValidateEvaluationParameters(data);
+
         var sesion = new VotingSession(
             categoryId: categoria.Id,
             name: data.Name ?? $"{(data.VoterType == VoterType.Jury ? "Jurado" : "Público")} - {categoria.Name}",
@@ -66,13 +68,11 @@ public class CategoryService
             requireComments: data.RequireComments,
             allowCommentsPerCriterion: data.AllowCommentsPerCriterion);
 
-        // 1. Asignar Jurados
         if (data.VoterType == VoterType.Jury && data.JurorEmails != null)
         {
             sesion.JurorEmails = data.JurorEmails.Select(e => e.Trim().ToLower()).Distinct().ToList();
         }
 
-        // 2. Asignar Criterios
         if (data.Criteria != null)
         {
             foreach (var cr in data.Criteria)
@@ -81,9 +81,12 @@ public class CategoryService
             }
         }
 
-        // 3. Asignar Premios (¡Movido aquí!)
         if (data.Prizes == null || data.Prizes.Count == 0)
             throw new ArgumentException($"La votación '{sesion.Name}' debe tener al menos un premio.");
+
+        if (data.Prizes.Count > evento.MaxProjects)
+            throw new ArgumentException(
+                $"La votación '{sesion.Name}' no puede tener más premios ({data.Prizes.Count}) que el número máximo de proyectos del evento ({evento.MaxProjects}).");
 
         var posiciones = new HashSet<int>();
         foreach (var p in data.Prizes)
@@ -97,6 +100,89 @@ public class CategoryService
 
         return sesion;
     }
+
+    private static void ValidateEvaluationParameters(CreateVotingSessionData data)
+    {
+        switch (data.EvaluationType)
+        {
+            case EvaluationType.TopN:
+                if (!data.TopN.HasValue || data.TopN.Value <= 0)
+                    throw new ArgumentException("En una votación Top N el número de proyectos a votar debe ser mayor que 0.");
+                break;
+
+            case EvaluationType.PointDistribution:
+                if (!data.PointsPerVoter.HasValue || data.PointsPerVoter.Value <= 0)
+                    throw new ArgumentException("En una votación por reparto de puntos, el total de puntos por votante debe ser mayor que 0.");
+                if (data.MaxPointsPerProject.HasValue && data.MaxPointsPerProject.Value <= 0)
+                    throw new ArgumentException("El máximo de puntos por proyecto debe ser mayor que 0.");
+                if (data.MaxPointsPerProject.HasValue && data.MaxPointsPerProject.Value > data.PointsPerVoter.Value)
+                    throw new ArgumentException("El máximo de puntos por proyecto no puede superar el total de puntos por votante.");
+                break;
+
+            case EvaluationType.WeightedScale:
+                if (data.Criteria == null || data.Criteria.Count == 0)
+                    throw new ArgumentException("En una votación con baremo debe haber al menos un criterio.");
+                if (data.Criteria.Any(c => c.Weight <= 0))
+                    throw new ArgumentException("Todos los criterios deben tener un peso mayor que 0.");
+                break;
+        }
+    }
+
+    public async Task UpdateVotingTypeAsync(string categoryId, UpdateCategoryVotingData data)
+    {
+        var categoria = await _repository.GetForUpdateAsync(categoryId)
+            ?? throw new ArgumentException("Categoría no existe.");
+
+        var evento = await _eventRepository.GetByIdAsync(categoria.EventId)
+            ?? throw new ArgumentException("Evento no existe.");
+
+        if (data.VotingSessions == null || data.VotingSessions.Count == 0)
+            throw new ArgumentException("Debe haber al menos una votación.");
+
+        var now = DateTime.UtcNow;
+        foreach (var existente in categoria.VotingSessions)
+        {
+            if (existente.OpenAt <= now)
+                throw new InvalidOperationException(
+                    $"No se puede modificar la votación '{existente.Name}' porque su ventana ya ha comenzado.");
+        }
+
+        foreach (var sesData in data.VotingSessions)
+            ValidateEvaluationParameters(sesData);
+
+        foreach (var sesData in data.VotingSessions)
+        {
+            if (sesData.Prizes == null || sesData.Prizes.Count == 0)
+                throw new ArgumentException("Cada votación debe tener al menos un premio.");
+            if (sesData.Prizes.Count > evento.MaxProjects)
+                throw new ArgumentException(
+                    $"Una votación no puede tener más premios ({sesData.Prizes.Count}) que el número máximo de proyectos del evento ({evento.MaxProjects}).");
+        }
+
+        categoria.CombineResults = data.CombineResults;
+        categoria.JuryWeight = data.CombineResults ? data.JuryWeight : null;
+        categoria.PublicWeight = data.CombineResults ? data.PublicWeight : null;
+        categoria.AllowSelfVoting = data.AllowSelfVoting;
+
+        await _repository.RemoveVotingSessionsAsync(categoria);
+
+        foreach (var sesData in data.VotingSessions)
+        {
+            var sesion = BuildSession(categoria, sesData, evento);
+            categoria.VotingSessions.Add(sesion);
+        }
+
+        await _repository.SaveChangesAsync();
+    }
+}
+
+public class UpdateCategoryVotingData
+{
+    public bool AllowSelfVoting { get; set; }
+    public bool CombineResults { get; set; }
+    public double? JuryWeight { get; set; }
+    public double? PublicWeight { get; set; }
+    public List<CreateVotingSessionData> VotingSessions { get; set; } = new();
 }
 
 public class CreateCategoryData

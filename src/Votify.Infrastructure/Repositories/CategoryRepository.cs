@@ -16,7 +16,7 @@ public class CategoryRepository : ICategoryRepository
         => await _context.Categories
             .Include(c => c.VotingSessions)
                 .ThenInclude(vs => vs.Criteria)
-            .Include(c => c.VotingSessions) // ── AHORA CARGA LOS PREMIOS DESDE LA SESIÓN ──
+            .Include(c => c.VotingSessions)
                 .ThenInclude(vs => vs.Prizes)
             .Where(c => c.EventId == eventId)
             .AsNoTracking()
@@ -31,14 +31,34 @@ public class CategoryRepository : ICategoryRepository
         => await _context.Categories
             .Include(c => c.VotingSessions)
                 .ThenInclude(vs => vs.Criteria)
-            .Include(c => c.VotingSessions) // ── AHORA CARGA LOS PREMIOS DESDE LA SESIÓN ──
+            .Include(c => c.VotingSessions)
                 .ThenInclude(vs => vs.Prizes)
             .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == categoryId);
+
+    public async Task<Category?> GetForUpdateAsync(string categoryId)
+        => await _context.Categories
+            .Include(c => c.VotingSessions)
+                .ThenInclude(vs => vs.Criteria)
+            .Include(c => c.VotingSessions)
+                .ThenInclude(vs => vs.Prizes)
             .FirstOrDefaultAsync(c => c.Id == categoryId);
 
     public async Task AddAsync(Category category)
     {
         await _context.Categories.AddAsync(category);
+    }
+
+    public Task RemoveVotingSessionsAsync(Category category)
+    {
+        foreach (var sesion in category.VotingSessions.ToList())
+        {
+            _context.RemoveRange(sesion.Criteria);
+            _context.RemoveRange(sesion.Prizes);
+        }
+        _context.RemoveRange(category.VotingSessions);
+        category.VotingSessions.Clear();
+        return Task.CompletedTask;
     }
 
     public async Task<bool> ExistsByNameInEventAsync(string eventId, string name)

@@ -132,11 +132,9 @@ public class EventsController : ControllerBase
         e.ImageUrl,
         Modality = e.Modality(),
 
-        // ── AÑADIDOS LOS ROLES PARA EL FRONTEND ──
         Organizer = e.Organizer ?? string.Empty,
         ParticipantsIds = e.Participants?.Select(p => p.Id).ToList() ?? new List<string>(),
         PublicIds = e.Public?.Select(p => p.Id).ToList() ?? new List<string>(),
-        // ─────────────────────────────────────────
 
         Categories = categorias.Select(c => new
         {
@@ -163,6 +161,7 @@ public class EventsController : ControllerBase
                 vs.AllowCommentsPerCriterion,
                 vs.OpenAt,
                 vs.CloseAt,
+                vs.ManualStatus,
                 Criteria = vs.Criteria.Select(cr => new { cr.Id, cr.Name, cr.Weight, cr.Description }),
                 JurorEmails = vs.JurorEmails,
                 Prizes = vs.Prizes.Select(p => new

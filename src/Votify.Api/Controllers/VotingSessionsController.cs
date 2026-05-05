@@ -37,8 +37,8 @@ namespace Votify.Api.Controllers
                 vs.AllowCommentsPerCriterion,
                 StartDate = vs.OpenAt,
                 EndDate = vs.EffectiveCloseAt,
-                OpenAt = (DateTime?)vs.OpenAt,
-                CloseAt = (DateTime?)vs.EffectiveCloseAt,
+                OpenAt = vs.OpenAt.Equals(default) ? (DateTime?)null : vs.OpenAt,
+                CloseAt = vs.CloseAt.Equals(default) ? (DateTime?)null : vs.CloseAt,
                 ManualStatus = vs.ManualStatus,
                 IsActive = vs.IsOpen
             });
