@@ -345,7 +345,6 @@
                             </div>
                             <div class="cat-summary-row">
                                 <div class="cat-pills">
-                                    <!-- AQUÍ AÑADIMOS LA PÍLDORA SI ERES JURADO -->
                                     @if (cat.VotingSessions.Any(vs => vs.VoterType == "Jury" && vs.JurorEmails.Contains(currentUserEmail)))
                                     {
                                         <span class="pill" style="background-color: #fef08a; color: #92400e; border: 1px solid #fde047;">⭐ Eres jurado</span>
@@ -439,16 +438,17 @@
                                     </div>
                                 }
 
-                                <!-- HEMOS CORREGIDO EL BUG AQUÍ PARA QUE COMPRUEBE EL CORREO EN LUGAR DEL ID -->
-                                @if (isOrganizer || cat.VotingSessions.Any(vs =>
-                                    (vs.VoterType == "Jury" && vs.JurorEmails.Contains(currentUserEmail)) ||
-                                    (vs.VoterType == "Public" && (isParticipant || isPublic))))
-                                {
-                                    <a href="@($"/event/{EventId}/categories/{cat.Id}/projects")"
-                                           class="btn-primary" style="display:inline-block; text-decoration:none; align-self:flex-start;">
-                                        Ver proyectos y votar →
-                                    </a>
+                                <!-- EL BOTÓN AHORA ES VISIBLE PARA TODOS -->
+                                @{
+                                    bool puedeVotar = cat.VotingSessions.Any(vs =>
+                                        (vs.VoterType == "Jury" && vs.JurorEmails.Contains(currentUserEmail)) ||
+                                        (vs.VoterType == "Public" && (isParticipant || isPublic)));
                                 }
+                                
+                                <a href="@($"/event/{EventId}/categories/{cat.Id}/projects")"
+                                       class="btn-primary" style="display:inline-block; text-decoration:none; align-self:flex-start;">
+                                    @(puedeVotar ? "Ver proyectos y votar →" : "Ver proyectos →")
+                                </a>
                             </div>
                         }
                     </div>
@@ -470,7 +470,7 @@
     private CategoryDraft draft = new();
 
     private string currentUserId = string.Empty;
-    private string currentUserEmail = string.Empty; // <-- AÑADIDO PARA LA PÍLDORA
+    private string currentUserEmail = string.Empty;
 
     private bool isGlobalAuditor = false;
     private bool isOrganizer = false;
@@ -482,7 +482,6 @@
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
         
-        // Recuperamos el correo del usuario en minúsculas para las comparaciones
         currentUserEmail = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value?.ToLower() ?? string.Empty;
         
         isGlobalAuditor = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value == "Auditor";
@@ -540,7 +539,7 @@
 
     private async Task AddJuror(SessionDraft ses)
     {
-        ses.JurorError = null; // Limpiar errores anteriores
+        ses.JurorError = null;
         var correo = ses.InputCorreoJurado?.Trim().ToLower();
         if (string.IsNullOrWhiteSpace(correo)) return;
 
