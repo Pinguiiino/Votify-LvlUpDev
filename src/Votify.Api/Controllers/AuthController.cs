@@ -89,25 +89,44 @@ namespace Votify.Api.Controllers
             var exists = await _service.CheckEmailExistsAsync(email);
             return Ok(exists);
         }
-    }
 
-    public class LoginDto
-    {
-        public string Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-    }
 
-    public class RegisterDto
-    {
-        public string Username { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-        public string Role { get; set; } = "GeneralUser";
-    }
-    public class ChangePasswordDto
-    {
-        public string UserId { get; set; } = string.Empty;
-        public string CurrentPassword { get; set; } = string.Empty;
-        public string NewPassword { get; set; } = string.Empty;
+        [HttpGet("user-by-email")]
+        public async Task<IActionResult> GetUserByEmail([FromQuery] string email)
+        {
+            var user = await _service.GetUserByEmailAsync(email);
+            if (user == null) return NotFound();
+
+            string role = user switch
+            {
+                Organizer => "Organizer",
+                Auditor => "Auditor",
+                Jury => "Jury",
+                Participant => "Participant",
+                _ => "Public"
+            };
+
+            return Ok(new { user.Id, Role = role });
+        }
+
+        public class LoginDto
+        {
+            public string Email { get; set; } = string.Empty;
+            public string Password { get; set; } = string.Empty;
+        }
+
+        public class RegisterDto
+        {
+            public string Username { get; set; } = string.Empty;
+            public string Email { get; set; } = string.Empty;
+            public string Password { get; set; } = string.Empty;
+            public string Role { get; set; } = "GeneralUser";
+        }
+        public class ChangePasswordDto
+        {
+            public string UserId { get; set; } = string.Empty;
+            public string CurrentPassword { get; set; } = string.Empty;
+            public string NewPassword { get; set; } = string.Empty;
+        }
     }
 }

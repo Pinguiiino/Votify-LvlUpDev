@@ -29,6 +29,8 @@ namespace Votify.Domain.UserFolder
             User newUser = role switch
             {
                 "Organizer" => new Organizer(name, email, password),
+                "Auditor" => new Auditor(name, email, password),   
+                "Participant" => new Participant(name, email, password),
                 "GeneralUser" => new GeneralUser(name, email, password),
                 _ => throw new ArgumentException("El rol seleccionado no es válido.")
             };
@@ -66,6 +68,10 @@ namespace Votify.Domain.UserFolder
         {
             var user = await _repository.GetByEmailAsync(email);
             return user != null;
+        }
+        public async Task<User?> GetUserByEmailAsync(string email)
+        {
+            return await _repository.GetByEmailAsync(email);
         }
     }
 }

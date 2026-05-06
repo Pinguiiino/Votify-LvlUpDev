@@ -55,7 +55,7 @@ public class EventsController : ControllerBase
                 dto.Name, dto.Modality, dto.MaxProjects,
                 startUtc, endUtc,
                 dto.Description, dto.ImageUrl,
-                dto.OrganizerId); // Pasamos el OrganizerId
+                dto.OrganizerId); 
 
             return Ok(new { message = "Evento creado con éxito", id = evento.Id });
         }
@@ -65,7 +65,7 @@ public class EventsController : ControllerBase
         }
     }
 
-    // ── NUEVO ENDPOINT PARA INSCRIBIRSE ──
+    
     [HttpPost("{eventId}/enroll")]
     public async Task<IActionResult> EnrollInEvent(string eventId, [FromBody] EnrollRequestDto dto)
     {
@@ -79,7 +79,7 @@ public class EventsController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
-    // ─────────────────────────────────────
+    
 
     [HttpGet("{id}/stats")]
     public async Task<ActionResult<EventDashboardDto>> GetStats(string id)
@@ -95,6 +95,22 @@ public class EventsController : ControllerBase
             return StatusCode(500, $"Error al obtener estadísticas: {ex.Message}");
         }
     }
+
+    [HttpPost("{eventId}/assign-auditor")]
+    [Authorize(Roles = "Organizer")]
+    public async Task<IActionResult> AssignAuditor(string eventId, [FromBody] AssignAuditorDto dto)
+    {
+        try
+        {
+            await _service.AssignAuditorAsync(eventId, dto.AuditorId);
+            return Ok(new { message = "Auditor asignado correctamente" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
 
     [HttpPost("upload-image")]
     [RequestSizeLimit(5 * 1024 * 1024)]
@@ -133,6 +149,7 @@ public class EventsController : ControllerBase
         Modality = e.Modality(),
 
         Organizer = e.Organizer ?? string.Empty,
+        AuditorId = e.Auditor ?? string.Empty,
         ParticipantsIds = e.Participants?.Select(p => p.Id).ToList() ?? new List<string>(),
         PublicIds = e.Public?.Select(p => p.Id).ToList() ?? new List<string>(),
 
@@ -191,4 +208,9 @@ public class EnrollRequestDto
 {
     public string UserId { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
+}
+
+public class AssignAuditorDto
+{
+    public string AuditorId { get; set; } = string.Empty;
 }

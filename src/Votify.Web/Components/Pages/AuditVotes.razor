@@ -3,6 +3,8 @@
 @rendermode InteractiveServer
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager Navigation
+@using Votify.Web.Auth
+@inject CustomAuthStateProvider CustomAuthProvider
 
 <PageTitle>Auditoría del Evento - Votify</PageTitle>
 
@@ -111,13 +113,30 @@
     private bool mostrandoVotos = false;
     private string proyectoActualNombre = "";
 
-    protected override async Task OnInitializedAsync()
+    private bool _rendered = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        try {
-            var http = HttpClientFactory.CreateClient("API");
-            Solicitudes = await http.GetFromJsonAsync<List<AuditRequestView>>($"api/audit/dashboard/{EventId}") ?? new();
-        } finally {
-            isLoading = false;
+        if (firstRender && !_rendered)
+        {
+            _rendered = true;
+            try
+            {
+                var session = await CustomAuthProvider.GetUserSessionAsync();
+                var http = HttpClientFactory.CreateClient("API");
+
+                if (!string.IsNullOrEmpty(session?.Token))
+                    http.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", session.Token);
+
+                Solicitudes = await http.GetFromJsonAsync<List<AuditRequestView>>(
+                    $"api/audit/dashboard/{EventId}") ?? new();
+            }
+            finally
+            {
+                isLoading = false;
+                StateHasChanged();
+            }
         }
     }
 
@@ -128,8 +147,13 @@
         proyectoActualNombre = title;
         StateHasChanged();
 
+        var session = await CustomAuthProvider.GetUserSessionAsync();
         var http = HttpClientFactory.CreateClient("API");
-    
+
+        if (!string.IsNullOrEmpty(session?.Token))
+            http.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", session.Token);
+
         var options = new System.Text.Json.JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -139,9 +163,7 @@
             $"api/audit/project/{projectId}", options);
 
         if (resultado != null)
-        {
             VotosActuales = resultado;
-        }
 
         mostrandoVotos = true;
         StateHasChanged();

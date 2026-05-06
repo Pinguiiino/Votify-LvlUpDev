@@ -15,6 +15,7 @@ public abstract class Event
     public List<GeneralUser> Participants { get; set; }
     public List<GeneralUser> Public { get; set; }
     public string Organizer { get; set; } 
+    public string Auditor { get; set; }
 
     protected Event() { }
 

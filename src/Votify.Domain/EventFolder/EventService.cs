@@ -221,5 +221,15 @@ public class EventService
             VotosEmitidos = usuariosQueHanVotado,
             Ranking = ranking.OrderByDescending(p => p.Puntos).ToList()
         };
+
+    }
+    public async Task AssignAuditorAsync(string eventId, string auditorId)
+    {
+        var evento = await _repository.GetByIdAsync(eventId);
+        if (evento == null)
+            throw new ArgumentException("Evento no encontrado.");
+
+        evento.Auditor = auditorId;
+        await _repository.SaveChangesAsync();
     }
 }

@@ -45,6 +45,8 @@
                 bool isOrganizer = evento.Organizer == currentUserId;
                 bool isParticipant = evento.ParticipantsIds != null && evento.ParticipantsIds.Contains(currentUserId);
                 bool isPublic = evento.PublicIds != null && evento.PublicIds.Contains(currentUserId);
+                bool isAuditor = evento.AuditorId == currentUserId;
+
 
                 <div class="event-card cursor-pointer" @onclick='() => Navigation.NavigateTo($"/event/{evento.Id}/categories")'>
                      
@@ -70,6 +72,39 @@
                         <div style="margin-top: 1.5rem; border-top: 1px solid #e5e7eb; padding-top: 1rem;" @onclick:stopPropagation="true">
                             @if (isOrganizer)
                             {
+                                <div style="margin-top: 0.5rem;" @onclick:stopPropagation="true">
+                                    @if (!mostrandoAsignarAuditor)
+                                    {
+                                        <button class="btn-outline" style="width:100%; font-size:0.85rem;"
+                                                @onclick="() => mostrandoAsignarAuditor = true">
+                                            🔍 Asignar auditor
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                                            <input type="email" class="form-control" placeholder="correo@auditor.com"
+                                                   @bind="emailAuditor" />
+                                            @if (!string.IsNullOrEmpty(errorAuditor))
+                                            {
+                                                <span style="color:#ef4444; font-size:0.8rem;">@errorAuditor</span>
+                                            }
+                                            <div style="display:flex; gap:0.5rem;">
+                                                <button class="btn-primary" style="flex:1; font-size:0.85rem;"
+                                                        @onclick="() => AsignarAuditor(evento.Id)">
+                                                    Confirmar
+                                                </button>
+                                                <button class="btn-secondary" style="font-size:0.85rem;"
+                                                        @onclick="() => { mostrandoAsignarAuditor = false; errorAuditor = null; }">
+                                                    Cancelar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            @if (isOrganizer)
+                            {
                                 <span style="display: block; font-size: 0.85rem; color: #16a34a; font-weight: 600; text-align: center;">★ Creador del Evento</span>
                             }
                             else if (isParticipant)
@@ -80,9 +115,17 @@
                             {
                                 <span style="display: block; font-size: 0.85rem; color: #9333ea; font-weight: 600; text-align: center;">✓ Inscrito como Público</span>
                             }
+                            else if (isAuditor)
+                            {
+                                <a href="/event/@evento.Id/audit"
+                                   style="display: block; text-align: center; font-size: 0.85rem; color: #b45309; font-weight: 600; text-decoration: none;"
+                                   @onclick:stopPropagation="true">
+                                    🔍 Ver Auditoría
+                                </a>
+                            }
                             else if (currentUserRole != "Organizer")
                             {
-                                <button class="btn-outline" style="width: 100%; padding: 0.6rem; font-size: 0.9rem;" 
+                                <button class="btn-outline" style="width: 100%; padding: 0.6rem; font-size: 0.9rem;"
                                         @onclick='() => EnrollAsPublic(evento.Id, evento.Name)'>
                                     Inscribirse al evento
                                 </button>
@@ -195,6 +238,80 @@
         }
     }
 
+    private bool mostrandoAsignarAuditor = false;
+private string emailAuditor = string.Empty;
+private string? errorAuditor = null;
+
+private async Task AsignarAuditor(string eventId)
+{
+    errorAuditor = null;
+    if (string.IsNullOrWhiteSpace(emailAuditor))
+    {
+        errorAuditor = "Introduce un correo.";
+        return;
+    }
+
+    try
+    {
+        var http = HttpClientFactory.CreateClient("API");
+
+        // 1. Verificar que el correo existe y es Auditor
+        var existe = await http.GetFromJsonAsync<bool>(
+            $"api/auth/check-email?email={emailAuditor.Trim().ToLower()}");
+
+        if (!existe)
+        {
+            errorAuditor = "No existe ningún usuario con ese correo.";
+            return;
+        }
+
+        // 2. Obtener el Id del auditor por email
+        var auditorUser = await http.GetFromJsonAsync<UserDto>(
+            $"api/auth/user-by-email?email={emailAuditor.Trim().ToLower()}");
+
+        if (auditorUser == null || auditorUser.Role != "Auditor")
+        {
+            errorAuditor = "Ese usuario no tiene rol de Auditor.";
+            return;
+        }
+
+        // 3. Asignar el auditor al evento
+        var session = await ((CustomAuthStateProvider)AuthStateProvider).GetUserSessionAsync();
+        http.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", session?.Token);
+
+        var response = await http.PostAsJsonAsync(
+            $"api/events/{eventId}/assign-auditor",
+            new { AuditorId = auditorUser.Id });
+
+        if (response.IsSuccessStatusCode)
+        {
+            mostrandoAsignarAuditor = false;
+            emailAuditor = string.Empty;
+            await LoadEvents();
+        }
+        else
+        {
+            errorAuditor = (await response.Content.ReadAsStringAsync()).Trim('"');
+        }
+    }
+    catch
+    {
+        errorAuditor = "Error de conexión.";
+    }
+}
+
+    public class UserDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+    }
+
+    public class AssignAuditorDto
+    {
+        public string AuditorId { get; set; } = string.Empty;
+    }
+
     public class EventDto
     {
         public string Id { get; set; } = string.Empty;
@@ -207,5 +324,6 @@
         public string Organizer { get; set; } = string.Empty;
         public List<string> ParticipantsIds { get; set; } = new();
         public List<string> PublicIds { get; set; } = new();
+        public string AuditorId { get; set; } = string.Empty;
     }
 }

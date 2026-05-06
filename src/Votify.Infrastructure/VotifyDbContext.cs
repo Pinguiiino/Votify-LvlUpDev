@@ -59,11 +59,12 @@ public class VotifyDbContext : DbContext
 
         modelBuilder.Entity<User>()
             .HasDiscriminator<string>("TipoUsuario")
-            .HasValue<Organizer>("Organizador")
-            .HasValue<Public>("PublicoGeneral")
-            .HasValue<Jury>("Jurado")
-            .HasValue<Participant>("Participante")
-            .HasValue<GeneralUser>("UsuarioGeneral");
+            .HasValue<Organizer>("Organizer")
+            .HasValue<Participant>("Participant")
+            .HasValue<GeneralUser>("GeneralUser")
+            .HasValue<Votify.Domain.UserFolder.Public>("Public")
+            .HasValue<Jury>("Jury")
+            .HasValue<Auditor>("Auditor");
 
         modelBuilder.Entity<Voter>().HasBaseType<User>();
         modelBuilder.Entity<Jury>().HasBaseType<Voter>();
