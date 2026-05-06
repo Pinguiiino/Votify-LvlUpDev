@@ -2,11 +2,13 @@
 @rendermode InteractiveServer
 @using Votify.Web.Helpers
 @using Microsoft.AspNetCore.Components.Authorization
+@using Votify.Web.Auth
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
 @inject HttpClient Http
 @inject IJSRuntime JS
 @inject AuthenticationStateProvider AuthStateProvider
+@inject CustomAuthStateProvider CustomAuthProvider
 
 <PageTitle>Tus proyectos - Votify</PageTitle>
 
@@ -292,6 +294,15 @@
         try
         {
             var http = HttpClientFactory.CreateClient("API");
+
+            var session = await CustomAuthProvider.GetUserSessionAsync();
+
+           
+            if (!string.IsNullOrEmpty(session?.Token))
+            {
+                http.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", session.Token);
+            }
 
             var response = await http.PostAsync($"api/audit/request/{proyecto.Id}", null);
             response.EnsureSuccessStatusCode();
