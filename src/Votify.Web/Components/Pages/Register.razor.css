@@ -10,7 +10,7 @@
 
 .auth-card {
     width: 100%;
-    max-width: 440px;
+    max-width: 540px;
     background: #ffffff;
     padding: 2.5rem;
     border-radius: 1rem;
@@ -118,6 +118,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    transform: translateX(7px);
 }
 
     .eye-btn:hover {
