@@ -35,13 +35,13 @@ El frontend Blazor lo recibe en el body del login, lo persiste (en ProtectedSess
 - El rol y el email viajan en el token, lo que permite que componentes como Categories.razor tomen decisiones de UI (mostrar botón de auditor, jurado, organizador) sin roundtrips extras.
 - Integración directa con el sistema de claims de ASP.NET Core y con AuthenticationStateProvider de Blazor.
 
-** Negativas / trade-offs:**
+**Negativas / trade-offs:**
 - La clave de firma es simétrica (Jwt:Key en configuración). Si se filtra, cualquiera puede emitir tokens válidos. En producción requeriría rotar a RSA asimétrico o gestión de secretos externa.
 - No hay revocación de tokens. Si un usuario cambia de rol o es expulsado, su token sigue siendo válido hasta que expire (8 horas). No existe blacklist.
 - El rol se fija en el momento del login. Si el rol cambia en base de datos, el usuario necesita volver a autenticarse para que el cambio se refleje.
 - El token se almacena en ProtectedSessionStorage (sessionStorage cifrado por ASP .NET Core Data Protection), lo que mitiga parcialmente el riesgo XSS respecto a localStorage plano, aunque no lo elimina por completo.
 
-** Riesgos y mitigaciones: **
+**Riesgos y mitigaciones:**
 - Filtrado de clave: Usar variables de entorno o un secrets manager (Azure Key Vault, etc.) en lugar de appsettings.json en producción.
 - Sin revocación: Aceptable en el contexto del sprint; si se necesitara, se podría añadir una tabla de tokens revocados o reducir el TTL.
 - XSS: Mitigable con Content Security Policy y validación de inputs.
