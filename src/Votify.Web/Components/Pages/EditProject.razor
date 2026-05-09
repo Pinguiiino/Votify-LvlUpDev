@@ -1,0 +1,513 @@
+@page "/edit-project/{ProjectId}"
+@rendermode InteractiveServer
+@using Votify.Web.Auth
+@using Votify.Web.Helpers
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
+@inject CustomAuthStateProvider CustomAuthProvider
+@inject IJSRuntime JS
+
+<PageTitle>Editar Proyecto - Votify</PageTitle>
+
+<div class="edit-project-container">
+    @if (cargando)
+    {
+        <p style="text-align: center; color: #6b7280; padding: 2rem;"><em>Cargando proyecto...</em></p>
+    }
+    else if (errorCarga != null)
+    {
+        <div class="ep-error-box">
+            <p>@errorCarga</p>
+            <button type="button" class="btn-secondary" @onclick="VolverAMisProyectos">Volver</button>
+        </div>
+    }
+    else
+    {
+        <header class="ep-header">
+            <div class="ep-header-title">
+                <h1>Editar Proyecto</h1>
+                <p class="ep-header-subtitle">@projectModel.Title</p>
+            </div>
+            <button type="button" class="close-btn" @onclick="VolverAMisProyectos" aria-label="Cerrar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                </svg>
+            </button>
+        </header>
+
+        <div class="ep-body">
+
+            <div class="form-group">
+                <label>Imagen del proyecto</label>
+                @if (!string.IsNullOrEmpty(projectModel.ImageUrl))
+                {
+                    <img src="@(apiBaseUrl + projectModel.ImageUrl)" alt="Imagen del proyecto" class="ep-image-preview" />
+                }
+                else
+                {
+                    <div class="ep-image-placeholder">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+                            <path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.094l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z" />
+                        </svg>
+                        <span>Sin imagen</span>
+                    </div>
+                }
+
+                <div class="ep-image-actions">
+                    <label class="btn-primary ep-btn-change-image">
+                        Cambiar imagen
+                        <InputFile OnChange="OnImagenSeleccionada" accept="image/*" style="display: none;" />
+                    </label>
+                    @if (!string.IsNullOrEmpty(projectModel.ImageUrl))
+                    {
+                        <button type="button" class="btn-outline-danger" @onclick="QuitarImagen">
+                            Quitar imagen
+                        </button>
+                    }
+                </div>
+
+                @if (subiendoImagen)
+                {
+                    <div class="ep-info-text">Subiendo imagen...</div>
+                }
+                @if (errorImagen != null)
+                {
+                    <div class="validation-error">@errorImagen</div>
+                }
+            </div>
+
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea class="form-control ep-textarea" rows="4" maxlength="500"
+                          @bind="projectModel.Description" @bind:event="oninput"
+                          placeholder="Describe brevemente tu proyecto..."></textarea>
+                <div class="ep-char-counter">
+                    @((projectModel.Description ?? "").Length) / 500 caracteres
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Materiales</label>
+                <p class="ep-section-help">Fotos, vídeos o documentos asociados al proyecto</p>
+
+                <div class="materials-list">
+                    @foreach (var mat in projectModel.Materials)
+                    {
+                        @if (materialEditando == mat)
+                        {
+                            <div class="add-category-box">
+                                <div class="form-group">
+                                    <label>Tipo de archivo</label>
+                                    <select class="form-control form-control-sm" @bind="mat.Type">
+                                        @foreach (var tipo in tiposMaterial)
+                                        {
+                                            <option value="@tipo">@(Translations.TipoMaterial.GetValueOrDefault(tipo, tipo))</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Enlace</label>
+                                    <input type="text" class="form-control form-control-sm @(errorUrlEdicion ? "is-invalid" : "")"
+                                           placeholder="https://..." @bind="mat.Url" />
+                                    @if (errorUrlEdicion)
+                                    {
+                                        <div class="validation-error">
+                                            Introduce una URL válida (debe empezar por http:// o https://)
+                                        </div>
+                                    }
+                                </div>
+                                <div class="form-group">
+                                    <label>Descripción del material</label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="Opcional"
+                                           @bind="mat.Description" />
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                                    <button type="button" class="btn-primary" style="flex: 1;"
+                                            @onclick="() => ConfirmarEdicionMaterial(mat)">
+                                        Guardar
+                                    </button>
+                                    <button type="button" class="btn-secondary" style="flex: 1;"
+                                            @onclick="CancelarEdicionMaterial">
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="ep-material-card">
+                                <div class="ep-material-icon">
+                                    @switch (mat.Type)
+                                    {
+                                        case "Photo":
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+                                                <path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.094l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z" />
+                                            </svg>
+                                            break;
+                                        case "Video":
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M0 1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V1zm4 0v6h4V1H4zm8 8H4v6h8V9zM1 1v2h2V1H1zm2 3H1v2h2V4zM1 7v2h2V7H1zm2 3H1v2h2v-2zm-2 3v2h2v-2H1zM15 1h-2v2h2V1zm-2 3v2h2V4h-2zm2 3h-2v2h2V7zm-2 3v2h2v-2h-2zm2 3h-2v2h2v-2zM2 4.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-3z" />
+                                            </svg>
+                                            break;
+                                        case "Audio":
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z" />
+                                                <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.483 5.483 0 0 1 11.025 8a5.483 5.483 0 0 1-1.61 3.89l.706.706z" />
+                                                <path d="M8.707 11.182A4.486 4.486 0 0 0 10.025 8a4.486 4.486 0 0 0-1.318-3.182L8 5.525A3.489 3.489 0 0 1 9.025 8 3.49 3.49 0 0 1 8 10.475l.707.707zM6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06z" />
+                                            </svg>
+                                            break;
+                                        case "Document":
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z" />
+                                            </svg>
+                                            break;
+                                        default:
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M4.406 1.342A5.53 5.53 0 0 1 8 0c2.69 0 4.923 2 5.166 4.579C14.758 4.804 16 6.137 16 7.773 16 9.569 14.502 11 12.687 11H10a.5.5 0 0 1 0-1h2.688C13.979 10 15 8.988 15 7.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 2.825 10.328 1 8 1a4.53 4.53 0 0 0-2.941 1.1c-.757.652-1.153 1.438-1.153 2.055v.448l-.445.049C2.064 4.805 1 5.952 1 7.318 1 8.785 2.23 10 3.781 10H6a.5.5 0 0 1 0 1H3.781C1.708 11 0 9.366 0 7.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383z" />
+                                                <path d="M7.646 15.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 14.293V7.5a.5.5 0 0 0-1 0v6.793l-2.146-2.147a.5.5 0 0 0-.708.708l3 3z" />
+                                            </svg>
+                                            break;
+                                    }
+                                </div>
+                                <div class="ep-material-info">
+                                    <div class="ep-material-type">@(Translations.TipoMaterial.GetValueOrDefault(mat.Type, mat.Type))</div>
+                                    <div class="ep-material-url">@mat.Url</div>
+                                    @if (!string.IsNullOrWhiteSpace(mat.Description))
+                                    {
+                                        <div class="ep-material-desc">@mat.Description</div>
+                                    }
+                                </div>
+                                <div class="ep-material-actions">
+                                    <button type="button" class="btn-edit" title="Editar"
+                                            @onclick="() => IniciarEdicionMaterial(mat)">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="btn-delete" title="Eliminar"
+                                            @onclick="() => projectModel.Materials.Remove(mat)">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                @if (!mostrandoFormMaterial)
+                {
+                    <button type="button" class="ep-add-material-btn" @onclick="MostrarFormMaterial">
+                        <span style="font-size: 1.2rem;">+</span> Agregar Foto, Vídeo o Documento
+                    </button>
+                }
+                else
+                {
+                    <div class="add-category-box">
+                        <div class="form-group">
+                            <label>Tipo de archivo</label>
+                            <select class="form-control form-control-sm" @bind="nuevoMaterial.Type">
+                                @foreach (var tipo in tiposMaterial)
+                                {
+                                    <option value="@tipo">@(Translations.TipoMaterial.GetValueOrDefault(tipo, tipo))</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Enlace</label>
+                            <input type="text" class="form-control form-control-sm @(errorUrl ? "is-invalid" : "")"
+                                   placeholder="https://..." @bind="nuevoMaterial.Url" />
+                            @if (errorUrl)
+                            {
+                                <div class="validation-error">
+                                    Introduce una URL válida (debe empezar por http:// o https://)
+                                </div>
+                            }
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción del material</label>
+                            <input type="text" class="form-control form-control-sm" placeholder="Opcional"
+                                   @bind="nuevoMaterial.Description" />
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                            <button type="button" class="btn-primary" style="flex: 1;"
+                                    @onclick="ConfirmarMaterial">Añadir</button>
+                            <button type="button" class="btn-secondary" style="flex: 1;"
+                                    @onclick="OcultarFormMaterial">Cancelar</button>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (errorGuardado != null)
+            {
+                <div class="validation-error" style="margin-top: 1rem;">@errorGuardado</div>
+            }
+        </div>
+
+        <footer class="ep-footer">
+            <button type="button" class="btn-secondary ep-btn-cancel" @onclick="VolverAMisProyectos" disabled="@guardando">
+                Cancelar
+            </button>
+            <button type="button" class="btn-primary ep-btn-save" @onclick="GuardarCambios" disabled="@guardando">
+                @(guardando ? "Guardando..." : "Guardar cambios")
+            </button>
+        </footer>
+    }
+</div>
+
+@code {
+    [Parameter] public string ProjectId { get; set; } = string.Empty;
+
+    private EditProjectModel projectModel = new();
+    private MaterialDraft nuevoMaterial = new();
+    private MaterialDraft? materialEditando = null;
+    private bool mostrandoFormMaterial = false;
+    private bool errorUrl = false;
+    private bool errorUrlEdicion = false;
+    private bool subiendoImagen = false;
+    private bool cargando = true;
+    private bool guardando = false;
+    private string? errorImagen;
+    private string? errorCarga;
+    private string? errorGuardado;
+    private string apiBaseUrl = string.Empty;
+    private string currentUserId = string.Empty;
+    private List<string> tiposMaterial = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var session = await CustomAuthProvider.GetUserSessionAsync();
+        currentUserId = session?.Id ?? string.Empty;
+
+        var http = HttpClientFactory.CreateClient("API");
+        apiBaseUrl = http.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
+
+        try
+        {
+            tiposMaterial = await http.GetFromJsonAsync<List<string>>("/api/projects/material-types") ?? new();
+        }
+        catch
+        {
+            tiposMaterial = new();
+        }
+
+        try
+        {
+            var dto = await http.GetFromJsonAsync<ProjectDetailDto>($"/api/projects/{ProjectId}");
+            if (dto == null)
+            {
+                errorCarga = "No se pudo cargar el proyecto.";
+            }
+            else if (!string.IsNullOrEmpty(dto.OwnerId)
+                     && !string.Equals(dto.OwnerId, currentUserId, StringComparison.Ordinal))
+            {
+                errorCarga = "No tienes permiso para editar este proyecto.";
+            }
+            else
+            {
+                projectModel = new EditProjectModel
+                {
+                    Id = dto.Id,
+                    Title = dto.Title,
+                    Description = dto.Description ?? string.Empty,
+                    ImageUrl = dto.ImageUrl,
+                    Materials = dto.Materials.Select(m => new MaterialDraft
+                    {
+                        Type = m.Type,
+                        Url = m.Url,
+                        Description = m.Description
+                    }).ToList()
+                };
+            }
+        }
+        catch
+        {
+            errorCarga = "Ha ocurrido un error al cargar el proyecto.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task OnImagenSeleccionada(InputFileChangeEventArgs e)
+    {
+        errorImagen = null;
+        var archivo = e.File;
+        if (archivo == null) return;
+
+        const long maxBytes = 5 * 1024 * 1024;
+        if (archivo.Size > maxBytes)
+        {
+            errorImagen = "La imagen excede el tamaño máximo de 5 MB.";
+            return;
+        }
+
+        try
+        {
+            subiendoImagen = true;
+            var http = HttpClientFactory.CreateClient("API");
+
+            using var content = new MultipartFormDataContent();
+            var streamContent = new StreamContent(archivo.OpenReadStream(maxBytes));
+            streamContent.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue(archivo.ContentType);
+            content.Add(streamContent, "file", archivo.Name);
+
+            var respuesta = await http.PostAsync("/api/projects/upload-image", content);
+            if (respuesta.IsSuccessStatusCode)
+            {
+                var json = await respuesta.Content.ReadFromJsonAsync<UploadResponse>();
+                projectModel.ImageUrl = json?.Url;
+            }
+            else
+            {
+                errorImagen = await respuesta.Content.ReadAsStringAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorImagen = $"No se pudo subir la imagen: {ex.Message}";
+        }
+        finally
+        {
+            subiendoImagen = false;
+            StateHasChanged();
+        }
+    }
+
+    private void QuitarImagen() => projectModel.ImageUrl = null;
+
+    private void MostrarFormMaterial()
+    {
+        nuevoMaterial = new() { Type = tiposMaterial.FirstOrDefault() ?? "Other" };
+        errorUrl = false;
+        mostrandoFormMaterial = true;
+    }
+
+    private void OcultarFormMaterial() => mostrandoFormMaterial = false;
+
+    private void ConfirmarMaterial()
+    {
+        if (string.IsNullOrWhiteSpace(nuevoMaterial.Url)) { errorUrl = true; return; }
+        if (!Uri.TryCreate(nuevoMaterial.Url, UriKind.Absolute, out var uri)
+            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+        { errorUrl = true; return; }
+
+        errorUrl = false;
+        projectModel.Materials.Add(nuevoMaterial);
+        mostrandoFormMaterial = false;
+    }
+
+    private void IniciarEdicionMaterial(MaterialDraft mat)
+    {
+        materialEditando = mat;
+        errorUrlEdicion = false;
+        mostrandoFormMaterial = false;
+    }
+
+    private void ConfirmarEdicionMaterial(MaterialDraft mat)
+    {
+        if (string.IsNullOrWhiteSpace(mat.Url)) { errorUrlEdicion = true; return; }
+        if (!Uri.TryCreate(mat.Url, UriKind.Absolute, out var uri)
+            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+        { errorUrlEdicion = true; return; }
+
+        errorUrlEdicion = false;
+        materialEditando = null;
+    }
+
+    private void CancelarEdicionMaterial() => materialEditando = null;
+
+    private async Task GuardarCambios()
+    {
+        errorGuardado = null;
+        guardando = true;
+
+        try
+        {
+            var payload = new
+            {
+                RequesterId = currentUserId,
+                projectModel.Description,
+                projectModel.ImageUrl,
+                Materials = projectModel.Materials.Select(m => new
+                {
+                    Type = m.Type,
+                    m.Url,
+                    m.Description
+                })
+            };
+
+            var http = HttpClientFactory.CreateClient("API");
+            var response = await http.PutAsJsonAsync($"/api/projects/{ProjectId}", payload);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Navigation.NavigateTo("/my-projects");
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                errorGuardado = string.IsNullOrWhiteSpace(error)
+                    ? "No se pudieron guardar los cambios."
+                    : error.Trim('"');
+            }
+        }
+        catch (Exception)
+        {
+            errorGuardado = "No se pudo conectar con la API.";
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private void VolverAMisProyectos() => Navigation.NavigateTo("/my-projects");
+
+    private class UploadResponse
+    {
+        public string? Url { get; set; }
+    }
+
+    public class EditProjectModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string? ImageUrl { get; set; }
+        public List<MaterialDraft> Materials { get; set; } = new();
+    }
+
+    public class MaterialDraft
+    {
+        public string Type { get; set; } = "Other";
+        public string Url { get; set; } = string.Empty;
+        public string? Description { get; set; }
+    }
+
+    public class ProjectDetailDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string EventId { get; set; } = string.Empty;
+        public string? OwnerId { get; set; }
+        public string? ImageUrl { get; set; }
+        public string ProjectType { get; set; } = string.Empty;
+        public List<MaterialDetailDto> Materials { get; set; } = new();
+    }
+
+    public class MaterialDetailDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Type { get; set; } = "Other";
+        public string Url { get; set; } = string.Empty;
+        public string? Description { get; set; }
+    }
+}

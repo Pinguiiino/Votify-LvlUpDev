@@ -40,6 +40,7 @@
             var evento = ListaEventos.FirstOrDefault(e => e.Id == grupo.Key);
             var nombreEvento = evento?.Name ?? "Evento Desconocido";
             var estadoEvento = GetEventStatus(evento);
+            var puedeEditar = estadoEvento == EventStatus.Activo || estadoEvento == EventStatus.Proximo;
 
             <div class="event-section" style="margin-bottom: 3rem;">
                 <h2 style="font-size: 1.4rem; color: #111827; margin-bottom: 1.25rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
@@ -55,6 +56,17 @@
                     @foreach (var proyecto in grupo.Value)
                     {
                         <div class="project-card" @onclick="() => AbrirPopup(proyecto)">
+                            <button type="button"
+                                    class="edit-project-btn @(puedeEditar ? "" : "disabled")"
+                                    title="@(puedeEditar ? "Editar proyecto" : "El evento ha finalizado")"
+                                    disabled="@(!puedeEditar)"
+                                    @onclick:stopPropagation="true"
+                                    @onclick="() => IrAEditar(proyecto)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
+                                </svg>
+                            </button>
+
                             @if (!string.IsNullOrWhiteSpace(proyecto.ImageUrl))
                             {
                                 <img src="@(apiBaseUrl + proyecto.ImageUrl)" alt="@proyecto.Title" class="card-image" />
@@ -85,14 +97,13 @@
             </div>
         }
     }
-</div> <!-- Cerramos el contenedor principal AQUÍ -->
-<!-- === MODAL FLOTANTE ARREGLADO Y ESTILIZADO === -->
+</div>
 @if (proyectoSeleccionado != null)
 {
     <div class="modal-overlay" @onclick="CerrarPopup" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(17, 24, 39, 0.7); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(4px);">
-        
+
         <div class="modal-content" @onclick:stopPropagation="true" style="background: white; width: 90%; max-width: 650px; border-radius: 1rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); padding: 2rem; position: relative; max-height: 85vh; overflow-y: auto;">
-            
+
             <button class="close-btn" @onclick="CerrarPopup" style="position: absolute; top: 1.5rem; right: 1.5rem; width: 2rem; height: 2rem; border-radius: 50%; border: none; background: #f3f4f6; color: #4b5563; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">✕</button>
 
             <h2 class="modal-title" style="font-size: 1.5rem; font-weight: 800; color: #111827; margin-top: 0; margin-bottom: 1.5rem; padding-right: 2rem;">@proyectoSeleccionado.Title</h2>
@@ -112,7 +123,6 @@
                              style="width: 100%; border-radius: 0.75rem; margin-top: 1.5rem; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);" />
                     }
 
-                    <!-- Botón de auditoría -->
                     @if (!proyectosAuditados.Contains(proyectoSeleccionado.Id))
                     {
                         <button class="btn-outline" style="margin-top: 1.5rem; display: block; width: fit-content; padding: 0.5rem 1rem; border: 1.5px solid #d1d5db; background: transparent; color: #111827; border-radius: 0.5rem; font-weight: 600; cursor: pointer;"
@@ -284,6 +294,9 @@
         comentariosProyecto = new();
     }
 
+    private void IrAEditar(ProjectDto proyecto)
+        => Navigation.NavigateTo($"/edit-project/{proyecto.Id}");
+
     private async Task PedirAuditoria(ProjectDto proyecto)
     {
         bool confirmar = await JS.InvokeAsync<bool>("confirm",
@@ -297,7 +310,6 @@
 
             var session = await CustomAuthProvider.GetUserSessionAsync();
 
-           
             if (!string.IsNullOrEmpty(session?.Token))
             {
                 http.DefaultRequestHeaders.Authorization =

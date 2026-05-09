@@ -48,6 +48,45 @@ namespace Votify.Api.Controllers
             return Ok(projects.Select(ToDto));
         }
 
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(string id)
+        {
+            var project = await _service.GetByIdAsync(id);
+            if (project == null) return NotFound();
+            return Ok(ToDto(project));
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(string id, [FromBody] UpdateProjectDto dto)
+        {
+            try
+            {
+                var materials = dto.Materials.Select(m => (
+                    Enum.TryParse<MaterialType>(m.Type, out var mt) ? mt : MaterialType.Other,
+                    m.Url,
+                    m.Description
+                )).ToList();
+
+                var project = await _service.UpdateProjectAsync(
+                    id, dto.RequesterId ?? string.Empty,
+                    dto.Description, dto.ImageUrl, materials);
+
+                return Ok(new { message = "Proyecto actualizado", id = project.Id });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpGet("by-category/{categoryId}")]
         public async Task<IActionResult> GetByCategory(string categoryId)
         {
@@ -118,6 +157,14 @@ namespace Votify.Api.Controllers
         public string? ImageUrl { get; set; }
         public string? OwnerId { get; set; }
         public List<string> CategoryIds { get; set; } = new();
+        public List<MaterialDto> Materials { get; set; } = new();
+    }
+
+    public class UpdateProjectDto
+    {
+        public string? RequesterId { get; set; }
+        public string? Description { get; set; }
+        public string? ImageUrl { get; set; }
         public List<MaterialDto> Materials { get; set; } = new();
     }
 

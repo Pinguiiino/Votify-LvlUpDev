@@ -1,0 +1,402 @@
+.edit-project-container {
+    background-color: #ffffff;
+    border-radius: 1rem;
+    padding: 0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    max-width: 720px;
+    margin: 2rem auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+}
+
+.ep-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.75rem 2rem 1.25rem 2rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.ep-header-title h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+}
+
+.ep-header-subtitle {
+    font-size: 0.95rem;
+    color: #6b7280;
+    margin: 0.25rem 0 0 0;
+}
+
+.ep-body {
+    padding: 1.75rem 2rem;
+    max-height: 65vh;
+    overflow-y: auto;
+}
+
+.ep-footer {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem 2rem 1.5rem 2rem;
+    border-top: 1px solid #e5e7eb;
+    background-color: #ffffff;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.95rem;
+    color: #1f2937;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #111827;
+    box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.1);
+}
+
+.form-control.is-invalid {
+    border-color: #ef4444;
+    background-color: #fef2f2;
+}
+
+.form-control.is-invalid:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+}
+
+.btn-primary {
+    background-color: #0f172a;
+    color: #ffffff;
+    border: none;
+    border-radius: 0.6rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-family: inherit;
+    line-height: 1;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: #334155;
+}
+
+.btn-primary:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background-color: #ffffff;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    border-radius: 0.6rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
+}
+
+.btn-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-outline-danger {
+    background-color: #ffffff;
+    color: #dc2626;
+    border: 1.5px solid #dc2626;
+    border-radius: 0.6rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    line-height: 1;
+}
+
+.btn-outline-danger:hover {
+    background-color: #fef2f2;
+}
+
+.btn-edit {
+    background: none;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0.4rem 0.55rem;
+    border-radius: 0.4rem;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-edit:hover {
+    background-color: #e0e7ff;
+    color: #4338ca;
+    border-color: #c7d2fe;
+}
+
+.btn-delete {
+    background: none;
+    border: 1px solid #e5e7eb;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 0.4rem 0.55rem;
+    border-radius: 0.4rem;
+    font-weight: bold;
+    transition: background-color 0.2s, border-color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-delete:hover {
+    background-color: #fee2e2;
+    border-color: #fecaca;
+}
+
+.close-btn {
+    background: none;
+    border: 1px solid #e5e7eb;
+    color: #4b5563;
+    cursor: pointer;
+    padding: 0.4rem;
+    border-radius: 0.4rem;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+.validation-error {
+    color: #ef4444;
+    font-size: 0.8rem;
+    margin-top: 0.35rem;
+    font-weight: 500;
+}
+
+.add-category-box {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+    margin-top: 0.5rem;
+}
+
+.materials-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+}
+
+.ep-btn-cancel {
+    flex: 0 0 auto;
+    min-width: 140px;
+}
+
+.ep-btn-save {
+    flex: 1;
+    padding: 0.85rem 1.5rem;
+}
+
+.ep-image-preview {
+    display: block;
+    width: 220px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 0.75rem;
+}
+
+.ep-image-placeholder {
+    width: 220px;
+    height: 150px;
+    border-radius: 0.75rem;
+    border: 1.5px dashed #d1d5db;
+    background-color: #f9fafb;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: #9ca3af;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+.ep-image-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.ep-btn-change-image {
+    cursor: pointer;
+    color: #ffffff !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 0 !important;
+}
+
+.ep-textarea {
+    resize: vertical;
+    min-height: 90px;
+    background-color: #f9fafb;
+}
+
+.ep-char-counter {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 0.4rem;
+}
+
+.ep-section-help {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin: -0.25rem 0 0.75rem 0;
+}
+
+.ep-info-text {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-top: 0.4rem;
+}
+
+.ep-material-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    background-color: #ffffff;
+}
+
+.ep-material-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    background-color: #f3f4f6;
+    color: #4b5563;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ep-material-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.ep-material-type {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.ep-material-url {
+    font-size: 0.85rem;
+    color: #6b7280;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ep-material-desc {
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+.ep-material-actions {
+    display: flex;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+.ep-add-material-btn {
+    width: 100%;
+    padding: 1rem;
+    border: 2px dashed #d1d5db;
+    border-radius: 0.75rem;
+    background-color: transparent;
+    color: #4b5563;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-family: inherit;
+}
+
+.ep-add-material-btn:hover {
+    border-color: #9ca3af;
+    background-color: #f9fafb;
+}
+
+.ep-error-box {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: #6b7280;
+}
+
+.ep-error-box p {
+    margin-bottom: 1.25rem;
+    font-size: 1rem;
+}
