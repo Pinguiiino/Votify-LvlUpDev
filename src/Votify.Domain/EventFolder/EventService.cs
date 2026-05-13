@@ -46,16 +46,22 @@ public class EventService
         DateTime startDate, DateTime endDate,
         string? description,
         string? imageUrl,
-        string organizerId)
+        string organizerId,
+        string auditorEmail)
     {
         bool nombreOcupado = await _repository.ExistsByNameAsync(name);
         if (nombreOcupado)
             throw new ArgumentException($"Ya existe un evento con el nombre \"{name}\". Elige un nombre diferente.");
 
+        var auditor = await _userRepository.GetByEmailAsync(auditorEmail);
+        if (auditor == null)
+            throw new ArgumentException($"No existe ninguna cuenta registrada con el correo '{auditorEmail}'.");
+
         var creator = new ModalityEventCreator(modality);
         var evento = creator.Create(name, maxProjects, startDate, endDate, description, imageUrl);
 
         evento.Organizer = organizerId;
+        evento.Auditor = auditor.Id;
         evento.Participants ??= new List<GeneralUser>();
         evento.Public ??= new List<GeneralUser>();
 

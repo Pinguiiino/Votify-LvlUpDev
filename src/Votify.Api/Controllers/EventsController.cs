@@ -48,24 +48,41 @@ public class EventsController : ControllerBase
     {
         try
         {
-            var startUtc = DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc);
-            var endUtc = DateTime.SpecifyKind(dto.EndDate, DateTimeKind.Utc);
+            var organizerId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
-            var evento = await _service.CreateEventAsync(
-                dto.Name, dto.Modality, dto.MaxProjects,
-                startUtc, endUtc,
-                dto.Description, dto.ImageUrl,
-                dto.OrganizerId); 
+            if (string.IsNullOrEmpty(organizerId))
+            {
+                return Unauthorized("No se pudo identificar al usuario organizador.");
+            }
 
-            return Ok(new { message = "Evento creado con éxito", id = evento.Id });
+            var fechaInicioUtc = dto.StartDate.ToUniversalTime();
+            var fechaFinUtc = dto.EndDate.ToUniversalTime();
+
+            var evt = await _service.CreateEventAsync(
+                dto.Name,
+                dto.Modality,
+                dto.MaxProjects,
+                fechaInicioUtc,
+                fechaFinUtc,
+                dto.Description,
+                dto.ImageUrl,
+                organizerId,
+                dto.AuditorEmail);
+
+            return Ok(evt);
         }
-        catch (Exception ex)
+        catch (ArgumentException ex)
         {
             return BadRequest(ex.Message);
         }
+        catch (Exception ex)
+        {
+            var errorReal = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+            return StatusCode(500, errorReal);
+        }
     }
 
-    
+
     [HttpPost("{eventId}/enroll")]
     public async Task<IActionResult> EnrollInEvent(string eventId, [FromBody] EnrollRequestDto dto)
     {
@@ -202,7 +219,8 @@ public class CreateEventDto
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public string? ImageUrl { get; set; }
-    public string OrganizerId { get; set; } = string.Empty; 
+    public string OrganizerId { get; set; } = string.Empty;
+    public string AuditorEmail { get; set; } = string.Empty;
 }
 public class EnrollRequestDto
 {
