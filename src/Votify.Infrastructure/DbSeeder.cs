@@ -152,6 +152,11 @@ public static class DbSeeder
         var p9 = aiCreator.Create("BioPrint3D", fibFair.Id, ownerId: part3.Id, description: "Impresión 3D de tejidos biológicos.");
         var p10 = sustCreator.Create("WaterSense", fibFair.Id, ownerId: part4.Id, description: "Sensores IoT para gestión eficiente del agua.");
 
+        foreach (var proyecto in new[] { p1, p2, p3, p4, p5, p6, p7, p8, p9, p10 })
+        {
+            proyecto.ValidationStatus = ValidationStatus.Approved;
+        }
+
         context.Projects.AddRange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
         await context.SaveChangesAsync();
 

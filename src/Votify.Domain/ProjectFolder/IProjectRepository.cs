@@ -6,6 +6,7 @@ public interface IProjectRepository
     Task<List<Project>> GetAllAsync();
     Task<List<Project>> GetByCategoryAsync(string categoryId);
     Task<List<Project>> GetByEventAsync(string eventId);
+    Task<List<Project>> GetPendingByEventAsync(string eventId);
     Task<List<Project>> GetByOwnerAsync(string ownerId);
     Task AddAsync(Project project);
     Task SaveChangesAsync();

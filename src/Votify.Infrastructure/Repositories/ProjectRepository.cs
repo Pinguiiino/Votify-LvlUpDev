@@ -29,7 +29,8 @@ public class ProjectRepository : IProjectRepository
         => await _context.Projects
             .Include(p => p.Materials)
             .Include(p => p.ProjectCategories)
-            .Where(p => p.ProjectCategories.Any(pc => pc.CategoryId == categoryId))
+            .Where(p => p.ProjectCategories.Any(pc => pc.CategoryId == categoryId)
+                        && p.ValidationStatus == ValidationStatus.Approved)
             .AsNoTracking()
             .ToListAsync();
 
@@ -37,6 +38,15 @@ public class ProjectRepository : IProjectRepository
         => await _context.Projects
             .AsNoTracking()
             .Where(p => p.EventId == eventId)
+            .ToListAsync();
+
+    public async Task<List<Project>> GetPendingByEventAsync(string eventId)
+        => await _context.Projects
+            .Include(p => p.ProjectCategories)
+                .ThenInclude(pc => pc.Category)
+            .AsNoTracking()
+            .Where(p => p.EventId == eventId
+                        && p.ValidationStatus == ValidationStatus.Pending)
             .ToListAsync();
 
     public async Task AddAsync(Project project)

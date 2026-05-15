@@ -101,6 +101,57 @@ namespace Votify.Api.Controllers
             return Ok(projects.Select(ToDto));
         }
 
+        [HttpGet("pending/by-event/{eventId}")]
+        public async Task<IActionResult> GetPendingByEvent(string eventId)
+        {
+            var projects = await _service.GetPendingByEventAsync(eventId);
+            return Ok(projects.Select(ToPendingDto));
+        }
+
+        [HttpPost("{id}/approve")]
+        public async Task<IActionResult> Approve(string id, [FromBody] ValidationRequestDto dto)
+        {
+            try
+            {
+                var project = await _service.ApproveAsync(id, dto.RequesterId ?? string.Empty);
+                return Ok(new { message = "Proyecto aprobado", id = project.Id });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("{id}/reject")]
+        public async Task<IActionResult> Reject(string id, [FromBody] RejectProjectDto dto)
+        {
+            try
+            {
+                var project = await _service.RejectAsync(id, dto.RequesterId ?? string.Empty, dto.Reason);
+                return Ok(new { message = "Proyecto rechazado", id = project.Id });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpPost("upload-image")]
         [RequestSizeLimit(5 * 1024 * 1024)]
         public async Task<IActionResult> UploadImage(IFormFile file)
@@ -135,8 +186,24 @@ namespace Votify.Api.Controllers
             p.OwnerId,
             p.ImageUrl,
             ProjectType = p.ProjectType(),
+            ValidationStatus = p.ValidationStatus.ToString(),
+            p.RejectionReason,
             Materials = p.Materials.Select(m => new
             { m.Id, Type = m.Type.ToString(), m.Url, m.Description })
+        };
+
+        private static object ToPendingDto(Project p) => new
+        {
+            p.Id,
+            p.Title,
+            p.Description,
+            p.EventId,
+            p.OwnerId,
+            p.ImageUrl,
+            ProjectType = p.ProjectType(),
+            Categories = p.ProjectCategories
+                .Where(pc => pc.Category != null)
+                .Select(pc => new { pc.CategoryId, Name = pc.Category!.Name })
         };
 
         [HttpGet("project-types")]
@@ -173,5 +240,16 @@ namespace Votify.Api.Controllers
         public string Type { get; set; } = "Other";
         public string Url { get; set; } = string.Empty;
         public string? Description { get; set; }
+    }
+
+    public class ValidationRequestDto
+    {
+        public string? RequesterId { get; set; }
+    }
+
+    public class RejectProjectDto
+    {
+        public string? RequesterId { get; set; }
+        public string? Reason { get; set; }
     }
 }

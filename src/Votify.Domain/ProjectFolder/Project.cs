@@ -13,6 +13,13 @@ public enum MaterialType
     Other
 }
 
+public enum ValidationStatus
+{
+    Pending,
+    Approved,
+    Rejected
+}
+
 public class ProjectMaterial
 {
     public string Id { get; set; }
@@ -43,6 +50,9 @@ public abstract class Project
     public string? OwnerId { get; set; }
     public string? ImageUrl { get; set; }
 
+    public ValidationStatus ValidationStatus { get; set; } = ValidationStatus.Pending;
+    public string? RejectionReason { get; set; }
+
     public virtual List<ProjectCategory> ProjectCategories { get; set; } = new();
     public virtual List<ProjectMaterial> Materials { get; set; } = new();
 
@@ -57,6 +67,7 @@ public abstract class Project
         OwnerId = ownerId;
         Description = description;
         ImageUrl = imageUrl;
+        ValidationStatus = ValidationStatus.Pending;
     }
 
     public abstract string ProjectType();

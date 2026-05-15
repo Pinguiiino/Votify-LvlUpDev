@@ -35,6 +35,7 @@ public class ProjectService
                 $"Ya existe un proyecto con el título \"{title}\" en este evento. Elige otro nombre.");
 
         var project = creator.Create(title, eventId, ownerId, description, imageUrl);
+        project.ValidationStatus = ValidationStatus.Pending;
 
         foreach (var (type, url, desc) in materials)
             project.Materials.Add(new ProjectMaterial(project.Id, type, url, desc));
@@ -84,6 +85,55 @@ public class ProjectService
 
     public Task<List<Project>> GetByOwnerAsync(string ownerId)
     => _repository.GetByOwnerAsync(ownerId);
+
+    public Task<List<Project>> GetPendingByEventAsync(string eventId)
+        => _repository.GetPendingByEventAsync(eventId);
+
+    public async Task<Project> ApproveAsync(string projectId, string requesterId)
+    {
+        var project = await _repository.GetByIdAsync(projectId)
+            ?? throw new ArgumentException("Proyecto no encontrado.");
+
+        var evento = await _eventRepository.GetByIdAsync(project.EventId)
+            ?? throw new ArgumentException("Evento no encontrado.");
+
+        if (!string.Equals(evento.Organizer, requesterId, StringComparison.Ordinal))
+            throw new UnauthorizedAccessException(
+                "Solo el organizador del evento puede validar proyectos.");
+
+        if (project.ValidationStatus != ValidationStatus.Pending)
+            throw new InvalidOperationException(
+                "Este proyecto ya ha sido validado previamente.");
+
+        project.ValidationStatus = ValidationStatus.Approved;
+        project.RejectionReason = null;
+
+        await _repository.SaveChangesAsync();
+        return project;
+    }
+
+    public async Task<Project> RejectAsync(string projectId, string requesterId, string? reason)
+    {
+        var project = await _repository.GetByIdAsync(projectId)
+            ?? throw new ArgumentException("Proyecto no encontrado.");
+
+        var evento = await _eventRepository.GetByIdAsync(project.EventId)
+            ?? throw new ArgumentException("Evento no encontrado.");
+
+        if (!string.Equals(evento.Organizer, requesterId, StringComparison.Ordinal))
+            throw new UnauthorizedAccessException(
+                "Solo el organizador del evento puede validar proyectos.");
+
+        if (project.ValidationStatus != ValidationStatus.Pending)
+            throw new InvalidOperationException(
+                "Este proyecto ya ha sido validado previamente.");
+
+        project.ValidationStatus = ValidationStatus.Rejected;
+        project.RejectionReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
+
+        await _repository.SaveChangesAsync();
+        return project;
+    }
 
     public List<string> GetProjectTypes()
         => new List<string> { "AI", "Sustainability", "General" };
