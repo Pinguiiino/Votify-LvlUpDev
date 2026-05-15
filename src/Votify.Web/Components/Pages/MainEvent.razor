@@ -16,11 +16,11 @@
     </header>
 
     <div class="toolbar">
-    <AuthorizeView Roles="Organizer">
-        <Authorized>
-            <a href="/create-event" class="btn-dark" style="text-decoration: none;">+ Crear Evento</a>
-        </Authorized>
-    </AuthorizeView>
+        <AuthorizeView>
+            <Authorized>
+                <a href="/create-event" class="btn-dark" style="text-decoration: none;">+ Crear Evento</a>
+            </Authorized>
+        </AuthorizeView>
     </div>
 
     @if (isLoading)
@@ -125,6 +125,12 @@
                                     </div>
                                 }
                             }
+                            else if (isAuditor)
+                            {
+                                <span style="display: block; font-size: 0.85rem; color: #b45309; font-weight: 600; text-align: center;">
+                                    🔍 Eres el Auditor
+                                </span>
+                            }
                             else if (isParticipant)
                             {
                                 <span style="display: block; font-size: 0.85rem; color: #0284c7; font-weight: 600; text-align: center;">
@@ -137,8 +143,9 @@
                                     ✓ Inscrito como Público
                                 </span>
                             }
-                            else if (currentUserRole != "Organizer" && currentUserRole != "Auditor")
+                            else 
                             {
+                                // Ahora solo comprobamos si NO eres el organizador o auditor contextual de este evento
                                 <button class="btn-outline" style="width: 100%; padding: 0.6rem; font-size: 0.9rem;"
                                         @onclick='() => EnrollAsPublic(evento.Id, evento.Name)'>
                                     Inscribirse al evento
@@ -178,6 +185,8 @@
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             currentUserId = authState.User.FindFirst(
                 System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            
+            // currentUserRole ya no se usa para filtrar pantallas globales
             currentUserRole = authState.User.FindFirst(
                 System.Security.Claims.ClaimTypes.Role)?.Value ?? string.Empty;
 
@@ -199,13 +208,8 @@
             {
                 var todosEventos = await http.GetFromJsonAsync<List<EventDto>>("api/events");
 
-                
-                if (currentUserRole == "Auditor")
-                    EventosActivos = todosEventos?
-                        .Where(e => e.AuditorId == currentUserId)
-                        .ToList();
-                else
-                    EventosActivos = todosEventos;
+                // Todo el mundo ve todos los eventos, su rol dependerá de la lógica dentro de las cards.
+                EventosActivos = todosEventos;
                 
                 isLoading = false;
                 StateHasChanged();
@@ -262,7 +266,6 @@
         }
     }
 
-    
     private string? eventoAsignando = null;   
     private string? eventoConMensaje = null;  
     private string emailAuditor = string.Empty;
@@ -293,9 +296,10 @@
             var auditorUser = await http.GetFromJsonAsync<UserDto>(
                 $"api/auth/user-by-email?email={emailAuditor.Trim().ToLower()}");
 
-            if (auditorUser == null || auditorUser.Role != "Auditor")
+            // Hemos quitado la comprobación de "Rol global" porque el auditor ahora puede ser un User cualquiera.
+            if (auditorUser == null)
             {
-                errorAuditor = "Ese usuario no tiene rol de Auditor.";
+                errorAuditor = "No se pudo recuperar la información del usuario.";
                 return;
             }
 

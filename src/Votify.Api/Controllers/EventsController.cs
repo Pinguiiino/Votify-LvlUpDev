@@ -43,7 +43,6 @@ public class EventsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Organizer")]
     public async Task<IActionResult> CreateEvent([FromBody] CreateEventDto dto)
     {
         try
@@ -114,7 +113,6 @@ public class EventsController : ControllerBase
     }
 
     [HttpPost("{eventId}/assign-auditor")]
-    [Authorize(Roles = "Organizer")]
     public async Task<IActionResult> AssignAuditor(string eventId, [FromBody] AssignAuditorDto dto)
     {
         try

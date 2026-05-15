@@ -159,11 +159,7 @@
                 return;
             }
 
-            if (!user.IsInRole("Organizer"))
-            {
-                Navigation.NavigateTo("/not-found");
-                return;
-            }
+            // SE ELIMINÓ LA RESTRICCIÓN: if (!user.IsInRole("Organizer")) ...
         }
     }
 
@@ -219,7 +215,7 @@
 
     private async Task ManejarSubmitValido()
     {
-        errorServidor = null; // Limpiamos errores previos
+        errorServidor = null;
 
         try
         {
@@ -233,7 +229,7 @@
                 EndDate = eventModel.EndDate!.Value,
                 eventModel.ImageUrl,
                 OrganizerId = currentUserId,
-                AuditorEmail = eventModel.AuditorEmail // <--- AQUÍ ESTABA EL ERROR, ¡Ya lo enviamos!
+                AuditorEmail = eventModel.AuditorEmail
             };
 
             var http = HttpClientFactory.CreateClient("API");
@@ -256,12 +252,11 @@
             }
             else
             {
-                // Si realmente es un error de nombre duplicado, ahora se mostrará claramente en la caja roja de abajo
                 var errorMsg = await respuesta.Content.ReadAsStringAsync();
                 
-                if (respuesta.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                if (respuesta.StatusCode == System.Net.HttpStatusCode.Unauthorized || respuesta.StatusCode == System.Net.HttpStatusCode.Forbidden)
                 {
-                    errorServidor = "No tienes autorización para realizar esta acción. Por favor, vuelve a iniciar sesión.";
+                    errorServidor = "No tienes autorización o la API está bloqueando la petición. Revisa el controlador.";
                 }
                 else
                 {
