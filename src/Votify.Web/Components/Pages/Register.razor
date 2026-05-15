@@ -68,38 +68,6 @@
                 <ValidationMessage For="@(() => registerModel.Password)" class="validation-msg" />
             </div>
 
-            <div class="auth-field" style="margin-top: 1.5rem;">
-                <label>¿Cómo quieres registrarte?</label>
-                <InputRadioGroup @bind-Value="registerModel.Role">
-                    <div class="role-selector">
-                        <label class="role-option @(registerModel.Role == "GeneralUser" ? "selected" : "")">
-                            <InputRadio Value="@("GeneralUser")" class="hidden-radio" />
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-                            </svg>
-                            Usuario
-                        </label>
-
-                        <label class="role-option @(registerModel.Role == "Organizer" ? "selected" : "")">
-                            <InputRadio Value="@("Organizer")" class="hidden-radio" />
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M6.5 1A1.5 1.5 0 0 0 5 2.5V3H1.5A1.5 1.5 0 0 0 0 4.5v8A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 14.5 3H11v-.5A1.5 1.5 0 0 0 9.5 1h-3Zm0 1h3a.5.5 0 0 1 .5.5V3H6v-.5a.5.5 0 0 1 .5-.5Zm1.886 6.914L15 7.151V12.5a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5V7.15l6.614 1.764a1.5 1.5 0 0 0 1.157 0Z" />
-                            </svg>
-                            Organizador
-                        </label>
-
-                        <label class="role-option @(registerModel.Role == "Auditor" ? "selected" : "")">
-                            <InputRadio Value="@("Auditor")" class="hidden-radio" />
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z" />
-                                <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8z" />
-                            </svg>
-                            Auditor
-                        </label>
-                    </div>
-                </InputRadioGroup>
-            </div>
-
             @if (!string.IsNullOrEmpty(apiError))
             {
                 <div class="api-error">@apiError</div>
@@ -173,7 +141,5 @@
         [Required(ErrorMessage = "La contraseña es obligatoria")]
         [MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
         public string Password { get; set; } = string.Empty;
-
-        public string Role { get; set; } = "GeneralUser";
     }
 }

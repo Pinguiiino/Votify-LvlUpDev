@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Votify.Domain.UserFolder
 {
@@ -13,7 +14,7 @@ namespace Votify.Domain.UserFolder
             _repository = repository;
         }
 
-        public async Task<User> RegisterUserAsync(string name, string email, string password, string role)
+        public async Task<User> RegisterUserAsync(string name, string email, string password)
         {
             var (nameExists, emailExists) = await _repository.CheckForDuplicatesAsync(name, email);
 
@@ -26,14 +27,7 @@ namespace Votify.Domain.UserFolder
                 throw new ArgumentException("El nombre de usuario ya está en uso.");
             }
 
-            User newUser = role switch
-            {
-                "Organizer" => new Organizer(name, email, password),
-                "Auditor" => new Auditor(name, email, password),   
-                "Participant" => new Participant(name, email, password),
-                "GeneralUser" => new GeneralUser(name, email, password),
-                _ => throw new ArgumentException("El rol seleccionado no es válido.")
-            };
+            User newUser = new GeneralUser(name, email, password);
 
             await _repository.AddAsync(newUser);
             await _repository.SaveChangesAsync();
@@ -52,6 +46,7 @@ namespace Votify.Domain.UserFolder
 
             return user;
         }
+
         public async Task ChangePasswordAsync(string userId, string currentPassword, string newPassword)
         {
             var user = await _repository.GetByIdAsync(userId);
@@ -64,11 +59,13 @@ namespace Votify.Domain.UserFolder
             user.Password = newPassword;
             await _repository.SaveChangesAsync();
         }
+
         public async Task<bool> CheckEmailExistsAsync(string email)
         {
             var user = await _repository.GetByEmailAsync(email);
             return user != null;
         }
+
         public async Task<User?> GetUserByEmailAsync(string email)
         {
             return await _repository.GetByEmailAsync(email);

@@ -23,7 +23,7 @@ namespace Votify.Api.Controllers
         {
             try
             {
-                var user = await _service.RegisterUserAsync(dto.Username, dto.Email, dto.Password, dto.Role);
+                var user = await _service.RegisterUserAsync(dto.Username, dto.Email, dto.Password);
                 return Ok(new { message = "Cuenta creada con éxito" });
             }
             catch (Exception ex)
@@ -39,47 +39,22 @@ namespace Votify.Api.Controllers
             {
                 var user = await _service.LoginAsync(dto.Email, dto.Password);
 
-                string role = user switch
-                {
-                    Organizer => "Organizer",
-                    Auditor => "Auditor",
-                    Jury => "Jury",
-                    Participant => "Participant",
-                    _ => "Public"
-                };
+                string role = "User";
 
                 var token = _tokenService.GenerateToken(user.Id, user.Email, role);
 
                 return Ok(new
                 {
-                    token,
                     Id = user.Id,
                     Username = user.Name,
                     Email = user.Email,
-                    Role = role
+                    Role = role,
+                    Token = token
                 });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
-            }
-        }
-
-        [HttpPost("change-password")]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
-        {
-            try
-            {
-                await _service.ChangePasswordAsync(dto.UserId, dto.CurrentPassword, dto.NewPassword);
-                return Ok(new { message = "Contraseña actualizada con éxito" });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "Error interno del servidor.");
+                return Unauthorized(ex.Message);
             }
         }
 
@@ -90,23 +65,27 @@ namespace Votify.Api.Controllers
             return Ok(exists);
         }
 
-
         [HttpGet("user-by-email")]
         public async Task<IActionResult> GetUserByEmail([FromQuery] string email)
         {
             var user = await _service.GetUserByEmailAsync(email);
             if (user == null) return NotFound();
 
-            string role = user switch
-            {
-                Organizer => "Organizer",
-                Auditor => "Auditor",
-                Jury => "Jury",
-                Participant => "Participant",
-                _ => "Public"
-            };
+            return Ok(new { user.Id, Role = "User" });
+        }
 
-            return Ok(new { user.Id, Role = role });
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+        {
+            try
+            {
+                await _service.ChangePasswordAsync(dto.UserId, dto.CurrentPassword, dto.NewPassword);
+                return Ok(new { message = "Contraseña cambiada con éxito." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         public class LoginDto
@@ -120,8 +99,8 @@ namespace Votify.Api.Controllers
             public string Username { get; set; } = string.Empty;
             public string Email { get; set; } = string.Empty;
             public string Password { get; set; } = string.Empty;
-            public string Role { get; set; } = "GeneralUser";
         }
+
         public class ChangePasswordDto
         {
             public string UserId { get; set; } = string.Empty;
