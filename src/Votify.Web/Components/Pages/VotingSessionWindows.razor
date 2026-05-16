@@ -61,10 +61,10 @@
                         var status    = GetStatusKey(ses);
                         var hasWindow = ses.OpenAt.HasValue && ses.CloseAt.HasValue;
 
-                        bool canOpen   = hasWindow && (status == "scheduled" || status == "closed");
-                        bool canPause  = hasWindow && status == "open";
-                        bool canResume = hasWindow && status == "paused";
-                        bool canClose  = hasWindow && (status == "open" || status == "paused");
+                        bool canOpen = status == "scheduled" || status == "closed" || status == "unconfigured";
+                        bool canPause  = status == "open";
+                        bool canResume = status == "paused";
+                        bool canClose  = status == "open" || status == "paused";
 
                         <div class="vw-session-card">
                             <div class="vw-session-header">
@@ -102,7 +102,7 @@
                                             <p class="vw-date-value">@ses.OpenAt.Value.ToLocalTime().ToString("dd MMM yyyy", new System.Globalization.CultureInfo("es-ES"))</p>
                                             <p class="vw-date-time">@ses.OpenAt.Value.ToLocalTime().ToString("HH:mm") hrs</p>
                                         }
-                                        else { <p class="vw-date-none">Sin configurar</p> }
+                                        else { <p class="vw-date-none">Por asignar</p> }
                                     </div>
                                 </div>
 
@@ -128,7 +128,7 @@
                                             <p class="vw-date-value">@ses.CloseAt.Value.ToLocalTime().ToString("dd MMM yyyy", new System.Globalization.CultureInfo("es-ES"))</p>
                                             <p class="vw-date-time">@ses.CloseAt.Value.ToLocalTime().ToString("HH:mm") hrs</p>
                                         }
-                                        else { <p class="vw-date-none">Sin configurar</p> }
+                                        else { <p class="vw-date-none">Por asignar</p> }
                                     </div>
                                 </div>
                             </div>
@@ -353,7 +353,7 @@
         "paused"       => "Pausada",
         "closed"       => "Cerrada",
         "scheduled"    => "Programada",
-        _              => "Sin configurar"
+        _              => "Por asignar"
     };
 
     private static string GetStatusDot(string key) => key switch

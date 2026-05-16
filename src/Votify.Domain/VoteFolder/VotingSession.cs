@@ -36,10 +36,10 @@ public class VotingSession
     public bool RequireComments { get; set; } = false;
     public bool AllowCommentsPerCriterion { get; set; } = false;
 
-    public DateTime OpenAt { get; set; }
-    public DateTime CloseAt { get; set; }
+    public DateTime? OpenAt { get; set; }
+    public DateTime? CloseAt { get; set; }
     public DateTime? AdjustedCloseAt { get; set; }
-    public DateTime EffectiveCloseAt => AdjustedCloseAt ?? CloseAt;
+    public DateTime? EffectiveCloseAt => AdjustedCloseAt ?? CloseAt;
     public string? ManualStatus { get; set; }
     public bool IsOpen
     {
@@ -48,6 +48,7 @@ public class VotingSession
             if (ManualStatus == "closed") return false;
             if (ManualStatus == "paused") return false;
             if (ManualStatus == "open") return true;
+            if (!OpenAt.HasValue || !CloseAt.HasValue) return false;
             var now = DateTime.UtcNow;
             return now >= OpenAt && now <= EffectiveCloseAt;
         }
@@ -64,7 +65,7 @@ public class VotingSession
 
     public VotingSession(string categoryId, string name,
                          VoterType voterType, EvaluationType evaluationType,
-                         DateTime openAt, DateTime closeAt,
+                         DateTime? openAt, DateTime? closeAt,
                          string? description = null,
                          CriterionType? criterionType = null,
                          int? topN = null,

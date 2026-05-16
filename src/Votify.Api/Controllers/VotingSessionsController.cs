@@ -37,8 +37,8 @@ namespace Votify.Api.Controllers
                 vs.AllowCommentsPerCriterion,
                 StartDate = vs.OpenAt,
                 EndDate = vs.EffectiveCloseAt,
-                OpenAt = vs.OpenAt.Equals(default) ? (DateTime?)null : vs.OpenAt,
-                CloseAt = vs.CloseAt.Equals(default) ? (DateTime?)null : vs.CloseAt,
+                OpenAt = vs.OpenAt,
+                CloseAt = vs.CloseAt,
                 ManualStatus = vs.ManualStatus,
                 IsActive = vs.IsOpen
             });
@@ -84,7 +84,9 @@ namespace Votify.Api.Controllers
 
             session.Name = dto.Name;
             session.Description = dto.Description;
-            session.OpenAt = dto.OpenAt ?? session.OpenAt;
+
+            if (dto.OpenAt.HasValue)
+                session.OpenAt = dto.OpenAt.Value;
 
             if (dto.CloseAt.HasValue)
             {
@@ -108,7 +110,7 @@ namespace Votify.Api.Controllers
             switch (dto.Action?.ToLower())
             {
                 case "open":
-                    if (session.OpenAt > now)
+                    if (session.OpenAt.HasValue || session.OpenAt.Value > now)
                         session.OpenAt = now;
                     session.ManualStatus = "open";
                     session.IsManuallyAdjusted = true;

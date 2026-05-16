@@ -58,7 +58,7 @@
                 </div>
             }
             else if (_sesionActivaDelUsuario.OpenAt.HasValue && _sesionActivaDelUsuario.OpenAt.Value > DateTime.UtcNow
-                     && _sesionActivaDelUsuario.ManualStatus != "closed")
+                     && _sesionActivaDelUsuario.ManualStatus != "closed" && _sesionActivaDelUsuario.ManualStatus != "open")
             {
                 @* Votación programada pero no iniciada aún *@
                 <div style="margin-top: 2.5rem; background: #e0e7ff; color: #3730a3; border-radius: 0.6rem; padding: 0.65rem 1rem; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
@@ -67,6 +67,16 @@
                         <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z" />
                     </svg>
                     Votación abre el @_sesionActivaDelUsuario.OpenAt.Value.ToLocalTime().ToString("dd/MM HH:mm")
+                </div>
+            }
+            else if (!_sesionActivaDelUsuario.OpenAt.HasValue
+                && _sesionActivaDelUsuario.ManualStatus != "open"
+                && _sesionActivaDelUsuario.ManualStatus != "closed")
+            {
+                <div style="margin-top: 2.5rem; background: #f1f5f9; color: #64748b; border-radius: 0.6rem;
+                    padding: 0.65rem 1rem; font-size: 0.8rem; font-weight: 600;
+                    display: flex; align-items: center; gap: 0.5rem;">
+                    ○ Votación pendiente de configurar
                 </div>
             }
         }

@@ -474,9 +474,9 @@
                                                 var estadoKey = GetVsStatusKey(vs);
                                             }
                                             <span style="font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.65rem; border-radius: 99px;
-                                                background: @(estadoKey == "open" ? "#dcfce7" : estadoKey == "paused" ? "#fef9c3" : estadoKey == "closed" ? "#f1f5f9" : estadoKey == "scheduled" ? "#e0e7ff" : "#fff7ed");
-                                                color: @(estadoKey == "open" ? "#15803d" : estadoKey == "paused" ? "#a16207" : estadoKey == "closed" ? "#64748b" : estadoKey == "scheduled" ? "#4338ca" : "#c2410c");">
-                                                @(estadoKey == "open" ? "● Abierta" : estadoKey == "paused" ? "⏸ Pausada" : estadoKey == "closed" ? "■ Cerrada" : estadoKey == "scheduled" ? "◷ Programada" : "○ Sin configurar")
+                                                background: @(estadoKey == "open" ? "#dcfce7" : estadoKey == "paused" ? "#fef9c3" : estadoKey == "scheduled" ? "#e0e7ff" : "#f1f5f9");
+                                                color: @(estadoKey == "open" ? "#15803d" : estadoKey == "paused" ? "#a16207" : estadoKey == "closed" ? "#64748b" : estadoKey == "scheduled" ? "#4338ca" : "#64748b");">
+                                                @(estadoKey == "open" ? "● Abierta" : estadoKey == "paused" ? "⏸ Pausada" : estadoKey == "closed" ? "■ Cerrada" : estadoKey == "scheduled" ? "◷ Programada" : "○ Por asignar")
                                             </span>
                                         </div>
 

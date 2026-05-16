@@ -47,9 +47,6 @@ public class CategoryService
 
     private static VotingSession BuildSession(Category categoria, CreateVotingSessionData data, Event evento)
     {
-        var openAt = data.OpenAt ?? evento.StartDate;
-        var closeAt = data.CloseAt ?? evento.EndDate;
-
         ValidateEvaluationParameters(data);
 
         var sesion = new VotingSession(
@@ -57,8 +54,8 @@ public class CategoryService
             name: data.Name ?? $"{(data.VoterType == VoterType.Jury ? "Jurado" : "Público")} - {categoria.Name}",
             voterType: data.VoterType,
             evaluationType: data.EvaluationType,
-            openAt: openAt,
-            closeAt: closeAt,
+            openAt: data.OpenAt,
+            closeAt: data.CloseAt,
             description: data.Description,
             criterionType: data.CriterionType,
             topN: data.TopN,
@@ -142,7 +139,7 @@ public class CategoryService
         var now = DateTime.UtcNow;
         foreach (var existente in categoria.VotingSessions)
         {
-            if (existente.OpenAt <= now)
+            if (existente.OpenAt.HasValue && existente.OpenAt.Value <= now)
                 throw new InvalidOperationException(
                     $"No se puede modificar la votación '{existente.Name}' porque su ventana ya ha comenzado.");
         }
