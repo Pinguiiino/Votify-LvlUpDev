@@ -110,7 +110,7 @@ namespace Votify.Api.Controllers
             switch (dto.Action?.ToLower())
             {
                 case "open":
-                    if (session.OpenAt.HasValue || session.OpenAt.Value > now)
+                    if (session.OpenAt.HasValue && session.OpenAt.Value > now)
                         session.OpenAt = now;
                     session.ManualStatus = "open";
                     session.IsManuallyAdjusted = true;
