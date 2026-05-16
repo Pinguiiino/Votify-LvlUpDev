@@ -648,7 +648,16 @@
     {
         if (cat.VotingSessions == null || cat.VotingSessions.Count == 0) return false;
         var ahora = DateTime.UtcNow;
-        return cat.VotingSessions.All(vs => !vs.OpenAt.HasValue || vs.OpenAt.Value > ahora);
+        return cat.VotingSessions.All(vs =>
+            {
+                if (vs.ManualStatus == "open" || vs.ManualStatus == "paused" || vs.ManualStatus == "closed")
+                    return false;
+
+                if (vs.OpenAt.HasValue && vs.OpenAt.Value <= ahora)
+                    return false;
+
+                return true;
+            });
     }
 
     private void OnSessionOpenAtChange(SessionDraft ses, string? value)
