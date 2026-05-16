@@ -301,29 +301,29 @@
                 }
             }
         }
+        if (puedeVotar && !string.IsNullOrEmpty(_sessionUserId) && !string.IsNullOrEmpty(_voteUrl))
+        {
+            try
+            {
+                var http2 = HttpClientFactory.CreateClient("API");
+                if (_voteUrl.Contains("vote-weighted") && !string.IsNullOrEmpty(_sesionWeightedId))
+                {
+                    var previos = await http2.GetFromJsonAsync<List<WeightedVotePrevioDto>>(
+                        $"api/votes/weighted?userId={_sessionUserId}&votingSessionId={_sesionWeightedId}");
+                    haVotado = previos != null && previos.Any();
+                }
+                else if (_sesionActivaDelUsuario != null)
+                {
+                    var votosPrevios = await http2.GetFromJsonAsync<List<VoteResultDto>>(
+                        $"api/votes/by-user?userId={_sessionUserId}&categoryId={CategoryId}&votingSessionId={_sesionActivaDelUsuario.Id}");
+                    haVotado = votosPrevios != null && votosPrevios.Any();
+                }
+            }
+            catch { }
+        }
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender || string.IsNullOrEmpty(_sessionUserId)) return;
-
-        var http = HttpClientFactory.CreateClient("API");
-
-        if (_voteUrl.Contains("vote-weighted") && !string.IsNullOrEmpty(_sesionWeightedId))
-        {
-            var previos = await http.GetFromJsonAsync<List<WeightedVotePrevioDto>>(
-                $"api/votes/weighted?userId={_sessionUserId}&votingSessionId={_sesionWeightedId}");
-            haVotado = previos != null && previos.Any();
-        }
-        else if (!string.IsNullOrEmpty(_voteUrl) && _sesionActivaDelUsuario != null)
-        {
-            var votosPrevios = await http.GetFromJsonAsync<List<VoteResultDto>>(
-                $"api/votes/by-user?userId={_sessionUserId}&categoryId={CategoryId}&votingSessionId={_sesionActivaDelUsuario.Id}");
-            haVotado = votosPrevios != null && votosPrevios.Any();
-        }
-
-        StateHasChanged();
-    }
+    protected override async Task OnAfterRenderAsync(bool firstRender) {    }
 
     private void IrAVotar() => Navigation.NavigateTo(_voteUrl);
 
