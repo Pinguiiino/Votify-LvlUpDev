@@ -90,10 +90,12 @@ namespace Votify.Api.Controllers
         }
 
         [HttpGet("by-user")]
-        public async Task<IActionResult> GetByUser(string userId, string categoryId)
+        public async Task<IActionResult> GetByUser(string userId, string categoryId, string? votingSessionId = null)
         {
             var votes = await _service.GetUserVotesAsync(userId, categoryId);
-            return Ok(votes.Select(v => new { v.VotedProjectId, v.TopPosition }));
+            if (!string.IsNullOrEmpty(votingSessionId))
+                votes = votes.Where(v => v.VotingSessionId == votingSessionId).ToList();
+            return Ok(votes.Select(v => new { v.VotedProjectId, v.TopPosition, v.Comment }));
         }
 
         [HttpGet("comments/{projectId}")]

@@ -108,7 +108,9 @@
                     }
 
                     <button class="btn-primary submit-vote-btn" disabled="@(!ProyectosSeleccionados.Any())" @onclick="EnviarVoto">
-                        @(_voterTypeForUser == "Jury" ? "Emitir Veredicto" : "Confirmar Mi Voto")
+                        @(_voterTypeForUser == "Jury"
+                            ? (haVotado ? "Modificar Veredicto" : "Emitir Veredicto")
+                            : (haVotado ? "Modificar Mi Voto" : "Confirmar Mi Voto"))
                     </button>
                 </div>
             </div>
@@ -125,6 +127,7 @@
     private string _userRole = string.Empty;
     private string _voterTypeForUser = string.Empty;
     private string? error;
+    private bool haVotado = false;
 
     private VotingSessionDto? sesion;
     private List<ProjectDto>? ProyectosDisponibles;
@@ -172,6 +175,7 @@
         var votosPrevios = await http.GetFromJsonAsync<List<VoteResultDto>>(
             $"api/votes/by-user?userId={UserId}&categoryId={CategoryId}&votingSessionId={SessionId}");
 
+        haVotado = votosPrevios != null && votosPrevios.Any();
         if (votosPrevios != null && votosPrevios.Any() && ProyectosDisponibles != null && !ProyectosSeleccionados.Any())
         {
             foreach (var voto in votosPrevios.OrderBy(v => v.TopPosition))
@@ -180,11 +184,11 @@
                 if (proj != null)
                 {
                     ProyectosSeleccionados.Add(proj);
-                    comentarios[proj.Id] = string.Empty;
+                    comentarios[proj.Id] = voto.Comment ?? string.Empty;
                 }
             }
-            StateHasChanged();
         }
+        StateHasChanged();
     }
 
     private void SeleccionarProyecto(ProjectDto p)
@@ -292,5 +296,6 @@
     {
         public string VotedProjectId { get; set; } = "";
         public int TopPosition { get; set; }
+        public string? Comment { get; set; }
     }
 }

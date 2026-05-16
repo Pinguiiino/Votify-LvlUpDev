@@ -193,7 +193,7 @@
             }
             else
             {
-                <span>✓ Confirmar Reparto</span>
+                <span>✓ @(haVotado ? "Modificar Reparto" : "Confirmar Reparto")</span>
             }
         </button>
     }
@@ -208,6 +208,7 @@
     private string              userId  = "";
     private string?             error;
     private bool                enviando = false;
+    private bool haVotado = false;
 
     private int presupuesto   = 100;
     private int maxPorProyecto = 100;
@@ -278,6 +279,7 @@
                         puntos[v.ProjectId]      = v.Points;
                         comentarios[v.ProjectId] = v.Comment ?? "";
                     }
+                    haVotado = previos != null && previos.Any();
                     StateHasChanged();
                 }
             }

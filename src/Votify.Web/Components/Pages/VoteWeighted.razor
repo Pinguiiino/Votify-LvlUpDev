@@ -185,7 +185,11 @@
             }
             else
             {
-                <span>✓ @(sesion?.VoterType == "Jury" ? "Emitir Veredicto" : "Confirmar Evaluación")</span>
+                <span>
+                    ✓ @(sesion?.VoterType == "Jury"
+                        ? (haVotado ? "Modificar Veredicto" : "Emitir Veredicto")
+                        : (haVotado ? "Modificar Evaluación" : "Confirmar Evaluación"))
+                </span>
             }
         </button>
     }
@@ -202,6 +206,7 @@
     private string userId = "";
     private string? error;
     private bool enviando = false;
+    private bool haVotado = false;
 
     private Dictionary<string, Dictionary<string, double>> scores = new();
     private Dictionary<string, string> comentarios = new();
@@ -292,6 +297,7 @@
                         comentariosCriterio[v.ProjectId][v.CriterionId] = v.CriterionComment;
                     }
                 }
+                haVotado = previos != null && previos.Any();
                 StateHasChanged();
             }
         }

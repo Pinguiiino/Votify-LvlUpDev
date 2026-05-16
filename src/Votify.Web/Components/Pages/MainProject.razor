@@ -315,10 +315,10 @@
                 $"api/votes/weighted?userId={_sessionUserId}&votingSessionId={_sesionWeightedId}");
             haVotado = previos != null && previos.Any();
         }
-        else if (!string.IsNullOrEmpty(_voteUrl))
+        else if (!string.IsNullOrEmpty(_voteUrl) && _sesionActivaDelUsuario != null)
         {
             var votosPrevios = await http.GetFromJsonAsync<List<VoteResultDto>>(
-                $"api/votes/by-user?userId={_sessionUserId}&categoryId={CategoryId}");
+                $"api/votes/by-user?userId={_sessionUserId}&categoryId={CategoryId}&votingSessionId={_sesionActivaDelUsuario.Id}");
             haVotado = votosPrevios != null && votosPrevios.Any();
         }
 
