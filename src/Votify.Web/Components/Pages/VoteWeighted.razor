@@ -226,6 +226,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
         var http = HttpClientFactory.CreateClient("API");
 
         try
@@ -259,49 +262,39 @@
                 comentariosCriterio[p.Id] = criterios.ToDictionary(c => c.Id, _ => "");
             }
         }
-    }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender) return;
-
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-        if (string.IsNullOrEmpty(userId)) return;
-
-        if (sesion != null)
+        if (!string.IsNullOrEmpty(userId) && sesion != null)
         {
-            var http = HttpClientFactory.CreateClient("API");
-            var previos = await http.GetFromJsonAsync<List<WeightedVoteDto>>(
-                $"api/votes/weighted?userId={userId}&votingSessionId={sesion.Id}");
-
-            if (previos != null && previos.Any())
+            try
             {
-                foreach (var v in previos)
+                var previos = await http.GetFromJsonAsync<List<WeightedVoteDto>>(
+                    $"api/votes/weighted?userId={userId}&votingSessionId={sesion.Id}");
+
+                if (previos != null && previos.Any())
                 {
-                    if (!scores.ContainsKey(v.ProjectId))
-                        scores[v.ProjectId] = new();
-                    scores[v.ProjectId][v.CriterionId] = v.Score;
-
-                    if (!scoresText.ContainsKey(v.ProjectId))
-                        scoresText[v.ProjectId] = new();
-                    scoresText[v.ProjectId][v.CriterionId] = v.Score.ToString(CultureInfo.InvariantCulture);
-
-                    if (!string.IsNullOrEmpty(v.Comment))
-                        comentarios[v.ProjectId] = v.Comment;
-
-                    if (!string.IsNullOrEmpty(v.CriterionComment))
+                    foreach (var v in previos)
                     {
-                        if (!comentariosCriterio.ContainsKey(v.ProjectId))
-                            comentariosCriterio[v.ProjectId] = new();
-                        comentariosCriterio[v.ProjectId][v.CriterionId] = v.CriterionComment;
+                        if (scores.ContainsKey(v.ProjectId))
+                            scores[v.ProjectId][v.CriterionId] = v.Score;
+                        if (scoresText.ContainsKey(v.ProjectId))
+                            scoresText[v.ProjectId][v.CriterionId] = v.Score.ToString(CultureInfo.InvariantCulture);
+                        if (!string.IsNullOrEmpty(v.Comment))
+                            comentarios[v.ProjectId] = v.Comment;
+                        if (!string.IsNullOrEmpty(v.CriterionComment))
+                        {
+                            if (!comentariosCriterio.ContainsKey(v.ProjectId))
+                                comentariosCriterio[v.ProjectId] = new();
+                            comentariosCriterio[v.ProjectId][v.CriterionId] = v.CriterionComment;
+                        }
                     }
+                    haVotado = true;
                 }
-                haVotado = previos != null && previos.Any();
-                StateHasChanged();
             }
+            catch { }
         }
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) { }
 
     private double GetScore(string projectId, string criterionId)
         => scores.TryGetValue(projectId, out var d) && d.TryGetValue(criterionId, out var v) ? v : 0;

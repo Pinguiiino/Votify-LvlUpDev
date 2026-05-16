@@ -226,6 +226,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
         var http = HttpClientFactory.CreateClient("API");
 
         try
@@ -254,19 +257,9 @@
                 comentarios[p.Id] = "";
             }
         }
-    }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender) return;
-
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-        if (string.IsNullOrEmpty(userId)) return;
-
-        if (sesion != null)
+        if (!string.IsNullOrEmpty(userId) && sesion != null)
         {
-            var http = HttpClientFactory.CreateClient("API");
             try
             {
                 var previos = await http.GetFromJsonAsync<List<PointDistributionPrevioDto>>(
@@ -276,16 +269,17 @@
                 {
                     foreach (var v in previos)
                     {
-                        puntos[v.ProjectId]      = v.Points;
+                        puntos[v.ProjectId] = v.Points;
                         comentarios[v.ProjectId] = v.Comment ?? "";
                     }
-                    haVotado = previos != null && previos.Any();
-                    StateHasChanged();
+                    haVotado = true;
                 }
             }
             catch { }
         }
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) { }
 
     private int GetPoints(string projectId)
         => puntos.TryGetValue(projectId, out var v) ? v : 0;

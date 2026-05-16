@@ -164,32 +164,34 @@
         catch { }
 
         ProyectosDisponibles = await http.GetFromJsonAsync<List<ProjectDto>>($"api/projects/by-category/{CategoryId}");
-    }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender || string.IsNullOrEmpty(UserId) || string.IsNullOrEmpty(SessionId)) return;
-
-        var http = HttpClientFactory.CreateClient("API");
-        
-        var votosPrevios = await http.GetFromJsonAsync<List<VoteResultDto>>(
-            $"api/votes/by-user?userId={UserId}&categoryId={CategoryId}&votingSessionId={SessionId}");
-
-        haVotado = votosPrevios != null && votosPrevios.Any();
-        if (votosPrevios != null && votosPrevios.Any() && ProyectosDisponibles != null && !ProyectosSeleccionados.Any())
+        if (!string.IsNullOrEmpty(UserId) && !string.IsNullOrEmpty(SessionId) && ProyectosDisponibles != null)
         {
-            foreach (var voto in votosPrevios.OrderBy(v => v.TopPosition))
+            try
             {
-                var proj = ProyectosDisponibles.FirstOrDefault(p => p.Id == voto.VotedProjectId);
-                if (proj != null)
+                var votosPrevios = await http.GetFromJsonAsync<List<VoteResultDto>>(
+                    $"api/votes/by-user?userId={UserId}&categoryId={CategoryId}&votingSessionId={SessionId}");
+
+                haVotado = votosPrevios != null && votosPrevios.Any();
+
+                if (votosPrevios != null && votosPrevios.Any())
                 {
-                    ProyectosSeleccionados.Add(proj);
-                    comentarios[proj.Id] = voto.Comment ?? string.Empty;
+                    foreach (var voto in votosPrevios.OrderBy(v => v.TopPosition))
+                    {
+                        var proj = ProyectosDisponibles.FirstOrDefault(p => p.Id == voto.VotedProjectId);
+                        if (proj != null)
+                        {
+                            ProyectosSeleccionados.Add(proj);
+                            comentarios[proj.Id] = voto.Comment ?? string.Empty;
+                        }
+                    }
                 }
             }
+            catch { }
         }
-        StateHasChanged();
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {    }
 
     private void SeleccionarProyecto(ProjectDto p)
     {
