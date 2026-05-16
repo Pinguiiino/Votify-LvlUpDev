@@ -14,7 +14,8 @@
 
 <div class="myprojects-container" style="position: relative;">
     <header class="hero-section">
-        <button class="back-btn" style="align-self: flex-start;" @onclick='() => Navigation.NavigateTo($"/MainEvent")'>
+        <button @onclick='() => Navigation.NavigateTo($"/MainEvent")'
+                style="align-self: flex-start; display: inline-flex; align-items: center; gap: 0.5rem; background-color: #ffffff; border: 1px solid #d1d5db; color: #374151; font-weight: 600; font-size: 0.9rem; padding: 0.55rem 1rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; margin-bottom: 1.5rem;">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                 <path fill-rule="evenodd"
                       d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
@@ -55,13 +56,13 @@
                 <div class="projects-grid">
                     @foreach (var proyecto in grupo.Value)
                     {
-                        <div class="project-card" @onclick="() => AbrirPopup(proyecto)">
+                        <div class="project-card" @onclick="() => AbrirPopup(proyecto)" style="position: relative;">
                             <button type="button"
-                                    class="edit-project-btn @(puedeEditar ? "" : "disabled")"
                                     title="@(puedeEditar ? "Editar proyecto" : "El evento ha finalizado")"
                                     disabled="@(!puedeEditar)"
                                     @onclick:stopPropagation="true"
-                                    @onclick="() => IrAEditar(proyecto)">
+                                    @onclick="() => IrAEditar(proyecto)"
+                                    style="position: absolute; top: 0.85rem; right: 0.85rem; width: 2rem; height: 2rem; border-radius: 0.5rem; border: 1px solid #e5e7eb; background-color: #ffffff; color: #4b5563; display: flex; align-items: center; justify-content: center; cursor: @(puedeEditar ? "pointer" : "not-allowed"); opacity: @(puedeEditar ? "1" : "0.4"); transition: all 0.2s; z-index: 2;">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
                                     <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
                                 </svg>

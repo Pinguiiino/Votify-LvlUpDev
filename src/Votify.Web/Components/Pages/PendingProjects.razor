@@ -9,8 +9,9 @@
 
 <PageTitle>Proyectos pendientes - Votify</PageTitle>
 
-<div class="pending-container">
-    <button class="back-btn" @onclick="Volver">
+<div style="max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1a1a1a;">
+    <button @onclick="Volver"
+            style="display: inline-flex; align-items: center; gap: 0.5rem; background-color: #ffffff; border: 1px solid #d1d5db; color: #374151; font-weight: 600; font-size: 0.9rem; padding: 0.55rem 1rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; margin-bottom: 1.75rem;">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
             <path fill-rule="evenodd"
                   d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
@@ -18,65 +19,67 @@
         Volver
     </button>
 
-    <header class="page-header">
-        <h1 class="page-title">Proyectos pendientes</h1>
+    <header style="margin-bottom: 2rem;">
+        <h1 style="font-size: 2rem; font-weight: 800; margin: 0 0 0.4rem 0; color: #0f172a;">Proyectos pendientes</h1>
         @if (!string.IsNullOrWhiteSpace(nombreEvento))
         {
-            <p class="page-subtitle">Evento: @nombreEvento</p>
+            <p style="color: #6b7280; font-size: 0.95rem; margin: 0;">Evento: @nombreEvento</p>
         }
     </header>
 
     @if (cargando)
     {
-        <div class="loading-state">
+        <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 1rem; padding: 2.5rem; text-align: center; color: #6b7280;">
             <p><em>Cargando proyectos pendientes...</em></p>
         </div>
     }
     else if (!autorizado)
     {
-        <div class="empty-state">
+        <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 1rem; padding: 2.5rem; text-align: center; color: #6b7280;">
             <p>No tienes permisos para validar proyectos en este evento.</p>
         </div>
     }
     else if (proyectos == null || !proyectos.Any())
     {
-        <div class="empty-state">
+        <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 1rem; padding: 2.5rem; text-align: center; color: #6b7280;">
             <p>No hay proyectos pendientes de validación en este evento.</p>
         </div>
     }
     else
     {
-        <div class="pending-table">
-            <div class="table-head">
-                <div class="col-project">PROYECTO</div>
-                <div class="col-categories">CATEGORÍAS</div>
-                <div class="col-actions">ACCIONES</div>
+        <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 0.85rem; overflow: hidden; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);">
+            <div style="display: grid; grid-template-columns: 2fr 2fr 1.4fr; gap: 1rem; padding: 1rem 1.5rem; background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; font-size: 0.78rem; font-weight: 700; color: #6b7280; letter-spacing: 0.05em;">
+                <div>PROYECTO</div>
+                <div>CATEGORÍAS</div>
+                <div style="text-align: right;">ACCIONES</div>
             </div>
 
             @foreach (var p in proyectos)
             {
-                <div class="table-row">
-                    <div class="col-project">
-                        <div class="project-title">@p.Title</div>
-                        <span class="project-type-pill">@TraducirTipo(p.ProjectType)</span>
+                <div style="display: grid; grid-template-columns: 2fr 2fr 1.4fr; gap: 1rem; padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; align-items: center;">
+                    <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                        <div style="font-weight: 700; color: #0f172a; font-size: 1rem;">@p.Title</div>
+                        <span style="align-self: flex-start; background-color: #eef2ff; color: #4338ca; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.65rem; border-radius: 9999px;">@TraducirTipo(p.ProjectType)</span>
                     </div>
 
-                    <div class="col-categories">
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; align-content: flex-start;">
                         @foreach (var cat in p.Categories)
                         {
-                            <span class="category-pill">@cat.Name</span>
+                            <span style="background-color: #f3f4f6; color: #4b5563; font-size: 0.78rem; font-weight: 500; padding: 0.25rem 0.7rem; border-radius: 9999px;">@cat.Name</span>
                         }
                     </div>
 
-                    <div class="col-actions">
-                        <button class="btn-accept" @onclick="() => Aprobar(p)" disabled="@procesando">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        <button @onclick="() => Aprobar(p)" disabled="@procesando"
+                                style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.1rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.88rem; cursor: @(procesando ? "not-allowed" : "pointer"); border: 1px solid transparent; background-color: #1e293b; color: #ffffff; opacity: @(procesando ? "0.55" : "1"); transition: background-color 0.15s; white-space: nowrap;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
                                 <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
                             </svg>
                             Aceptar
                         </button>
-                        <button class="btn-reject" @onclick="() => AbrirModalRechazo(p)" disabled="@procesando">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                        <button @onclick="() => AbrirModalRechazo(p)" disabled="@procesando"
+                                style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.1rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.88rem; cursor: @(procesando ? "not-allowed" : "pointer"); border: 1px solid #d1d5db; background-color: #ffffff; color: #1f2937; opacity: @(procesando ? "0.55" : "1"); transition: all 0.15s; white-space: nowrap;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
                                 <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
                             </svg>
                             Rechazar
@@ -90,33 +93,39 @@
 
 @if (proyectoRechazando != null)
 {
-    <div class="modal-overlay" @onclick="CerrarModal">
-        <div class="modal-box" @onclick:stopPropagation="true">
-            <div class="modal-header">
-                <div class="modal-icon">
+    <div @onclick="CerrarModal"
+         style="position: fixed; inset: 0; background-color: rgba(17, 24, 39, 0.55); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(4px); padding: 1rem;">
+        <div @onclick:stopPropagation="true"
+             style="background: #ffffff; width: 100%; max-width: 540px; border-radius: 1rem; padding: 1.75rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15), 0 10px 10px -5px rgba(0,0,0,0.04);">
+            <div style="display: flex; align-items: flex-start; gap: 0.85rem; margin-bottom: 1.25rem;">
+                <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background-color: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
                         <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
                     </svg>
                 </div>
                 <div>
-                    <h3 class="modal-title">Rechazar proyecto</h3>
-                    <p class="modal-subtitle">@proyectoRechazando.Title</p>
+                    <h3 style="margin: 0 0 0.25rem 0; font-size: 1.2rem; font-weight: 800; color: #0f172a;">Rechazar proyecto</h3>
+                    <p style="margin: 0; font-size: 0.9rem; color: #6b7280;">@proyectoRechazando.Title</p>
                 </div>
             </div>
 
-            <textarea class="reject-textarea"
-                      placeholder="Motivo del rechazo (opcional)..."
+            <textarea placeholder="Motivo del rechazo (opcional)..."
                       @bind="motivoRechazo"
-                      rows="5"></textarea>
+                      rows="5"
+                      style="width: 100%; border: 1.5px solid #1f2937; border-radius: 0.6rem; padding: 0.85rem; font-family: inherit; font-size: 0.92rem; color: #1f2937; resize: vertical; min-height: 110px; box-sizing: border-box;"></textarea>
 
             @if (errorRechazo != null)
             {
-                <div class="error-msg">@errorRechazo</div>
+                <div style="color: #dc2626; font-size: 0.85rem; margin-top: 0.5rem;">@errorRechazo</div>
             }
 
-            <div class="modal-actions">
-                <button class="btn-cancel" @onclick="CerrarModal" disabled="@procesando">Cancelar</button>
-                <button class="btn-confirm-reject" @onclick="ConfirmarRechazo" disabled="@procesando">
+            <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.25rem;">
+                <button @onclick="CerrarModal" disabled="@procesando"
+                        style="padding: 0.65rem 1.3rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem; cursor: @(procesando ? "not-allowed" : "pointer"); border: 1px solid #d1d5db; background-color: #ffffff; color: #1f2937; opacity: @(procesando ? "0.55" : "1");">
+                    Cancelar
+                </button>
+                <button @onclick="ConfirmarRechazo" disabled="@procesando"
+                        style="padding: 0.65rem 1.3rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem; cursor: @(procesando ? "not-allowed" : "pointer"); border: 1px solid transparent; background-color: #1e293b; color: #ffffff; opacity: @(procesando ? "0.55" : "1");">
                     @(procesando ? "Procesando..." : "Confirmar rechazo")
                 </button>
             </div>
