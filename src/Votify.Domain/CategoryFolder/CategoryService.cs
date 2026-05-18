@@ -78,10 +78,7 @@ public class CategoryService
             }
         }
 
-        if (data.Prizes == null || data.Prizes.Count == 0)
-            throw new ArgumentException($"La votación '{sesion.Name}' debe tener al menos un premio.");
-
-        if (data.Prizes.Count > evento.MaxProjects)
+        if (data.Prizes != null && data.Prizes.Count > evento.MaxProjects)
             throw new ArgumentException(
                 $"La votación '{sesion.Name}' no puede tener más premios ({data.Prizes.Count}) que el número máximo de proyectos del evento ({evento.MaxProjects}).");
 
@@ -149,9 +146,7 @@ public class CategoryService
 
         foreach (var sesData in data.VotingSessions)
         {
-            if (sesData.Prizes == null || sesData.Prizes.Count == 0)
-                throw new ArgumentException("Cada votación debe tener al menos un premio.");
-            if (sesData.Prizes.Count > evento.MaxProjects)
+            if (sesData.Prizes != null && sesData.Prizes.Count > evento.MaxProjects)
                 throw new ArgumentException(
                     $"Una votación no puede tener más premios ({sesData.Prizes.Count}) que el número máximo de proyectos del evento ({evento.MaxProjects}).");
         }

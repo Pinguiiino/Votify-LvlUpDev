@@ -66,13 +66,11 @@
             <p class="section-hint">Añade al menos una (jurado o público).</p>
 
             <div class="session-add-buttons">
-                <button type="button" class="btn-secondary"
-                        disabled="@(draft.Sessions.Any(s => s.VoterType == "Jury"))"
+                <button type="button" class="btn-secondary" disabled="@(draft.Sessions.Any(s => s.VoterType == "Jury"))"
                         @onclick='() => AddSession("Jury")'>
                     + Votación del jurado
                 </button>
-                <button type="button" class="btn-secondary"
-                        disabled="@(draft.Sessions.Any(s => s.VoterType == "Public"))"
+                <button type="button" class="btn-secondary" disabled="@(draft.Sessions.Any(s => s.VoterType == "Public"))"
                         @onclick='() => AddSession("Public")'>
                     + Votación del público
                 </button>
@@ -120,7 +118,8 @@
                         {
                             <div class="model-config">
                                 <label class="field-label">Top N proyectos a elegir</label>
-                                <input type="number" min="1" class="form-control form-control-sm" @bind="ses.TopN" style="max-width: 100px;" />
+                                <input type="number" min="1" class="form-control form-control-sm" @bind="ses.TopN"
+                                       style="max-width: 100px;" />
                             </div>
                         }
                         else if (ses.EvaluationType == "PointDistribution")
@@ -128,11 +127,13 @@
                             <div class="model-config" style="display:flex; gap:1rem;">
                                 <div>
                                     <label class="field-label">Total puntos</label>
-                                    <input type="number" min="1" class="form-control form-control-sm" @bind="ses.PointsPerVoter" style="max-width: 100px;" />
+                                    <input type="number" min="1" class="form-control form-control-sm" @bind="ses.PointsPerVoter"
+                                           style="max-width: 100px;" />
                                 </div>
                                 <div>
                                     <label class="field-label">Máx. por proyecto</label>
-                                    <input type="number" min="1" class="form-control form-control-sm" @bind="ses.MaxPointsPerProject" style="max-width: 100px;" />
+                                    <input type="number" min="1" class="form-control form-control-sm"
+                                           @bind="ses.MaxPointsPerProject" style="max-width: 100px;" />
                                 </div>
                             </div>
                         }
@@ -171,146 +172,157 @@
                                 <div class="item-row">
                                     <div class="item-row-main">
                                         <input type="text" class="form-control form-control-sm" placeholder="Nombre" @bind="cr.Name" />
-                                        <input type="number" step="0.05" min="0.05" max="1" class="form-control form-control-sm" placeholder="Peso" @bind="cr.Weight" />
+                                        <input type="number" step="0.05" min="0.05" max="1" class="form-control form-control-sm"
+                                               placeholder="Peso" @bind="cr.Weight" />
                                         <button type="button" class="btn-remove" @onclick="() => ses.Criteria.Remove(cr)">✕</button>
                                     </div>
                                 </div>
                             }
-                            <button type="button" class="btn-ghost" @onclick="() => ses.Criteria.Add(new CriterionDraft())">+ Añadir criterio</button>
-                        </div>
-                    }
+                            <button type="button" class="btn-ghost" @onclick="() => ses.Criteria.Add(new CriterionDraft())">+ Añadir
+                                criterio</button>
+                            </div>
+                        }
 
-                    <div class="form-group" style="background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0;">
-                        <label style="margin-bottom: 0.5rem;">Comentarios</label>
+                        <div class="form-group"
+                             style="background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0;">
+                            <label style="margin-bottom: 0.5rem;">Comentarios</label>
 
-                        <label class="checkbox-row">
-                            <input type="checkbox" @bind="ses.AllowComments" />
-                            Permitir comentario por proyecto
-                        </label>
-
-                        @if (ses.AllowComments)
-                        {
-                            <label class="checkbox-row" style="margin-left: 1.5rem; margin-top: 0.4rem;">
-                                <input type="checkbox" @bind="ses.RequireComments" />
-                                Hacerlo obligatorio
+                            <label class="checkbox-row">
+                                <input type="checkbox" @bind="ses.AllowComments" />
+                                Permitir comentario por proyecto
                             </label>
-                        }
 
-                        @if (ses.EvaluationType == "WeightedScale")
-                        {
-                            <label class="checkbox-row" style="margin-top: 0.4rem;">
-                                <input type="checkbox" @bind="ses.AllowCommentsPerCriterion" />
-                                Permitir comentario por criterio
-                            </label>
-                        }
-                    </div>
+                            @if (ses.AllowComments)
+                            {
+                                <label class="checkbox-row" style="margin-left: 1.5rem; margin-top: 0.4rem;">
+                                    <input type="checkbox" @bind="ses.RequireComments" />
+                                    Hacerlo obligatorio
+                                </label>
+                            }
 
-                    <div class="form-group" style="margin-top: 1.5rem; border-top: 1px dashed #cbd5e1; padding-top: 1rem;">
-                        <label>Premios de esta votación</label>
-                        @foreach (var pr in ses.Prizes)
-                        {
-                            <div class="item-row">
-                                <div class="item-row-main prize" style="grid-template-columns: 4.5rem 2fr auto;">
-                                    <input type="number" min="1" class="form-control form-control-sm" placeholder="Pos." @bind="pr.Position" />
-                                    <input type="text" class="form-control form-control-sm" placeholder="Recompensa" @bind="pr.Name" />
-                                    <button type="button" class="btn-remove" @onclick="() => ses.Prizes.Remove(pr)">✕</button>
-                                </div>
-                                <div class="item-row-desc">
-                                    <input type="text" style="width: 100%; border: none; font-size: 0.8rem;" placeholder="Descripción opcional..." @bind="pr.Description" />
-                                </div>
-                            </div>
-                        }
-                        <button type="button" class="btn-ghost" @onclick="() => AddPrize(ses)">+ Añadir premio</button>
-                    </div>
-
-                    <div class="form-group" style="margin-top: 1.5rem; border-top: 1px dashed #cbd5e1; padding-top: 1rem;">
-                        <label>Ventana de votación</label>
-                        <div style="display:flex; gap:1rem; flex-wrap:wrap;">
-                            <div>
-                                <label class="field-label">Apertura</label>
-                                <input type="datetime-local" class="form-control form-control-sm"
-                                       value="@(ses.OpenAt?.ToLocalTime().ToString("yyyy-MM-ddTHH:mm"))"
-                                       @onchange='e => OnSessionOpenAtChange(ses, e.Value?.ToString())' />
-                            </div>
-                            <div>
-                                <label class="field-label">Cierre</label>
-                                <input type="datetime-local" class="form-control form-control-sm"
-                                       value="@(ses.CloseAt?.ToLocalTime().ToString("yyyy-MM-ddTHH:mm"))"
-                                       @onchange='e => OnSessionCloseAtChange(ses, e.Value?.ToString())' />
-                            </div>
+                            @if (ses.EvaluationType == "WeightedScale")
+                            {
+                                <label class="checkbox-row" style="margin-top: 0.4rem;">
+                                    <input type="checkbox" @bind="ses.AllowCommentsPerCriterion" />
+                                    Permitir comentario por criterio
+                                </label>
+                            }
                         </div>
-                    </div>
 
-                    @if (ses.VoterType == "Jury")
-                    {
                         <div class="form-group" style="margin-top: 1.5rem; border-top: 1px dashed #cbd5e1; padding-top: 1rem;">
-                            <label>Correos de jurado</label>
-                            <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
-                                <input type="email" class="form-control form-control-sm" placeholder="correo@ejemplo.com"
-                                       @bind="ses.InputCorreoJurado" @bind:event="oninput"
-                                       @onkeydown='async e => { if (e.Key == "Enter") await AddJuror(ses); }' />
-                                <button type="button" class="btn-ghost" @onclick="() => AddJuror(ses)">Añadir</button>
-                            </div>
-
-                            @if (!string.IsNullOrEmpty(ses.JurorError))
+                            <label>Premios de esta votación</label>
+                            @foreach (var pr in ses.Prizes)
                             {
-                                <div style="color: #ef4444; font-size: 0.85rem; margin-bottom: 0.75rem;">@ses.JurorError</div>
-                            }
-
-                            @foreach (var email in ses.JurorEmails)
-                            {
-                                <div class="juror-chip" style="display: inline-flex; align-items: center; gap: 0.4rem; background: #f3f4f6; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.85rem; margin-right: 0.4rem; margin-bottom: 0.4rem;">
-                                    <span>@email</span>
-                                    <button type="button" class="btn-remove" style="background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 0.9rem; padding: 0;" @onclick="() => ses.JurorEmails.Remove(email)">✕</button>
+                                <div class="item-row">
+                                    <div class="item-row-main prize" style="grid-template-columns: 4.5rem 2fr auto;">
+                                        <input type="number" min="1" class="form-control form-control-sm" placeholder="Pos."
+                                               @bind="pr.Position" />
+                                        <input type="text" class="form-control form-control-sm" placeholder="Recompensa"
+                                               @bind="pr.Name" />
+                                        <button type="button" class="btn-remove" @onclick="() => ses.Prizes.Remove(pr)">✕</button>
+                                    </div>
+                                    <div class="item-row-desc">
+                                        <input type="text" style="width: 100%; border: none; font-size: 0.8rem;"
+                                               placeholder="Descripción opcional..." @bind="pr.Description" />
+                                    </div>
                                 </div>
                             }
+                            <button type="button" class="btn-ghost" @onclick="() => AddPrize(ses)">+ Añadir premio</button>
                         </div>
-                    }
-                </div>
-            }
 
-            @if (draft.Sessions.Count == 2)
-            {
-                <div class="combine-block">
-                    <label class="checkbox-row">
-                        <input type="checkbox" @bind="draft.CombineResults" />
-                        Combinar resultados de jurado y público en un único ranking
-                    </label>
-                    @if (draft.CombineResults)
-                    {
-                        <div class="combine-weights">
-                            <div><label>Peso jurado</label><input type="number" step="0.05" @bind="draft.JuryWeight" class="form-control" /></div>
-                            <div><label>Peso público</label><input type="number" step="0.05" @bind="draft.PublicWeight" class="form-control" /></div>
+                        <div class="form-group" style="margin-top: 1.5rem; border-top: 1px dashed #cbd5e1; padding-top: 1rem;">
+                            <label>Ventana de votación</label>
+                            <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                                <div>
+                                    <label class="field-label">Apertura</label>
+                                    <input type="datetime-local" class="form-control form-control-sm"
+                                           value="@(ses.OpenAt?.ToLocalTime().ToString("yyyy-MM-ddTHH:mm"))"
+                                           @onchange='e => OnSessionOpenAtChange(ses, e.Value?.ToString())' />
+                                </div>
+                                <div>
+                                    <label class="field-label">Cierre</label>
+                                    <input type="datetime-local" class="form-control form-control-sm"
+                                           value="@(ses.CloseAt?.ToLocalTime().ToString("yyyy-MM-ddTHH:mm"))"
+                                           @onchange='e => OnSessionCloseAtChange(ses, e.Value?.ToString())' />
+                                </div>
+                            </div>
                         </div>
-                    }
-                </div>
-            }
 
-            @if (errorFormulario != null)
-            {
-                <div class="error-banner">@errorFormulario</div>
-            }
+                        @if (ses.VoterType == "Jury")
+                        {
+                            <div class="form-group" style="margin-top: 1.5rem; border-top: 1px dashed #cbd5e1; padding-top: 1rem;">
+                                <label>Correos de jurado</label>
+                                <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+                                    <input type="email" class="form-control form-control-sm" placeholder="correo@ejemplo.com"
+                                           @bind="ses.InputCorreoJurado" @bind:event="oninput"
+                                           @onkeydown='async e => { if (e.Key == "Enter") await AddJuror(ses); }' />
+                                    <button type="button" class="btn-ghost" @onclick="() => AddJuror(ses)">Añadir</button>
+                                </div>
 
-            <div class="panel-actions">
-                <button type="button" class="btn-secondary" @onclick="Volver">Cancelar</button>
-                <button type="button" class="btn-primary" disabled="@guardando" @onclick="GuardarCambios">
-                    @(guardando ? "Guardando..." : "Guardar cambios")
-                </button>
+                                @if (!string.IsNullOrEmpty(ses.JurorError))
+                                {
+                                    <div style="color: #ef4444; font-size: 0.85rem; margin-bottom: 0.75rem;">@ses.JurorError</div>
+                                }
+
+                                @foreach (var email in ses.JurorEmails)
+                                {
+                                    <div class="juror-chip"
+                                         style="display: inline-flex; align-items: center; gap: 0.4rem; background: #f3f4f6; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.85rem; margin-right: 0.4rem; margin-bottom: 0.4rem;">
+                                        <span>@email</span>
+                                        <button type="button" class="btn-remove"
+                                                style="background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 0.9rem; padding: 0;"
+                                                @onclick="() => ses.JurorEmails.Remove(email)">✕</button>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (draft.Sessions.Count == 2)
+                {
+                    <div class="combine-block">
+                        <label class="checkbox-row">
+                            <input type="checkbox" @bind="draft.CombineResults" />
+                            Combinar resultados de jurado y público en un único ranking
+                        </label>
+                        @if (draft.CombineResults)
+                        {
+                            <div class="combine-weights">
+                                <div><label>Peso jurado</label><input type="number" step="0.05" @bind="draft.JuryWeight"
+                                                                          class="form-control" /></div>
+                                    <div><label>Peso público</label><input type="number" step="0.05" @bind="draft.PublicWeight"
+                                                                               class="form-control" /></div>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        @if (errorFormulario != null)
+                        {
+                            <div class="error-banner">@errorFormulario</div>
+                        }
+
+                        <div class="panel-actions">
+                            <button type="button" class="btn-secondary" @onclick="Volver">Cancelar</button>
+                            <button type="button" class="btn-primary" disabled="@guardando" @onclick="GuardarCambios">
+                                @(guardando ? "Guardando..." : "Guardar cambios")
+                            </button>
+                        </div>
+                    </div>
+                }
             </div>
-        </div>
-    }
-</div>
 
 @code {
-    [Parameter] public string EventId    { get; set; } = string.Empty;
+    [Parameter] public string EventId { get; set; } = string.Empty;
     [Parameter] public string CategoryId { get; set; } = string.Empty;
 
-    private bool   cargando      = true;
-    private bool   guardando     = false;
-    private bool   puedeEditar   = false;
+    private bool cargando = true;
+    private bool guardando = false;
+    private bool puedeEditar = false;
     private string? errorCarga;
     private string? errorFormulario;
-    private string  categoriaNombre = string.Empty;
+    private string categoriaNombre = string.Empty;
     private DateTime? eventoEndDate;
 
     private CategoryDraft draft = new();
@@ -341,32 +353,32 @@
             draft = new CategoryDraft
             {
                 AllowSelfVoting = cat.AllowSelfVoting,
-                CombineResults  = cat.CombineResults,
-                JuryWeight      = cat.JuryWeight,
-                PublicWeight    = cat.PublicWeight,
+                CombineResults = cat.CombineResults,
+                JuryWeight = cat.JuryWeight,
+                PublicWeight = cat.PublicWeight,
                 Sessions = cat.VotingSessions.Select(vs => new SessionDraft
                 {
-                    VoterType                 = vs.VoterType,
-                    EvaluationType            = vs.EvaluationType,
-                    CriterionType             = vs.CriterionType,
-                    TopN                      = vs.TopN,
-                    PointsPerVoter            = vs.PointsPerVoter,
-                    MaxPointsPerProject       = vs.MaxPointsPerProject,
-                    AllowComments             = vs.AllowComments,
-                    RequireComments           = vs.RequireComments,
+                    VoterType = vs.VoterType,
+                    EvaluationType = vs.EvaluationType,
+                    CriterionType = vs.CriterionType,
+                    TopN = vs.TopN,
+                    PointsPerVoter = vs.PointsPerVoter,
+                    MaxPointsPerProject = vs.MaxPointsPerProject,
+                    AllowComments = vs.AllowComments,
+                    RequireComments = vs.RequireComments,
                     AllowCommentsPerCriterion = vs.AllowCommentsPerCriterion,
-                    OpenAt                    = vs.OpenAt,
-                    CloseAt                   = vs.CloseAt,
-                    JurorEmails               = vs.JurorEmails?.ToList() ?? new List<string>(),
+                    OpenAt = vs.OpenAt,
+                    CloseAt = vs.CloseAt,
+                    JurorEmails = vs.JurorEmails?.ToList() ?? new List<string>(),
                     Criteria = vs.Criteria.Select(c => new CriterionDraft
                     {
-                        Name   = c.Name,
+                        Name = c.Name,
                         Weight = c.Weight
                     }).ToList(),
                     Prizes = vs.Prizes.Select(p => new PrizeDraft
                     {
-                        Position    = p.Position,
-                        Name        = p.Name,
+                        Position = p.Position,
+                        Name = p.Name,
                         Description = p.Description
                     }).ToList()
                 }).ToList()
@@ -389,9 +401,9 @@
         var defaultEval = voterType == "Jury" ? "WeightedScale" : "TopN";
         draft.Sessions.Add(new SessionDraft
         {
-            VoterType      = voterType,
+            VoterType = voterType,
             EvaluationType = defaultEval,
-            TopN           = defaultEval == "TopN" ? 3 : null
+            TopN = defaultEval == "TopN" ? 3 : null
         });
     }
 
@@ -401,7 +413,7 @@
 
         if (model != "WeightedScale")
         {
-            ses.CriterionType             = null;
+            ses.CriterionType = null;
             ses.AllowCommentsPerCriterion = false;
         }
         else if (string.IsNullOrEmpty(ses.CriterionType))
@@ -525,11 +537,6 @@
                 }
             }
 
-            if (ses.Prizes.Count == 0)
-            {
-                errorFormulario = $"La votación de {tipoVotante} debe tener al menos un premio.";
-                return;
-            }
 
             if (!ses.AllowComments) ses.RequireComments = false;
             if (ses.EvaluationType != "WeightedScale") ses.AllowCommentsPerCriterion = false;
@@ -542,7 +549,7 @@
             {
                 draft.AllowSelfVoting,
                 draft.CombineResults,
-                JuryWeight   = draft.CombineResults ? draft.JuryWeight   : null,
+                JuryWeight = draft.CombineResults ? draft.JuryWeight : null,
                 PublicWeight = draft.CombineResults ? draft.PublicWeight : null,
                 VotingSessions = draft.Sessions.Select(s => new
                 {
@@ -555,11 +562,11 @@
                     s.AllowComments,
                     s.RequireComments,
                     s.AllowCommentsPerCriterion,
-                    OpenAt  = s.OpenAt,
+                    OpenAt = s.OpenAt,
                     CloseAt = s.CloseAt,
                     JurorEmails = s.VoterType == "Jury" ? s.JurorEmails : new List<string>(),
                     Criteria = s.Criteria.Select(c => new { c.Name, c.Weight }),
-                    Prizes   = s.Prizes.Select(p => new { p.Position, p.Name, p.Description })
+                    Prizes = s.Prizes.Select(p => new { p.Position, p.Name, p.Description })
                 })
             };
 

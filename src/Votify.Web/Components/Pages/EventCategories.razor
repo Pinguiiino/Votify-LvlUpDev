@@ -760,12 +760,7 @@
                 }
             }
 
-            if (ses.Prizes.Count == 0)
-            {
-                errorFormulario = $"La votación de {tipoVotante} debe tener al menos un premio.";
-                return;
-            }
-
+            
             if (!ses.AllowComments)
             {
                 ses.RequireComments = false;
