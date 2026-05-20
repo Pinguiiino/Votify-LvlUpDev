@@ -1,6 +1,10 @@
 @page "/dashboard/{EventoId}"
 @rendermode InteractiveServer
 @using Votify.Domain.EventFolder
+@using Votify.Domain.VoteFolder
+@using Microsoft.AspNetCore.SignalR.Client
+@implements IAsyncDisposable
+@implements IVoteObserver
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager Navigation
 
@@ -124,11 +128,34 @@
 
 @code {
     [Parameter] public string EventoId { get; set; } = string.Empty;
-    
+
     private EventDashboardDto? stats;
     private string? errorMessage = null;
+    private HubConnection? _hub;
 
     protected override async Task OnInitializedAsync()
+    {
+        await LoadStats();
+
+        _hub = new HubConnectionBuilder()
+            .WithUrl("https://localhost:7150/hubs/votes")
+            .Build();
+
+        _hub.On<string, string, string>("VoteCast", async (eventId, categoryId, sessionId) =>
+            await Update(new VoteChangedEvent(eventId, categoryId, sessionId)));
+
+        await _hub.StartAsync();
+        await _hub.InvokeAsync("JoinEventGroup", EventoId);
+    }
+
+    public async Task Update(VoteChangedEvent voteEvent)
+    {
+        if (voteEvent.EventId != EventoId) return;
+        await LoadStats();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadStats()
     {
         try
         {
@@ -138,6 +165,15 @@
         catch (Exception ex)
         {
             errorMessage = "No se pudieron cargar los datos reales: " + ex.Message;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hub is not null)
+        {
+            await _hub.InvokeAsync("LeaveEventGroup", EventoId);
+            await _hub.DisposeAsync();
         }
     }
 

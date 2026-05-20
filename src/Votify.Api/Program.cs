@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Votify.Api.Hubs;
 using Votify.Api.Services;
 using Votify.Domain.AuditFolder;
 using Votify.Domain.CategoryFolder;
@@ -38,6 +39,8 @@ builder.Services.AddScoped<AuditService>();
 builder.Services.AddScoped<IWeightedVoteRepository, WeightedVoteRepository>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddVotingStrategies();
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<VoteNotifier>();
 
 var jwtKey = builder.Configuration["Jwt:Key"];
 
@@ -67,7 +70,8 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins("https://localhost:7121")
                   .AllowAnyHeader()
-                  .AllowAnyMethod();
+                  .AllowAnyMethod()
+                  .AllowCredentials();
         });
 });
 
@@ -87,6 +91,7 @@ app.UseStaticFiles();
 
 app.MapGet("/", () => "API funcionando");
 app.MapControllers();
+app.MapHub<VoteHub>("/hubs/votes");
 
 using (var scope = app.Services.CreateScope())
 {

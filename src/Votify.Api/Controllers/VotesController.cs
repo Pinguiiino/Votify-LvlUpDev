@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Votify.Api.Services;
 using Votify.Domain.VoteFolder;
 using Votify.Domain.VoteFolder.Strategies;
 
@@ -9,10 +10,12 @@ namespace Votify.Api.Controllers
     public class VotesController : ControllerBase
     {
         private readonly VoteService _service;
+        private readonly VoteNotifier _notifier;
 
-        public VotesController(VoteService service)
+        public VotesController(VoteService service, VoteNotifier notifier)
         {
             _service = service;
+            _notifier = notifier;
         }
 
         [HttpPost("cast")]
@@ -22,6 +25,7 @@ namespace Votify.Api.Controllers
             {
                 var input = dto.ToStrategyInput();
                 await _service.CastVotesByStrategyAsync(dto.VotingSessionId, input);
+                _notifier.NotifyObservers(new VoteChangedEvent(dto.EventId, dto.CategoryId, dto.VotingSessionId));
                 return Ok(new { message = "Voto registrado correctamente." });
             }
             catch (Exception ex) { return BadRequest(ex.Message); }
@@ -41,6 +45,7 @@ namespace Votify.Api.Controllers
                         .ToArray()
                 };
                 await _service.CastVotesByStrategyAsync(dto.VotingSessionId, input);
+                _notifier.NotifyObservers(new VoteChangedEvent(dto.EventId, dto.CategoryId, dto.VotingSessionId));
                 return Ok(new { message = "Votos registrados correctamente." });
             }
             catch (Exception ex) { return BadRequest(ex.Message); }
@@ -65,6 +70,7 @@ namespace Votify.Api.Controllers
                         .ToArray()
                 };
                 await _service.CastVotesByStrategyAsync(dto.VotingSessionId, input);
+                _notifier.NotifyObservers(new VoteChangedEvent(dto.EventId, dto.CategoryId, dto.VotingSessionId));
                 return Ok(new { message = "Evaluación registrada." });
             }
             catch (Exception ex) { return BadRequest(ex.Message); }
@@ -84,6 +90,7 @@ namespace Votify.Api.Controllers
                         .ToArray()
                 };
                 await _service.CastVotesByStrategyAsync(dto.VotingSessionId, input);
+                _notifier.NotifyObservers(new VoteChangedEvent(dto.EventId, dto.CategoryId, dto.VotingSessionId));
                 return Ok(new { message = "Reparto de puntos registrado." });
             }
             catch (Exception ex) { return BadRequest(ex.Message); }
@@ -124,6 +131,7 @@ namespace Votify.Api.Controllers
 
     public sealed class CastVoteRequest
     {
+        public string EventId { get; init; } = "";
         public string UserId { get; init; } = "";
         public string CategoryId { get; init; } = "";
         public string VotingSessionId { get; init; } = "";
@@ -155,8 +163,8 @@ namespace Votify.Api.Controllers
 
     public record WeightedCriterionScoreDto(string CriterionId, double Score, string? Comment = null);
     public record WeightedProjectScoreDto(string ProjectId, string? Comment, List<WeightedCriterionScoreDto> CriterionScores);
-    public record WeightedBatchRequest(string UserId, string CategoryId, string VotingSessionId, List<WeightedProjectScoreDto> Scores);
+    public record WeightedBatchRequest(string EventId, string UserId, string CategoryId, string VotingSessionId, List<WeightedProjectScoreDto> Scores);
 
     public record PointAllocationDto(string ProjectId, int Points, string? Comment);
-    public record PointDistributionRequest(string UserId, string CategoryId, string VotingSessionId, List<PointAllocationDto> Allocations);
+    public record PointDistributionRequest(string EventId, string UserId, string CategoryId, string VotingSessionId, List<PointAllocationDto> Allocations);
 }
