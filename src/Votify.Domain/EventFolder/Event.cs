@@ -33,6 +33,7 @@ public abstract class Event
 
     public abstract string Modality();
 
+    public abstract void SetModality(string modality);
     public virtual string Summary()
         => $"{this.Name} [{Modality()}] — hasta {this.MaxProjects} proyectos, {this.StartDate:d} → {this.EndDate:d}";
 }

@@ -17,5 +17,10 @@ namespace Votify.Domain.EventFolder
         }
 
         public override string Modality() => modality;
+
+        public override void SetModality(string modality)
+        {
+            this.modality = modality;
+        }
     }
 }

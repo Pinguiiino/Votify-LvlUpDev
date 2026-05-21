@@ -238,4 +238,47 @@ public class EventService
         evento.Auditor = auditorId;
         await _repository.SaveChangesAsync();
     }
+
+    public async Task<Event> UpdateEventAsync(
+    string id, string name, string modality, int maxProjects,
+    DateTime startDate, DateTime endDate, string? description,
+    string? imageUrl, string auditorEmail)
+    {
+        var evento = await _repository.GetByIdAsync(id);
+        if (evento == null)
+            throw new ArgumentException("Evento no encontrado.");
+
+        if (DateTime.UtcNow >= evento.StartDate)
+            throw new ArgumentException("No se puede editar el evento porque ya ha comenzado.");
+
+        if (evento.Name != name)
+        {
+            bool nombreOcupado = await _repository.ExistsByNameAsync(name);
+            if (nombreOcupado)
+                throw new ArgumentException($"Ya existe un evento con el nombre \"{name}\". Elige otro nombre.");
+        }
+
+        var auditor = await _userRepository.GetByEmailAsync(auditorEmail);
+        if (auditor == null)
+            throw new ArgumentException($"No existe ninguna cuenta registrada con el correo '{auditorEmail}'.");
+
+        evento.Name = name;
+        evento.SetModality(modality);
+        evento.MaxProjects = maxProjects;
+        evento.StartDate = startDate;
+        evento.EndDate = endDate;
+        evento.Description = description;
+        evento.ImageUrl = imageUrl;
+        evento.Auditor = auditor.Id;
+
+        await _repository.SaveChangesAsync();
+        return evento;
+    }
+
+    public async Task<string> GetUserEmailByIdAsync(string id)
+    {
+        if (string.IsNullOrEmpty(id)) return string.Empty;
+        var user = await _userRepository.GetByIdAsync(id);
+        return user?.Email ?? string.Empty;
+    }
 }

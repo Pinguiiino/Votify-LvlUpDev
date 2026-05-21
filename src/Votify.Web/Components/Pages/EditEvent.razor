@@ -1,0 +1,300 @@
+﻿@page "/event/{EventId}/edit"
+@using Votify.Web.Auth
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Authorization
+@inject CustomAuthStateProvider CustomAuthProvider
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+<PageTitle>Editar Evento - Votify</PageTitle>
+
+<div class="create-event-container">
+    @if (cargando)
+    {
+        <div style="padding: 3rem; text-align: center; color: #4b5563;">
+            <p>Cargando datos del evento...</p>
+        </div>
+    }
+    else
+    {
+        <EditForm Model="eventModel" OnValidSubmit="ManejarSubmitValido">
+            <DataAnnotationsValidator />
+            <Breadcrumb EventId="@EventId" CurrentPageName="Editar Evento" />
+
+            <header class="modal-header">
+                <div class="header-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                    </svg>
+                    <h1>Editar Evento</h1>
+                </div>
+                <button type="button" class="close-btn" @onclick="Cancelar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                    </svg>
+                </button>
+            </header>
+
+            <div class="modal-body">
+
+                <div class="form-group">
+                    <label>Nombre del evento *</label>
+                    <InputText class="form-control"
+                               placeholder="Ej: Hackathon 2026"
+                               @bind-Value="eventModel.Name"
+                               @oninput="() => errorServidor = null" />
+                    <ValidationMessage For="@(() => eventModel.Name)" />
+                </div>
+
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <InputTextArea class="form-control"
+                                   rows="4"
+                                   placeholder="Describe el evento..."
+                                   @bind-Value="eventModel.Description" />
+                </div>
+
+                <div class="form-group">
+                    <label>Imagen del evento</label>
+                    <InputFile class="form-control" OnChange="OnImagenSeleccionada" accept="image/*" />
+                    @if (subiendoImagen)
+                    {
+                        <div style="font-size: 0.85rem; color: #6b7280; margin-top: 0.25rem;">Subiendo imagen...</div>
+                    }
+                    @if (errorImagen != null)
+                    {
+                        <div class="validation-error" style="color: #dc2626; font-size: 0.85rem; margin-top: 0.25rem;">@errorImagen</div>
+                    }
+                    @if (!string.IsNullOrEmpty(eventModel.ImageUrl))
+                    {
+                        <div style="margin-top: 0.5rem;">
+                            <img src="@(apiBaseUrl + eventModel.ImageUrl)" alt="Vista previa" style="max-width: 200px; max-height: 150px; border-radius: 0.5rem; border: 1px solid #e5e7eb;" />
+                            <button type="button" class="btn-delete" style="margin-left: 0.5rem;" @onclick="() => eventModel.ImageUrl = null">Quitar</button>
+                        </div>
+                    }
+                </div>
+
+                <div class="form-group">
+                    <label>Modalidad *</label>
+                    <InputText class="form-control"
+                               placeholder="Ej: Presencial, Online, Híbrido"
+                               @bind-Value="eventModel.Modality" />
+                    <ValidationMessage For="@(() => eventModel.Modality)" />
+                </div>
+
+                <div class="form-group">
+                    <label>Número máximo de proyectos *</label>
+                    <InputNumber class="form-control"
+                                 placeholder="20"
+                                 @bind-Value="eventModel.MaxProjects" />
+                    <ValidationMessage For="@(() => eventModel.MaxProjects)" />
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <div class="form-group">
+                        <label>Fecha de inicio *</label>
+                        <InputDate class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" @bind-Value="eventModel.StartDate" />
+                        <ValidationMessage For="@(() => eventModel.StartDate)" />
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de fin *</label>
+                        <InputDate class="form-control" min="@(eventModel.StartDate.HasValue ? eventModel.StartDate.Value.ToString("yyyy-MM-dd") : DateTime.Today.ToString("yyyy-MM-dd"))" @bind-Value="eventModel.EndDate" />
+                        <ValidationMessage For="@(() => eventModel.EndDate)" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Asignar o cambiar auditor *</label>
+                    <InputText @bind-Value="eventModel.AuditorEmail" class="form-control" placeholder="correo@ejemplo.com" />
+                    <ValidationMessage For="@(() => eventModel.AuditorEmail)" />
+                </div>
+
+                @if (errorServidor != null)
+                {
+                    <div style="background-color: #fee2e2; border: 1px solid #f87171; color: #b91c1c; padding: 0.75rem; border-radius: 0.5rem; margin-top: 1rem; font-size: 0.9rem;">
+                        @errorServidor
+                    </div>
+                }
+
+            </div>
+
+            <footer class="modal-footer">
+                <button type="button" class="btn-secondary" @onclick="Cancelar">Cancelar</button>
+                <button type="submit" class="btn-primary">Guardar Cambios</button>
+            </footer>
+
+        </EditForm>
+    }
+</div>
+
+@code {
+    [Parameter] public string EventId { get; set; } = string.Empty;
+
+    private EditEventModel eventModel = new();
+    private string? errorServidor;
+    private string? errorImagen;
+    private bool subiendoImagen;
+    private bool cargando = true;
+    private string apiBaseUrl = string.Empty;
+    private string currentUserId = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var http = HttpClientFactory.CreateClient("API");
+        apiBaseUrl = http.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
+
+        var authState = await CustomAuthProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
+        await CargarDatosEvento();
+    }
+
+    private async Task CargarDatosEvento()
+    {
+        try
+        {
+            var http = HttpClientFactory.CreateClient("API");
+            var res = await http.GetFromJsonAsync<EventFetchDto>($"/api/events/{EventId}");
+            
+            if (res != null)
+            {
+                // Seguridad a nivel de cliente: Si no es el organizador, fuera
+                if (res.Organizer != currentUserId)
+                {
+                    Navigation.NavigateTo("/not-found");
+                    return;
+                }
+
+                // Precargamos el modelo con los datos actuales del servidor
+                eventModel.Name = res.Name;
+                eventModel.Description = res.Description ?? string.Empty;
+                eventModel.Modality = res.Modality;
+                eventModel.MaxProjects = res.MaxProjects;
+                eventModel.StartDate = res.StartDate;
+                eventModel.EndDate = res.EndDate;
+                eventModel.ImageUrl = res.ImageUrl;
+                eventModel.AuditorEmail = res.AuditorEmail;
+            }
+        }
+        catch
+        {
+            errorServidor = "No se pudieron precargar los datos del evento.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task OnImagenSeleccionada(InputFileChangeEventArgs e)
+    {
+        errorImagen = null;
+        var file = e.File;
+        if (file == null) return;
+
+        if (file.Size > 5 * 1024 * 1024)
+        {
+            errorImagen = "La imagen no puede superar los 5 MB.";
+            return;
+        }
+
+        try
+        {
+            subiendoImagen = true;
+            using var content = new MultipartFormDataContent();
+            var stream = file.OpenReadStream(5 * 1024 * 1024);
+            var streamContent = new StreamContent(stream);
+            streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+            content.Add(streamContent, "file", file.Name);
+
+            var http = HttpClientFactory.CreateClient("API");
+            var response = await http.PostAsync("/api/events/upload-image", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var data = await response.Content.ReadFromJsonAsync<UploadResponse>();
+                eventModel.ImageUrl = data?.Url;
+            }
+            else { errorImagen = "No se pudo subir la imagen."; }
+        }
+        catch (Exception ex) { errorImagen = $"Error: {ex.Message}"; }
+        finally
+        {
+            subiendoImagen = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ManejarSubmitValido()
+    {
+        errorServidor = null;
+        try
+        {
+            var http = HttpClientFactory.CreateClient("API");
+            var session = await CustomAuthProvider.GetUserSessionAsync();
+            if (session != null && !string.IsNullOrEmpty(session.Token))
+            {
+                http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", session.Token);
+            }
+
+            var response = await http.PutAsJsonAsync($"/api/events/{EventId}", eventModel);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Navigation.NavigateTo("/MainEvent");
+            }
+            else
+            {
+                errorServidor = (await response.Content.ReadAsStringAsync()).Trim('"');
+            }
+        }
+        catch { errorServidor = "Error crítico de conexión."; }
+    }
+
+    private void Cancelar() => Navigation.NavigateTo("/MainEvent");
+
+    public class EditEventModel : IValidatableObject
+    {
+        [Required(ErrorMessage = "El nombre del evento es obligatorio.")]
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        [Required(ErrorMessage = "La modalidad es obligatoria.")]
+        public string Modality { get; set; } = string.Empty;
+        [Range(1, 1000, ErrorMessage = "El número máximo de proyectos debe estar entre 1 y 1000.")]
+        public int MaxProjects { get; set; }
+        [Required(ErrorMessage = "La fecha de inicio es obligatoria.")]
+        public DateTime? StartDate { get; set; }
+        [Required(ErrorMessage = "La fecha de fin es obligatoria.")]
+        public DateTime? EndDate { get; set; }
+        [Required(ErrorMessage = "El correo del Auditor es obligatorio.")]
+        [EmailAddress(ErrorMessage = "Debe ser un formato de correo válido.")]
+        public string AuditorEmail { get; set; } = string.Empty;
+        public string? ImageUrl { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (StartDate.HasValue && StartDate.Value.Date < DateTime.Today)
+                yield return new ValidationResult("La fecha de inicio no puede ser anterior a hoy.", new[] { nameof(StartDate) });
+
+            if (EndDate.HasValue && StartDate.HasValue && EndDate.Value.Date < StartDate.Value.Date)
+                yield return new ValidationResult("La fecha de fin debe ser posterior a la de inicio.", new[] { nameof(EndDate) });
+        }
+    }
+
+    private class EventFetchDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string Modality { get; set; } = string.Empty;
+        public int MaxProjects { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public string? ImageUrl { get; set; }
+        public string Organizer { get; set; } = string.Empty;
+        public string AuditorEmail { get; set; } = string.Empty;
+    }
+
+    private class UploadResponse { public string? Url { get; set; } }
+}

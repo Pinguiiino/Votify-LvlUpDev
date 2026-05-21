@@ -152,7 +152,40 @@ public class EventsController : ControllerBase
         return Ok(new { url });
     }
 
-    private static object ToDto(Event e, List<Votify.Domain.CategoryFolder.Category> categorias) => new
+    [HttpPut("{id}")]
+    [Authorize]
+    public async Task<IActionResult> UpdateEvent(string id, [FromBody] UpdateEventDto dto)
+    {
+        try
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var evento = await _service.GetByIdAsync(id);
+            if (evento == null) return NotFound();
+
+            if (evento.Organizer != userId)
+                return Forbid("No tienes permisos para editar este evento.");
+
+            var fechaInicioUtc = dto.StartDate.ToUniversalTime();
+            var fechaFinUtc = dto.EndDate.ToUniversalTime();
+
+            var updatedEvent = await _service.UpdateEventAsync(
+                id, dto.Name, dto.Modality, dto.MaxProjects,
+                fechaInicioUtc, fechaFinUtc, dto.Description, dto.ImageUrl, dto.AuditorEmail);
+
+            return Ok(updatedEvent);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            var errorReal = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+            return StatusCode(500, errorReal);
+        }
+    }
+
+    private object ToDto(Event e, List<Votify.Domain.CategoryFolder.Category> categorias) => new
     {
         e.Id,
         e.Name,
@@ -164,6 +197,7 @@ public class EventsController : ControllerBase
         Modality = e.Modality(),
 
         Organizer = e.Organizer ?? string.Empty,
+        AuditorEmail = _service.GetUserEmailByIdAsync(e.Auditor).Result,
         AuditorId = e.Auditor ?? string.Empty,
         ParticipantsIds = e.Participants?.Select(p => p.Id).ToList() ?? new List<string>(),
         PublicIds = e.Public?.Select(p => p.Id).ToList() ?? new List<string>(),
@@ -229,4 +263,16 @@ public class EnrollRequestDto
 public class AssignAuditorDto
 {
     public string AuditorId { get; set; } = string.Empty;
+}
+
+public class UpdateEventDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Modality { get; set; } = string.Empty;
+    public int MaxProjects { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public string? ImageUrl { get; set; }
+    public string AuditorEmail { get; set; } = string.Empty;
 }

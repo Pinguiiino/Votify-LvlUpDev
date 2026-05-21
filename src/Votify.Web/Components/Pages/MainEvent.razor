@@ -77,53 +77,6 @@
                                 <span style="display: block; font-size: 0.85rem; color: #16a34a; font-weight: 600; text-align: center; margin-bottom: 0.5rem;">
                                     ★ Creador del Evento
                                 </span>
-
-                                @* Sección de auditor *@
-                                @if (eventoConMensaje == evento.Id)
-                                {
-                                    <div style="font-size: 0.82rem; color: #16a34a; font-weight: 600; text-align: center;">
-                                        ✓ Auditor asignado correctamente
-                                    </div>
-                                }
-                                else if (yaAsignado && eventoAsignando != evento.Id)
-                                {
-                                    <div style="font-size: 0.82rem; color: #b45309; font-weight: 600; text-align: center; margin-bottom: 0.4rem;">
-                                        🔍 Auditor ya asignado
-                                    </div>
-                                    <button class="btn-outline" style="width:100%; font-size:0.82rem;"
-                                            @onclick="() => eventoAsignando = evento.Id">
-                                        Reasignar auditor
-                                    </button>
-                                }
-                                else if (eventoAsignando != evento.Id)
-                                {
-                                    <button class="btn-outline" style="width:100%; font-size:0.85rem;"
-                                            @onclick="() => { eventoAsignando = evento.Id; errorAuditor = null; emailAuditor = string.Empty; }">
-                                        🔍 Asignar auditor
-                                    </button>
-                                }
-
-                                @if (eventoAsignando == evento.Id)
-                                {
-                                    <div style="display:flex; flex-direction:column; gap:0.5rem; margin-top:0.5rem;">
-                                        <input type="email" class="form-control" placeholder="correo@auditor.com"
-                                               @bind="emailAuditor" />
-                                        @if (!string.IsNullOrEmpty(errorAuditor))
-                                        {
-                                            <span style="color:#ef4444; font-size:0.8rem;">@errorAuditor</span>
-                                        }
-                                        <div style="display:flex; gap:0.5rem;">
-                                            <button class="btn-primary" style="flex:1; font-size:0.85rem;"
-                                                    @onclick="() => AsignarAuditor(evento.Id)">
-                                                Confirmar
-                                            </button>
-                                            <button class="btn-secondary" style="font-size:0.85rem;"
-                                                    @onclick="() => { eventoAsignando = null; errorAuditor = null; }">
-                                                Cancelar
-                                            </button>
-                                        </div>
-                                    </div>
-                                }
                             }
                             else if (isAuditor)
                             {
@@ -143,11 +96,10 @@
                                     ✓ Inscrito como Público
                                 </span>
                             }
-                            else 
+                            else
                             {
-                                // Ahora solo comprobamos si NO eres el organizador o auditor contextual de este evento
                                 <button class="btn-outline" style="width: 100%; padding: 0.6rem; font-size: 0.9rem;"
-                                        @onclick='() => EnrollAsPublic(evento.Id, evento.Name)'>
+                                @onclick='() => EnrollAsPublic(evento.Id, evento.Name)'>
                                     Inscribirse al evento
                                 </button>
                             }
