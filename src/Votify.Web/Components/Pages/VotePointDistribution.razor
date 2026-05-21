@@ -10,6 +10,7 @@
 
 <div class="pd-container">
     <header class="pd-header">
+        <Breadcrumb EventId="@EventId" CategoryId="@CategoryId" CurrentPageName="Votar: Reparto" />
         <button class="back-btn" @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories/{CategoryId}/projects")'>
             ← Volver a proyectos
         </button>

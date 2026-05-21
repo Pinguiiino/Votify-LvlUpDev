@@ -12,6 +12,7 @@
 
 <div class="mainproject-container" style="position: relative;">
     <header class="hero-section" style="display: flex; justify-content: space-between; align-items: flex-start; text-align: left;">
+        <Breadcrumb EventId="@EventId" CategoryId="@CategoryId" CurrentPageName="Proyectos" />
         <div>
             <button class="back-btn" style="align-self: flex-start; margin-bottom: 1rem;"
                     @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories")'>

@@ -10,6 +10,7 @@
 
 <div class="ranking-container">
     <header class="ranking-header">
+        <Breadcrumb EventId="@EventId" CategoryId="@CategoryId" CurrentPageName="Votar: Ranking" />
         <button class="back-btn" @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories/{CategoryId}/projects")'>
             ← Volver a proyectos
         </button>

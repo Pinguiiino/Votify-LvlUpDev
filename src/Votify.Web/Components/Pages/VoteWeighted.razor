@@ -11,6 +11,7 @@
 
 <div class="weighted-container">
     <header class="weighted-header">
+        <Breadcrumb EventId="@EventId" CategoryId="@CategoryId" CurrentPageName="Votar: Baremo" />
         <button class="back-btn" @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories/{CategoryId}/projects")'>
             ← Volver a proyectos
         </button>

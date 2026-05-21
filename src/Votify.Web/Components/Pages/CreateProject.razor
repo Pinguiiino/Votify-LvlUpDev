@@ -13,6 +13,7 @@
 <div class="create-project-container">
     <EditForm Model="projectModel" OnValidSubmit="ManejarSubmitValido">
         <DataAnnotationsValidator />
+        <Breadcrumb EventId="@EventId" CurrentPageName="Crear proyecto" />
 
         <header class="modal-header">
             <div class="header-title">
