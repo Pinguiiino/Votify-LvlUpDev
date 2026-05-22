@@ -1,115 +1,66 @@
-﻿@using System.Net.Http.Json
+@using System.Net.Http.Json
 @inject IHttpClientFactory HttpClientFactory
+@inject BreadcrumbStateService BreadcrumbState
+@implements IDisposable
 
-<nav aria-label="breadcrumb" class="votify-breadcrumb">
-    <ol>
-        <li><a href="/MainEvent">Inicio</a></li>
-        
-        @if (isLoading)
-        {
-            <li class="active">Cargando ruta...</li>
-        }
-        else
-        {
-            @if (!string.IsNullOrEmpty(EventId))
-            {
-                <li><a href="/event/@EventId/categories">@(eventName ?? "Evento")</a></li>
-            }
-            
-            @if (!string.IsNullOrEmpty(CategoryId))
-            {
-                <li><a href="/event/@EventId/categories/@CategoryId/projects">@(categoryName ?? "Categoría")</a></li>
-            }
-
-            @if (!string.IsNullOrEmpty(CurrentPageName))
-            {
-                <li class="active" aria-current="page">@CurrentPageName</li>
-            }
-        }
-    </ol>
-</nav>
-
-<style>
-    .votify-breadcrumb {
-        background-color: #f8fafc;
-        padding: 0.75rem 1rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1.5rem;
-        border: 1px solid #e2e8f0;
-    }
-    .votify-breadcrumb ol {
-        list-style: none;
-        display: flex;
-        flex-wrap: wrap;
-        padding: 0;
-        margin: 0;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-    .votify-breadcrumb li {
-        display: flex;
-        align-items: center;
-    }
-    .votify-breadcrumb li:not(:last-child)::after {
-        content: "›";
-        margin: 0 0.5rem;
-        color: #94a3b8;
-        font-size: 1.2rem;
-        line-height: 1;
-    }
-    .votify-breadcrumb a {
-        color: #0284c7;
-        text-decoration: none;
-        transition: color 0.2s;
-    }
-    .votify-breadcrumb a:hover {
-        color: #0369a1;
-        text-decoration: underline;
-    }
-    .votify-breadcrumb li.active {
-        color: #475569;
-    }
-</style>
+@* Headless: sets breadcrumb state in the top-bar, renders nothing here *@
 
 @code {
     [Parameter] public string? EventId { get; set; }
     [Parameter] public string? CategoryId { get; set; }
     [Parameter] public string? CurrentPageName { get; set; }
 
-    private string? eventName;
-    private string? categoryName;
-    private bool isLoading = true;
+    private string? _eventName;
+    private string? _categoryName;
 
     protected override async Task OnParametersSetAsync()
     {
+        _eventName = null;
+        _categoryName = null;
+
         if (!string.IsNullOrEmpty(EventId))
         {
             try
             {
                 var http = HttpClientFactory.CreateClient("API");
                 var evt = await http.GetFromJsonAsync<EventDto>($"api/events/{EventId}");
-                
                 if (evt != null)
                 {
-                    eventName = evt.Name;
-                    
+                    _eventName = evt.Name;
                     if (!string.IsNullOrEmpty(CategoryId))
                     {
                         var cat = evt.Categories?.FirstOrDefault(c => c.Id == CategoryId);
                         if (cat != null)
-                        {
-                            categoryName = cat.Name;
-                        }
+                            _categoryName = cat.Name;
                     }
                 }
             }
-            catch
-            {
-                
-            }
+            catch { }
         }
-        isLoading = false;
+
+        PushState();
     }
+
+    private void PushState()
+    {
+        var items = new List<BreadcrumbStateService.BreadcrumbItem>
+        {
+            new("Inicio", "/MainEvent")
+        };
+
+        if (!string.IsNullOrEmpty(EventId))
+            items.Add(new(_eventName ?? "Evento", $"/event/{EventId}/categories"));
+
+        if (!string.IsNullOrEmpty(CategoryId))
+            items.Add(new(_categoryName ?? "Categoría", $"/event/{EventId}/categories/{CategoryId}/projects"));
+
+        if (!string.IsNullOrEmpty(CurrentPageName))
+            items.Add(new(CurrentPageName, null));
+
+        BreadcrumbState.SetItems(items);
+    }
+
+    public void Dispose() => BreadcrumbState.Clear();
 
     private class EventDto
     {

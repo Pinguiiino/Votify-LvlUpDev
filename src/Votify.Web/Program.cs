@@ -19,6 +19,7 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddScoped<CustomAuthStateProvider>();
+builder.Services.AddScoped<Votify.Web.Components.Layout.BreadcrumbStateService>();
 
 var app = builder.Build();
 

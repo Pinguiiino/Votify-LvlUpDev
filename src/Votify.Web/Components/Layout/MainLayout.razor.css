@@ -15,7 +15,7 @@ main {
 .top-row {
     background-color: #f7f7f7;
     border-bottom: 1px solid #d6d5d5;
-    justify-content: flex-end;
+    justify-content: space-between;
     height: 3.5rem;
     display: flex;
     align-items: center;
@@ -124,4 +124,48 @@ main {
     font-weight: 600;
     color: #111827 !important;
     text-decoration: none;
+}
+
+.top-breadcrumb {
+    flex: 1;
+}
+
+.top-breadcrumb ol {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.top-breadcrumb li {
+    display: flex;
+    align-items: center;
+}
+
+.top-breadcrumb a {
+    color: #0284c7;
+    text-decoration: none;
+    transition: color 0.15s;
+    margin-left: 0;
+    white-space: normal;
+}
+
+.top-breadcrumb a:hover {
+    color: #0369a1;
+    text-decoration: underline;
+}
+
+.top-breadcrumb .bc-active {
+    color: #374151;
+}
+
+.top-breadcrumb .bc-sep {
+    margin: 0 0.4rem;
+    color: #9ca3af;
+    font-size: 1.1rem;
+    line-height: 1;
 }

@@ -33,15 +33,17 @@
 
 .project-card {
     display: flex;
-    border: 1px solid #e5e7eb;
+    border: 1.5px solid #d1d5db;
     border-radius: 1rem;
     padding: 1.5rem;
     background-color: #ffffff;
-    transition: box-shadow 0.2s;
+    transition: box-shadow 0.2s, transform 0.2s;
+    box-shadow: 4px 4px 0 0 #111827;
 }
 
     .project-card:hover {
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        box-shadow: 6px 6px 0 0 #111827;
+        transform: translate(-1px, -1px);
     }
 
 .icon-container {

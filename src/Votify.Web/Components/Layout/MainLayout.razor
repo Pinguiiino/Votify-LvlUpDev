@@ -1,5 +1,7 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @using Microsoft.AspNetCore.Components.Authorization
+@inject BreadcrumbStateService BreadcrumbState
+@implements IDisposable
 
 <div class="page">
     <div class="sidebar">
@@ -8,6 +10,33 @@
 
     <main>
         <div class="top-row px-4">
+            @if (BreadcrumbState.Items.Count > 0)
+            {
+                <nav class="top-breadcrumb" aria-label="breadcrumb">
+                    <ol>
+                        @for (int i = 0; i < BreadcrumbState.Items.Count; i++)
+                        {
+                            var item = BreadcrumbState.Items[i];
+                            bool isLast = i == BreadcrumbState.Items.Count - 1;
+                            <li>
+                                @if (item.Href != null && !isLast)
+                                {
+                                    <a href="@item.Href">@item.Label</a>
+                                }
+                                else
+                                {
+                                    <span class="@(isLast ? "bc-active" : "")">@item.Label</span>
+                                }
+                                @if (!isLast)
+                                {
+                                    <span class="bc-sep">›</span>
+                                }
+                            </li>
+                        }
+                    </ol>
+                </nav>
+            }
+
             <AuthorizeView>
                 <Authorized>
                     <a href="/profile" class="avatar-nav-link" title="Ver perfil">
@@ -36,3 +65,15 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        BreadcrumbState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        BreadcrumbState.OnChange -= StateHasChanged;
+    }
+}
