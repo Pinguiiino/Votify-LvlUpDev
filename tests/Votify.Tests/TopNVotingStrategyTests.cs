@@ -5,21 +5,22 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Votify.Domain.VoteFolder;
 using Votify.Domain.VoteFolder.Strategies;
+using Votify.Domain.Factory;
 
 namespace Votify.Tests
 {
     public class TopNVotingStrategyTests
     {
         private readonly Mock<IVoteRepository> _voteRepoMock;
+        private readonly Mock<VoteCreatorFactory> _voteCreatorFactoryMock;
         private readonly TopNVotingStrategy _strategy;
 
         public TopNVotingStrategyTests()
         {
             
             _voteRepoMock = new Mock<IVoteRepository>();
-
-            
-            _strategy = new TopNVotingStrategy(_voteRepoMock.Object);
+            _voteCreatorFactoryMock = new Mock<VoteCreatorFactory>();
+            _strategy = new TopNVotingStrategy(_voteRepoMock.Object, _voteCreatorFactoryMock.Object);
         }
 
         [Fact]
