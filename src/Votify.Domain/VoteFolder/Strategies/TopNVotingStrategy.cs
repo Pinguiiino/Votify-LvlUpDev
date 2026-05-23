@@ -5,9 +5,15 @@ namespace Votify.Domain.VoteFolder.Strategies;
 public sealed class TopNVotingStrategy : IVotingStrategy
 {
     private readonly IVoteRepository _voteRepo;
+    private readonly VoteCreatorFactory _voteCreatorFactory;
 
-    public TopNVotingStrategy(IVoteRepository voteRepo)
-        => _voteRepo = voteRepo;
+    public TopNVotingStrategy(
+        IVoteRepository voteRepo,
+        VoteCreatorFactory voteCreatorFactory)
+    {
+        _voteRepo = voteRepo;
+        _voteCreatorFactory = voteCreatorFactory;
+    }
 
     public EvaluationType SupportedType => EvaluationType.TopN;
 
@@ -34,24 +40,31 @@ public sealed class TopNVotingStrategy : IVotingStrategy
         await _voteRepo.RemoveByUserInCategoryAsync(
             input.UserId, input.CategoryId, session.Id);
 
-        VoteCreator factory = session.VoterType == VoterType.Jury
-            ? new ExpertVoteCreator()
-            : new PublicVoteCreator();
+        var creator = _voteCreatorFactory.GetCreator(session.VoterType);
 
-        var nuevos = input.RankedProjects.Select(r =>
-        {
-            var voto = factory.Create(
-                votingSessionId: session.Id,
-                projectId:       r.ProjectId,
-                userId:          input.UserId,
-                categoryId:      input.CategoryId,
-                topPosition:     r.Position,
-                comment:         string.IsNullOrWhiteSpace(r.Comment) ? null : r.Comment.Trim());
-            voto.GenerateIntegrityHash();
-            return voto;
-        }).ToList();
+        var nuevos = input.RankedProjects
+            .Select(r => BuildVote(creator, session, input, r))
+            .ToList();
 
         await _voteRepo.AddRangeAsync(nuevos);
         await _voteRepo.SaveChangesAsync();
     }
+
+    private static Vote BuildVote(
+        VoteCreator creator, VotingSession session,
+        VoteStrategyInput input, RankedProjectInput r)
+    {
+        var voto = creator.Create(
+            votingSessionId: session.Id,
+            projectId: r.ProjectId,
+            userId: input.UserId,
+            categoryId: input.CategoryId,
+            topPosition: r.Position,
+            comment: NormalizeComment(r.Comment));
+        voto.GenerateIntegrityHash();
+        return voto;
+    }
+
+    private static string? NormalizeComment(string? raw)
+        => string.IsNullOrWhiteSpace(raw) ? null : raw.Trim();
 }
