@@ -83,7 +83,7 @@
                 {
                     <a href="@($"/dashboard/{EventId}")" class="btn-secondary" style="text-decoration:none;">Ver resultados</a>
 
-                    @if (isParticipant || isPublic)
+                    @if ((isParticipant || isPublic) && !eventoNoIniciado && !eventoFinalizado)
                     {
                         <a href="@($"/event/{EventId}/create-project")" class="btn-dark">+ Subir proyecto</a>
                     }
@@ -576,6 +576,7 @@
     private bool isParticipant = false;
     private bool isPublic = false;
     private bool eventoNoIniciado = false;
+    private bool eventoFinalizado = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -599,6 +600,7 @@
             isParticipant = evento.ParticipantsIds.Contains(currentUserId);
             isPublic = evento.PublicIds.Contains(currentUserId);
             eventoNoIniciado = DateTime.UtcNow < evento.StartDate;
+            eventoFinalizado = DateTime.UtcNow > evento.EndDate;
         }
     }
 
