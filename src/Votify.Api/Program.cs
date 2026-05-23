@@ -12,6 +12,7 @@ using Votify.Domain.UserFolder;
 using Votify.Domain.VoteFolder;
 using Votify.Infrastructure;
 using Votify.Infrastructure.Repositories;
+using Votify.Domain.Factory;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,10 @@ builder.Services.AddScoped<TokenService>();
 builder.Services.AddVotingStrategies();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<VoteNotifier>();
+
+builder.Services.AddSingleton<VoteCreator, ExpertVoteCreator>();
+builder.Services.AddSingleton<VoteCreator, PublicVoteCreator>();
+builder.Services.AddSingleton<VoteCreatorFactory>();
 
 var jwtKey = builder.Configuration["Jwt:Key"];
 

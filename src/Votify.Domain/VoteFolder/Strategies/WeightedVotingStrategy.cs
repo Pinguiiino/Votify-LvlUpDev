@@ -5,7 +5,9 @@ public sealed class WeightedVotingStrategy : IVotingStrategy
     private readonly IWeightedVoteRepository _weightedRepo;
 
     public WeightedVotingStrategy(IWeightedVoteRepository weightedRepo)
-        => _weightedRepo = weightedRepo;
+    {
+        _weightedRepo = weightedRepo;
+    }
 
     public EvaluationType SupportedType => EvaluationType.WeightedScale;
 

@@ -13,13 +13,15 @@ namespace Votify.Domain.VoteFolder
         private readonly IProjectRepository _projectRepo;
         private readonly IWeightedVoteRepository _weightedRepo;
         private readonly VotingStrategyResolver _strategyResolver;
+        private readonly VoteCreatorFactory _voteCreatorFactory;
 
         public VoteService(IVoteRepository repository,
                            IVotingSessionRepository sessionRepo,
                            ICategoryRepository categoryRepo,
                            IProjectRepository projectRepo,
                            IWeightedVoteRepository weightedRepo,
-                           VotingStrategyResolver strategyResolver)
+                           VotingStrategyResolver strategyResolver,
+                           VoteCreatorFactory voteCreatorFactory)
         {
             _repository = repository;
             _sessionRepo = sessionRepo;
@@ -27,6 +29,7 @@ namespace Votify.Domain.VoteFolder
             _projectRepo = projectRepo;
             _weightedRepo = weightedRepo;
             _strategyResolver = strategyResolver;
+            _voteCreatorFactory = voteCreatorFactory;
         }
 
         public async Task CastVotesByStrategyAsync(
@@ -101,11 +104,8 @@ namespace Votify.Domain.VoteFolder
             if (alreadyVoted)
                 throw new InvalidOperationException("Ya has votado por este proyecto.");
 
-            VoteCreator factory = session.VoterType == VoterType.Jury
-                ? new ExpertVoteCreator()
-                : new PublicVoteCreator();
-
-            var vote = factory.Create(session.Id, projectId, userId, categoryId, topPosition);
+            var creator = _voteCreatorFactory.GetCreator(session.VoterType);
+            var vote = creator.Create(session.Id, projectId, userId, categoryId, topPosition);
             return await _repository.AddAsync(vote);
         }
 
@@ -167,7 +167,6 @@ namespace Votify.Domain.VoteFolder
         public async Task<List<CommentDto>> GetCommentsByProjectAsync(string projectId)
         {
             var normalVotes = await _repository.GetByProjectAsync(projectId);
-
             var weightedVotes = await _weightedRepo.GetByProjectAsync(projectId);
 
             var sessionIds = normalVotes.Select(v => v.VotingSessionId)
@@ -190,18 +189,12 @@ namespace Votify.Domain.VoteFolder
                 {
                     var sessionExists = sessions.TryGetValue(v.VotingSessionId, out var s);
                     var evalType = sessionExists ? s.EvaluationType.ToString() : "TopN";
-
                     var voterType = sessionExists && s.VoterType == VoterType.Jury ? "Expert" : "Public";
-
                     var displayValue = s?.EvaluationType == EvaluationType.PointDistribution
                         ? v.Points ?? 0
                         : v.TopPosition;
 
-                    return new CommentDto(
-                        v.Comment!,
-                        displayValue,
-                        voterType,
-                        evalType);
+                    return new CommentDto(v.Comment!, displayValue, voterType, evalType);
                 });
 
             finalComments.AddRange(normalComments);
@@ -212,14 +205,9 @@ namespace Votify.Domain.VoteFolder
                 {
                     var sessionExists = sessions.TryGetValue(wv.VotingSessionId, out var s);
                     var evalType = sessionExists ? s.EvaluationType.ToString() : "WeightedScale";
-
                     var voterType = sessionExists && s.VoterType == VoterType.Jury ? "Expert" : "Public";
 
-                    return new CommentDto(
-                        wv.Comment!,
-                        0,
-                        voterType,
-                        evalType);
+                    return new CommentDto(wv.Comment!, 0, voterType, evalType);
                 });
 
             finalComments.AddRange(weightedComments);
