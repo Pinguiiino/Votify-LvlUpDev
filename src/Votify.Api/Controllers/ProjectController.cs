@@ -113,21 +113,12 @@ namespace Votify.Api.Controllers
         {
             try
             {
-                var project = await _service.ApproveAsync(id, dto.RequesterId ?? string.Empty);
-                return Ok(new { message = "Proyecto aprobado", id = project.Id });
+                await _service.ApproveAsync(id, dto.RequesterId ?? string.Empty);
+                return Ok(new { message = "Proyecto aprobado", id });
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            catch (ArgumentException ex) { return BadRequest(ex.Message); }
+            catch (UnauthorizedAccessException ex) { return StatusCode(403, ex.Message); }
+            catch (InvalidOperationException ex) { return BadRequest(ex.Message); }
         }
 
         [HttpPost("{id}/reject")]
@@ -135,21 +126,12 @@ namespace Votify.Api.Controllers
         {
             try
             {
-                var project = await _service.RejectAsync(id, dto.RequesterId ?? string.Empty, dto.Reason);
-                return Ok(new { message = "Proyecto rechazado", id = project.Id });
+                await _service.RejectAsync(id, dto.RequesterId ?? string.Empty, dto.Reason);
+                return Ok(new { message = "Proyecto rechazado", id });
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            catch (ArgumentException ex) { return BadRequest(ex.Message); }
+            catch (UnauthorizedAccessException ex) { return StatusCode(403, ex.Message); }
+            catch (InvalidOperationException ex) { return BadRequest(ex.Message); }
         }
 
         [HttpPost("upload-image")]

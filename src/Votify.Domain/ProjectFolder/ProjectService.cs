@@ -118,7 +118,8 @@ public class ProjectService
     public Task<List<Project>> GetPendingByEventAsync(string eventId)
         => _repository.GetPendingByEventAsync(eventId);
 
-    public async Task<Project> ApproveAsync(string projectId, string requesterId)
+    private async Task<(Project project, Event evento)> GetValidatedProjectForApprovalAsync(
+        string projectId, string requesterId)
     {
         var project = await _repository.GetByIdAsync(projectId)
             ?? throw new ArgumentException("Proyecto no encontrado.");
@@ -127,41 +128,28 @@ public class ProjectService
             ?? throw new ArgumentException("Evento no encontrado.");
 
         if (!string.Equals(evento.Organizer, requesterId, StringComparison.Ordinal))
-            throw new UnauthorizedAccessException(
-                "Solo el organizador del evento puede validar proyectos.");
+            throw new UnauthorizedAccessException("Solo el organizador del evento puede validar proyectos.");
 
         if (project.ValidationStatus != ValidationStatus.Pending)
-            throw new InvalidOperationException(
-                "Este proyecto ya ha sido validado previamente.");
+            throw new InvalidOperationException("Este proyecto ya ha sido validado previamente.");
 
-        project.ValidationStatus = ValidationStatus.Approved;
-        project.RejectionReason = null;
-
-        await _repository.SaveChangesAsync();
-        return project;
+        return (project, evento);
     }
 
-    public async Task<Project> RejectAsync(string projectId, string requesterId, string? reason)
+    public async Task ApproveAsync(string projectId, string requesterId)
     {
-        var project = await _repository.GetByIdAsync(projectId)
-            ?? throw new ArgumentException("Proyecto no encontrado.");
+        var (project, _) = await GetValidatedProjectForApprovalAsync(projectId, requesterId);
+        project.ValidationStatus = ValidationStatus.Approved;
+        project.RejectionReason = null;
+        await _repository.SaveChangesAsync();
+    }
 
-        var evento = await _eventRepository.GetByIdAsync(project.EventId)
-            ?? throw new ArgumentException("Evento no encontrado.");
-
-        if (!string.Equals(evento.Organizer, requesterId, StringComparison.Ordinal))
-            throw new UnauthorizedAccessException(
-                "Solo el organizador del evento puede validar proyectos.");
-
-        if (project.ValidationStatus != ValidationStatus.Pending)
-            throw new InvalidOperationException(
-                "Este proyecto ya ha sido validado previamente.");
-
+    public async Task RejectAsync(string projectId, string requesterId, string? reason)
+    {
+        var (project, _) = await GetValidatedProjectForApprovalAsync(projectId, requesterId);
         project.ValidationStatus = ValidationStatus.Rejected;
         project.RejectionReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
-
         await _repository.SaveChangesAsync();
-        return project;
     }
 
     public List<string> GetProjectTypes()

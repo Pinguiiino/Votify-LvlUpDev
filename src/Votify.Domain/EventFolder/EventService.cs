@@ -128,8 +128,8 @@ public class EventService
     }
 
     private static List<TopNEntry> BuildTopNRanking(
-    List<Vote> votos,
-    Dictionary<string, VotingSession> sesionesInfo)
+        List<Vote> votos,
+        Dictionary<string, VotingSession> sesionesInfo)
     {
         return votos
             .GroupBy(v => new { v.VotedProjectId, v.CategoryId, v.VotingSessionId })
