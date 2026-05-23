@@ -297,7 +297,7 @@
 
             var resultado = await http.GetFromJsonAsync<List<CategorySimpleDto>>(
                 $"/api/categories/by-event/{EventId}");
-            categoriasDisponibles = resultado ?? new();
+            categoriasDisponibles = (resultado ?? new()).Where(c => !c.VotingStarted).ToList();
         }
         catch
         {
@@ -483,5 +483,6 @@
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
+        public bool VotingStarted { get; set; }
     }
 }

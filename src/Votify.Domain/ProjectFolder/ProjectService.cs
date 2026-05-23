@@ -1,5 +1,7 @@
+using Votify.Domain.CategoryFolder;
 using Votify.Domain.EventFolder;
 using Votify.Domain.Factory;
+using Votify.Domain.VoteFolder;
 
 namespace Votify.Domain.ProjectFolder;
 
@@ -7,11 +9,13 @@ public class ProjectService
 {
     private readonly IProjectRepository _repository;
     private readonly IEventRepository _eventRepository;
+    private readonly ICategoryRepository _categoryRepository;
 
-    public ProjectService(IProjectRepository repository, IEventRepository eventRepository)
+    public ProjectService(IProjectRepository repository, IEventRepository eventRepository, ICategoryRepository categoryRepository)
     {
         _repository = repository;
         _eventRepository = eventRepository;
+        _categoryRepository = categoryRepository;
     }
 
     public async Task<Project> CreateProjectAsync(
@@ -21,6 +25,31 @@ public class ProjectService
         List<string> categoryIds,
         List<(MaterialType type, string url, string? desc)> materials)
     {
+        var evento = await _eventRepository.GetByIdAsync(eventId)
+        ?? throw new ArgumentException("Evento no encontrado.");
+
+        var categoriasDelEvento = await _categoryRepository.GetByEventAsync(eventId);
+        var categoriasBlockeadas = categoriasDelEvento
+            .Where(c => categoryIds.Contains(c.Id) && c.VotingSessions.Any(vs =>
+                vs.ManualStatus == "open" ||
+                vs.ManualStatus == "paused" ||
+                vs.ManualStatus == "closed" ||
+                (vs.OpenAt.HasValue && vs.OpenAt.Value <= DateTime.UtcNow)))
+            .Select(c => c.Name)
+            .ToList();
+
+        if (categoriasBlockeadas.Any())
+            throw new ArgumentException(
+                $"La votación ya ha iniciado en: {string.Join(", ", categoriasBlockeadas)}. No se pueden subir proyectos a estas categorías.");
+
+        var now = DateTime.UtcNow;
+
+        if (now < evento.StartDate)
+            throw new ArgumentException("El evento aún no ha comenzado. No se pueden subir proyectos.");
+
+        if (now > evento.EndDate)
+            throw new ArgumentException("El evento ha finalizado. No se pueden subir proyectos.");
+
         ProjectCreator creator = projectType switch
         {
             "AI" => new AiProjectCreator(),

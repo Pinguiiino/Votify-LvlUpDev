@@ -162,7 +162,12 @@ public class CategoriesController : ControllerBase
         c.AllowSelfVoting,
         TopNProjectsAllowed = c.VotingSessions
         .FirstOrDefault(vs => vs.EvaluationType == EvaluationType.TopN)?.TopN ?? 3,
-        EvaluationType = c.VotingSessions.FirstOrDefault()?.EvaluationType.ToString()
+        EvaluationType = c.VotingSessions.FirstOrDefault()?.EvaluationType.ToString(),
+        VotingStarted = c.VotingSessions.Any(vs =>
+            vs.ManualStatus == "open" ||
+            vs.ManualStatus == "paused" ||
+            vs.ManualStatus == "closed" ||
+            (vs.OpenAt.HasValue && vs.OpenAt.Value <= DateTime.UtcNow))
     };
 }
 
