@@ -45,12 +45,12 @@ public class VotingSession
     {
         get
         {
-            if (ManualStatus == "closed") return false;
-            if (ManualStatus == "paused") return false;
+            if (ManualStatus == "closed" || ManualStatus == "paused") return false;
             if (ManualStatus == "open") return true;
-            if (!OpenAt.HasValue || !CloseAt.HasValue) return false;
+
             var now = DateTime.UtcNow;
-            return now >= OpenAt && now <= EffectiveCloseAt;
+            return OpenAt.HasValue && CloseAt.HasValue
+                && now >= OpenAt && now <= EffectiveCloseAt;
         }
     }
     public int? ReminderMinutesBeforeClose { get; set; }
