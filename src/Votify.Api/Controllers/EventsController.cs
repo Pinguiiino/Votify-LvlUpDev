@@ -57,16 +57,18 @@ public class EventsController : ControllerBase
             var fechaInicioUtc = dto.StartDate.ToUniversalTime();
             var fechaFinUtc = dto.EndDate.ToUniversalTime();
 
-            var evt = await _service.CreateEventAsync(
-                dto.Name,
-                dto.Modality,
-                dto.MaxProjects,
-                fechaInicioUtc,
-                fechaFinUtc,
-                dto.Description,
-                dto.ImageUrl,
-                organizerId,
-                dto.AuditorEmail);
+            var data = new EventData
+            {
+                Name = dto.Name,
+                Modality = dto.Modality,
+                MaxProjects = dto.MaxProjects,
+                StartDate = dto.StartDate.ToUniversalTime(),
+                EndDate = dto.EndDate.ToUniversalTime(),
+                Description = dto.Description,
+                ImageUrl = dto.ImageUrl,
+                AuditorEmail = dto.AuditorEmail
+            };
+            var evt = await _service.CreateEventAsync(data, organizerId);
 
             return Ok(evt);
         }
@@ -168,9 +170,18 @@ public class EventsController : ControllerBase
             var fechaInicioUtc = dto.StartDate.ToUniversalTime();
             var fechaFinUtc = dto.EndDate.ToUniversalTime();
 
-            var updatedEvent = await _service.UpdateEventAsync(
-                id, dto.Name, dto.Modality, dto.MaxProjects,
-                fechaInicioUtc, fechaFinUtc, dto.Description, dto.ImageUrl, dto.AuditorEmail);
+            var data = new EventData
+            {
+                Name = dto.Name,
+                Modality = dto.Modality,
+                MaxProjects = dto.MaxProjects,
+                StartDate = dto.StartDate.ToUniversalTime(),
+                EndDate = dto.EndDate.ToUniversalTime(),
+                Description = dto.Description,
+                ImageUrl = dto.ImageUrl,
+                AuditorEmail = dto.AuditorEmail
+            };
+            var updatedEvent = await _service.UpdateEventAsync(id, data);
 
             return Ok(updatedEvent);
         }

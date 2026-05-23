@@ -41,24 +41,18 @@ public class EventService
     public Task<List<Category>> GetCategoriesWithDetailsAsync(string eventId)
         => _repository.GetCategoriesWithDetailsAsync(eventId);
 
-    public async Task<Event> CreateEventAsync(
-        string name, string modality, int maxProjects,
-        DateTime startDate, DateTime endDate,
-        string? description,
-        string? imageUrl,
-        string organizerId,
-        string auditorEmail)
+    public async Task<Event> CreateEventAsync(EventData data, string organizerId)
     {
-        bool nombreOcupado = await _repository.ExistsByNameAsync(name);
+        bool nombreOcupado = await _repository.ExistsByNameAsync(data.Name);
         if (nombreOcupado)
-            throw new ArgumentException($"Ya existe un evento con el nombre \"{name}\". Elige un nombre diferente.");
+            throw new ArgumentException($"Ya existe un evento con el nombre \"{data.Name}\".");
 
-        var auditor = await _userRepository.GetByEmailAsync(auditorEmail);
-        if (auditor == null)
-            throw new ArgumentException($"No existe ninguna cuenta registrada con el correo '{auditorEmail}'.");
+        var auditor = await _userRepository.GetByEmailAsync(data.AuditorEmail)
+            ?? throw new ArgumentException($"No existe ninguna cuenta con el correo '{data.AuditorEmail}'.");
 
-        var creator = new ModalityEventCreator(modality);
-        var evento = creator.Create(name, maxProjects, startDate, endDate, description, imageUrl);
+        var creator = new ModalityEventCreator(data.Modality);
+        var evento = creator.Create(data.Name, data.MaxProjects, data.StartDate, data.EndDate,
+                                    data.Description, data.ImageUrl);
 
         evento.Organizer = organizerId;
         evento.Auditor = auditor.Id;
@@ -239,36 +233,31 @@ public class EventService
         await _repository.SaveChangesAsync();
     }
 
-    public async Task<Event> UpdateEventAsync(
-    string id, string name, string modality, int maxProjects,
-    DateTime startDate, DateTime endDate, string? description,
-    string? imageUrl, string auditorEmail)
+    public async Task<Event> UpdateEventAsync(string id, EventData data)
     {
-        var evento = await _repository.GetByIdAsync(id);
-        if (evento == null)
-            throw new ArgumentException("Evento no encontrado.");
+        var evento = await _repository.GetByIdAsync(id)
+            ?? throw new ArgumentException("Evento no encontrado.");
 
         if (DateTime.UtcNow >= evento.StartDate)
             throw new ArgumentException("No se puede editar el evento porque ya ha comenzado.");
 
-        if (evento.Name != name)
+        if (evento.Name != data.Name)
         {
-            bool nombreOcupado = await _repository.ExistsByNameAsync(name);
+            bool nombreOcupado = await _repository.ExistsByNameAsync(data.Name);
             if (nombreOcupado)
-                throw new ArgumentException($"Ya existe un evento con el nombre \"{name}\". Elige otro nombre.");
+                throw new ArgumentException($"Ya existe un evento con el nombre \"{data.Name}\".");
         }
 
-        var auditor = await _userRepository.GetByEmailAsync(auditorEmail);
-        if (auditor == null)
-            throw new ArgumentException($"No existe ninguna cuenta registrada con el correo '{auditorEmail}'.");
+        var auditor = await _userRepository.GetByEmailAsync(data.AuditorEmail)
+            ?? throw new ArgumentException($"No existe ninguna cuenta con el correo '{data.AuditorEmail}'.");
 
-        evento.Name = name;
-        evento.SetModality(modality);
-        evento.MaxProjects = maxProjects;
-        evento.StartDate = startDate;
-        evento.EndDate = endDate;
-        evento.Description = description;
-        evento.ImageUrl = imageUrl;
+        evento.Name = data.Name;
+        evento.SetModality(data.Modality);
+        evento.MaxProjects = data.MaxProjects;
+        evento.StartDate = data.StartDate;
+        evento.EndDate = data.EndDate;
+        evento.Description = data.Description;
+        evento.ImageUrl = data.ImageUrl;
         evento.Auditor = auditor.Id;
 
         await _repository.SaveChangesAsync();
