@@ -54,9 +54,6 @@ public class EventsController : ControllerBase
                 return Unauthorized("No se pudo identificar al usuario organizador.");
             }
 
-            var fechaInicioUtc = dto.StartDate.ToUniversalTime();
-            var fechaFinUtc = dto.EndDate.ToUniversalTime();
-
             var data = new EventData
             {
                 Name = dto.Name,
@@ -166,9 +163,6 @@ public class EventsController : ControllerBase
 
             if (evento.Organizer != userId)
                 return Forbid("No tienes permisos para editar este evento.");
-
-            var fechaInicioUtc = dto.StartDate.ToUniversalTime();
-            var fechaFinUtc = dto.EndDate.ToUniversalTime();
 
             var data = new EventData
             {

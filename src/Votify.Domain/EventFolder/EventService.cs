@@ -105,20 +105,33 @@ public class EventService
 
         var proyectos = await _projectRepository.GetByEventAsync(eventId);
         var proyectosInfo = proyectos.ToDictionary(p => p.Id, p => p.Title);
-
         var categorias = await _categoryRepository.GetByEventAsync(eventId);
         var categoriasInfo = categorias.ToDictionary(c => c.Id, c => c.Name);
-
         var sesiones = await _votingSessionRepository.GetByEventAsync(eventId);
         var sesionesInfo = sesiones.ToDictionary(vs => vs.Id, vs => vs);
-
         var projectIds = proyectosInfo.Keys.ToList();
         var votosDelEvento = await _voteRepository.GetByProjectIdsAsync(projectIds);
 
         var usuariosQueHanVotado = votosDelEvento.Select(v => v.UserId).Distinct().Count();
         var totalRegistrados = await _userRepository.CountAsync();
 
-        var rankingTopN = votosDelEvento
+        var rankingTopN = BuildTopNRanking(votosDelEvento, sesionesInfo);
+        var rankingWeighted = await BuildWeightedRankingAsync(sesiones);
+        var ranking = CombineRankings(rankingTopN, rankingWeighted, proyectosInfo, categoriasInfo, sesionesInfo);
+
+        return new EventDashboardDto
+        {
+            TotalVotantes = totalRegistrados,
+            VotosEmitidos = usuariosQueHanVotado,
+            Ranking = ranking.OrderByDescending(p => p.Puntos).ToList()
+        };
+    }
+
+    private static List<TopNEntry> BuildTopNRanking(
+    List<Vote> votos,
+    Dictionary<string, VotingSession> sesionesInfo)
+    {
+        return votos
             .GroupBy(v => new { v.VotedProjectId, v.CategoryId, v.VotingSessionId })
             .Select(g =>
             {
@@ -130,72 +143,78 @@ public class EventService
                     else if (sesion.EvaluationType == EvaluationType.PointDistribution)
                         puntos = g.Sum(v => v.Points ?? 0);
                 }
-                return new { g.Key.VotedProjectId, g.Key.CategoryId, g.Key.VotingSessionId, puntos };
+                return new TopNEntry(g.Key.VotedProjectId, g.Key.CategoryId, g.Key.VotingSessionId, puntos);
             })
-            .Where(x => x.puntos > 0)
+            .Where(x => x.Puntos > 0)
             .ToList();
+    }
 
+    private async Task<List<(string ProjectId, string CategoryId, string VotingSessionId, double Score)>>
+        BuildWeightedRankingAsync(List<VotingSession> sesiones)
+    {
+        var result = new List<(string, string, string, double)>();
         var weightedSessionIds = sesiones
             .Where(vs => vs.EvaluationType == EvaluationType.WeightedScale)
             .Select(vs => vs.Id)
             .ToList();
 
-        var rankingWeighted = new List<(string ProjectId, string CategoryId, string VotingSessionId, double Score)>();
+        if (!weightedSessionIds.Any()) return result;
 
-        if (weightedSessionIds.Any())
+        var weightedVotes = await _weightedVoteRepository.GetBySessionIdsAsync(weightedSessionIds);
+        var criteriaBySession = sesiones
+            .Where(vs => vs.EvaluationType == EvaluationType.WeightedScale)
+            .ToDictionary(vs => vs.Id, vs => vs.Criteria);
+
+        foreach (var sessionId in weightedSessionIds)
         {
-            var weightedVotes = await _weightedVoteRepository.GetBySessionIdsAsync(weightedSessionIds);
+            var criteria = criteriaBySession[sessionId];
+            if (!criteria.Any()) continue;
 
-            var criteriaBySession = sesiones
-                .Where(vs => vs.EvaluationType == EvaluationType.WeightedScale)
-                .ToDictionary(vs => vs.Id, vs => vs.Criteria);
+            var weightMap = criteria.ToDictionary(c => c.Id, c => c.Weight);
+            var categoryId = sesiones.First(vs => vs.Id == sessionId).CategoryId;
+            var votosDeSesion = weightedVotes.Where(wv => wv.VotingSessionId == sessionId).ToList();
 
-            foreach (var sessionId in weightedSessionIds)
-            {
-                var criteria = criteriaBySession[sessionId];
-                if (!criteria.Any()) continue;
+            var scores = votosDeSesion
+                .GroupBy(wv => wv.ProjectId)
+                .Select(g => (
+                    ProjectId: g.Key,
+                    CategoryId: categoryId,
+                    VotingSessionId: sessionId,
+                    Score: g.Average(wv =>
+                        wv.CriterionScores.Sum(cs =>
+                            cs.Score * (weightMap.TryGetValue(cs.CriterionId, out var w) ? w : 0)))
+                ));
 
-                var weightMap = criteria.ToDictionary(c => c.Id, c => c.Weight);
-                var categoryId = sesiones.First(vs => vs.Id == sessionId).CategoryId;
-
-                var votosDeSesion = weightedVotes.Where(wv => wv.VotingSessionId == sessionId).ToList();
-
-                var scoresPorProyecto = votosDeSesion
-                    .GroupBy(wv => wv.ProjectId)
-                    .Select(g => (
-                        ProjectId: g.Key,
-                        CategoryId: categoryId,
-                        VotingSessionId: sessionId, // Conservamos la sesión
-                        Score: g.Average(wv =>
-                            wv.CriterionScores.Sum(cs =>
-                                cs.Score * (weightMap.TryGetValue(cs.CriterionId, out var w) ? w : 0)))
-                    ));
-
-                rankingWeighted.AddRange(scoresPorProyecto);
-            }
+            result.AddRange(scores);
         }
 
+        return result;
+    }
+
+    private static List<ProjectResultDto> CombineRankings(
+        List<TopNEntry> topNRanking,
+        List<(string ProjectId, string CategoryId, string VotingSessionId, double Score)> weightedRanking,
+        Dictionary<string, string> proyectosInfo,
+        Dictionary<string, string> categoriasInfo,
+        Dictionary<string, VotingSession> sesionesInfo)
+    {
         var ranking = new List<ProjectResultDto>();
 
-        foreach (var grupo in rankingTopN.GroupBy(x => new { x.VotedProjectId, x.CategoryId, x.VotingSessionId }))
+        foreach (var grupo in topNRanking.GroupBy(x => new { x.VotedProjectId, x.CategoryId, x.VotingSessionId }))
         {
             string catNombre = categoriasInfo.GetValueOrDefault(grupo.Key.CategoryId, "General");
             string sesionNombre = sesionesInfo.GetValueOrDefault(grupo.Key.VotingSessionId)?.Name ?? "Votación";
-
-            string tituloCompuesto = $"{catNombre}|{sesionNombre}";
-
             ranking.Add(new ProjectResultDto
             {
                 Nombre = proyectosInfo.GetValueOrDefault(grupo.Key.VotedProjectId, "Proyecto"),
-                Categoria = tituloCompuesto,
-                Puntos = grupo.Sum(x => x.puntos)
+                Categoria = $"{catNombre}|{sesionNombre}",
+                Puntos = grupo.Sum(x => x.Puntos)
             });
         }
 
-        foreach (var grupo in rankingWeighted.GroupBy(x => new { x.ProjectId, x.CategoryId, x.VotingSessionId }))
+        foreach (var grupo in weightedRanking.GroupBy(x => new { x.ProjectId, x.CategoryId, x.VotingSessionId }))
         {
             var puntos = (int)Math.Round(grupo.Sum(x => x.Score) * 10);
-
             string catNombre = categoriasInfo.GetValueOrDefault(grupo.Key.CategoryId, "General");
             string sesionNombre = sesionesInfo.GetValueOrDefault(grupo.Key.VotingSessionId)?.Name ?? "Votación";
             string tituloCompuesto = $"{catNombre}|{sesionNombre}";
@@ -215,14 +234,9 @@ public class EventService
                 });
         }
 
-        return new EventDashboardDto
-        {
-            TotalVotantes = totalRegistrados,
-            VotosEmitidos = usuariosQueHanVotado,
-            Ranking = ranking.OrderByDescending(p => p.Puntos).ToList()
-        };
-
+        return ranking;
     }
+
     public async Task AssignAuditorAsync(string eventId, string auditorId)
     {
         var evento = await _repository.GetByIdAsync(eventId);
@@ -270,4 +284,6 @@ public class EventService
         var user = await _userRepository.GetByIdAsync(id);
         return user?.Email ?? string.Empty;
     }
+
+    private record TopNEntry(string VotedProjectId, string CategoryId, string VotingSessionId, int Puntos);
 }
