@@ -42,126 +42,84 @@
     }
     else
     {
-        <div class="events-grid">
-            @foreach (var evento in EventosActivos)
-            {
-                bool isOrganizer = evento.Organizer == currentUserId;
-                bool isParticipant = evento.ParticipantsIds != null && evento.ParticipantsIds.Contains(currentUserId);
-                bool isPublic = evento.PublicIds != null && evento.PublicIds.Contains(currentUserId);
-                bool isAuditor = evento.AuditorId == currentUserId;
-                bool yaAsignado = !string.IsNullOrEmpty(evento.AuditorId);
+        var misEventos = EventosActivos.Where(e => e.Organizer == currentUserId).ToList();
+        var eventosAuditor = EventosActivos.Where(e => e.Organizer != currentUserId && e.AuditorId == currentUserId).ToList();
+        var eventosInscrito = EventosActivos.Where(e => e.Organizer != currentUserId && e.AuditorId != currentUserId &&
+                                    ((e.ParticipantsIds != null && e.ParticipantsIds.Contains(currentUserId)) ||
+                                     (e.PublicIds != null && e.PublicIds.Contains(currentUserId)))).ToList();
+        var eventosDisponibles = EventosActivos.Where(e => e.Organizer != currentUserId && e.AuditorId != currentUserId &&
+                                    (e.ParticipantsIds == null || !e.ParticipantsIds.Contains(currentUserId)) &&
+                                    (e.PublicIds == null || !e.PublicIds.Contains(currentUserId))).ToList();
 
-                <div class="event-card cursor-pointer" style="position: relative;" @onclick='() => Navigation.NavigateTo($"/event/{evento.Id}/categories")'>
+        @if (misEventos.Any())
+        {
+            <h2 class="section-title" style="margin-top: 2rem; margin-bottom: 1rem; color: #111827; font-size: 1.5rem; font-weight: 700;">Mis Eventos</h2>
+            <div class="events-grid">
+                @foreach (var evento in misEventos)
+                {
+                    @RenderEventCard(evento)
+                }
+            </div>
+        }
 
-                    @if (!string.IsNullOrWhiteSpace(evento.ImageUrl))
-                    {
-                        <img src="@(apiBaseUrl + evento.ImageUrl)" alt="@evento.Name" class="card-image" />
-                    }
-                    else
-                    {
-                        <div class="icon-container">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                                <path d="M11.354 4.646a.5.5 0 0 0-.708 0l-6 6a.5.5 0 0 0 .708.708l6-6a.5.5 0 0 0 0-.708z" />
-                            </svg>
-                        </div>
-                    }
+        @if (eventosAuditor.Any())
+        {
+            <h2 class="section-title" style="margin-top: 3rem; margin-bottom: 1rem; color: #111827; font-size: 1.5rem; font-weight: 700;">Eventos como Auditor</h2>
+            <div class="events-grid">
+                @foreach (var evento in eventosAuditor)
+                {
+                    @RenderEventCard(evento)
+                }
+            </div>
+        }
 
-                    @if (isOrganizer)
-                    {
-                        <button type="button"
-                                title="Eliminar evento"
-                                @onclick:stopPropagation="true"
-                                @onclick="() => AbrirModalEliminarEvento(evento)"
-                                style="position: absolute; bottom: 0.85rem; right: 0.85rem; width: 2.2rem; height: 2.2rem; border-radius: 50%; border: none; background-color: #ef4444; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; box-shadow: 0 2px 6px rgba(239,68,68,0.4); transition: background-color 0.2s;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                            </svg>
-                        </button>
-                    }
+        @if (eventosInscrito.Any())
+        {
+            <h2 class="section-title" style="margin-top: 3rem; margin-bottom: 1rem; color: #111827; font-size: 1.5rem; font-weight: 700;">Eventos en los que participo</h2>
+            <div class="events-grid">
+                @foreach (var evento in eventosInscrito)
+                {
+                    @RenderEventCard(evento)
+                }
+            </div>
+        }
 
-                    <div class="card-info">
-                        <h2 class="card-title">@evento.Name</h2>
-                        <span class="card-date">@evento.StartDate.ToString("dd 'de' MMMM, yyyy")</span>
-                        <p class="card-description">@evento.Description</p>
-                        <span class="card-modality" style="font-weight: bold; color: #4b5563;">@evento.Modality</span>
-
-                        <div style="margin-top: 1.5rem; border-top: 1px solid #e5e7eb; padding-top: 1rem;" @onclick:stopPropagation="true">
-
-                            @if (isOrganizer)
-                            {
-                                <span style="display: block; font-size: 0.85rem; color: #16a34a; font-weight: 600; text-align: center; margin-bottom: 0.5rem;">
-                                    ★ Creador del Evento
-                                </span>
-                            }
-                            else if (isAuditor)
-                            {
-                                <span style="display: block; font-size: 0.85rem; color: #b45309; font-weight: 600; text-align: center;">
-                                    🔍 Eres el Auditor
-                                </span>
-                            }
-                            else if (isParticipant)
-                            {
-                                <span style="display: block; font-size: 0.85rem; color: #0284c7; font-weight: 600; text-align: center;">
-                                    ✓ Inscrito como Participante
-                                </span>
-                            }
-                            else if (isPublic)
-                            {
-                                <span style="display: block; font-size: 0.85rem; color: #9333ea; font-weight: 600; text-align: center;">
-                                    ✓ Inscrito como Público
-                                </span>
-                            }
-                            else
-                            {
-                                <button class="btn-outline" style="width: 100%; padding: 0.6rem; font-size: 0.9rem;"
-                                @onclick='() => EnrollAsPublic(evento.Id, evento.Name)'>
-                                    Inscribirse al evento
-                                </button>
-                            }
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
+        @if (eventosDisponibles.Any())
+        {
+            <h2 class="section-title" style="margin-top: 3rem; margin-bottom: 1rem; color: #111827; font-size: 1.5rem; font-weight: 700;">Eventos Disponibles</h2>
+            <div class="events-grid">
+                @foreach (var evento in eventosDisponibles)
+                {
+                    @RenderEventCard(evento)
+                }
+            </div>
+        }
     }
 </div>
 
-@if (eventoAEliminar != null)
+@if (mostrandoConfirmacionEliminar)
 {
-    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(17,24,39,0.55); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(4px); padding: 1rem;"
-         @onclick="CerrarModalEliminarEvento">
-        <div style="background: white; width: 100%; max-width: 440px; border-radius: 1rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15); padding: 2rem; text-align: center;"
-             @onclick:stopPropagation="true">
-            <div style="width: 3rem; height: 3rem; background-color: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="#ef4444" viewBox="0 0 16 16">
-                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                </svg>
-            </div>
-            <h2 style="font-size: 1.15rem; font-weight: 700; color: #111827; margin: 0 0 0.5rem;">¿Está seguro de que desea eliminar '@eventoAEliminar.Name'?</h2>
-            <p style="font-size: 0.9rem; color: #6b7280; margin: 0 0 1.75rem;">Esta acción no se puede deshacer y eliminará todas sus categorías y proyectos asociados.</p>
-            <div style="display: flex; gap: 0.75rem; justify-content: center;">
-                <button @onclick="CerrarModalEliminarEvento"
-                        style="flex: 1; padding: 0.65rem 1.25rem; border-radius: 0.5rem; border: 1px solid #d1d5db; background: white; color: #374151; font-weight: 600; cursor: pointer; font-size: 0.95rem;">
-                    Cancelar
-                </button>
-                <button @onclick="ConfirmarEliminarEvento" disabled="@eliminando"
-                        style="flex: 1; padding: 0.65rem 1.25rem; border-radius: 0.5rem; border: none; background: #ef4444; color: white; font-weight: 600; cursor: pointer; font-size: 0.95rem; opacity: @(eliminando ? "0.7" : "1");">
-                    @(eliminando ? "Eliminando..." : "Eliminar")
+    <div class="delete-confirm-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="background: white; padding: 2rem; border-radius: 1rem; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#ef4444" viewBox="0 0 16 16" style="margin-bottom: 1rem;">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z" />
+            </svg>
+            <h3 style="color: #111827; margin-top: 0; font-size: 1.25rem;">¿Eliminar este evento?</h3>
+            <p style="color: #4b5563; font-size: 0.9rem; margin-bottom: 1.5rem;">Esta acción es irreversible. Se eliminará permanentemente el evento y todos sus datos asociados.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button type="button" class="btn-secondary" @onclick="() => mostrandoConfirmacionEliminar = false">Cancelar</button>
+                <button type="button" class="btn-danger" style="background-color: #ef4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; font-weight: 600;" @onclick="EliminarEventoConfirmado" disabled="@eliminando">
+                    @(eliminando ? "Eliminando..." : "Sí, eliminar")
                 </button>
             </div>
+            @if (!string.IsNullOrEmpty(errorServidor))
+            {
+                <p style="color: #ef4444; font-size: 0.85rem; margin-top: 1rem;">@errorServidor</p>
+            }
         </div>
     </div>
 }
-
-<style>
-    .cursor-pointer { cursor: pointer; transition: transform 0.2s; }
-    .cursor-pointer:hover { transform: translateY(-2px); }
-    .btn-outline { background: transparent; border: 1px solid #cbd5e1; border-radius: 0.5rem; color: #0f172a; font-weight: 600; transition: all 0.2s; cursor: pointer; }
-    .btn-outline:hover { background-color: #f8fafc; border-color: #94a3b8; }
-</style>
 
 @code {
     private List<EventDto>? EventosActivos;
@@ -169,9 +127,13 @@
     private string mensajeEstado = "Conectando con el servidor...";
     private string apiBaseUrl = string.Empty;
     private string currentUserId = string.Empty;
-    private string currentUserRole = string.Empty; 
     private bool _rendered = false;
-    private string? mensajeAuditor = null;
+
+    // Variables para el borrado
+    private bool mostrandoConfirmacionEliminar = false;
+    private bool eliminando = false;
+    private string eventoAEliminarId = string.Empty;
+    private string? errorServidor;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -182,10 +144,6 @@
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             currentUserId = authState.User.FindFirst(
                 System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-            
-            // currentUserRole ya no se usa para filtrar pantallas globales
-            currentUserRole = authState.User.FindFirst(
-                System.Security.Claims.ClaimTypes.Role)?.Value ?? string.Empty;
 
             await LoadEvents();
         }
@@ -203,11 +161,7 @@
         {
             try
             {
-                var todosEventos = await http.GetFromJsonAsync<List<EventDto>>("api/events");
-
-                // Todo el mundo ve todos los eventos, su rol dependerá de la lógica dentro de las cards.
-                EventosActivos = todosEventos;
-                
+                EventosActivos = await http.GetFromJsonAsync<List<EventDto>>("api/events");
                 isLoading = false;
                 StateHasChanged();
                 return;
@@ -226,6 +180,49 @@
         StateHasChanged();
     }
 
+    private void ConfirmarEliminar(string eventId)
+    {
+        eventoAEliminarId = eventId;
+        mostrandoConfirmacionEliminar = true;
+        errorServidor = null;
+    }
+
+    private async Task EliminarEventoConfirmado()
+    {
+        eliminando = true;
+        errorServidor = null;
+        try
+        {
+            var http = HttpClientFactory.CreateClient("API");
+            var session = await CustomAuthProvider.GetUserSessionAsync();
+            
+            if (session != null && !string.IsNullOrEmpty(session.Token))
+            {
+                http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", session.Token);
+            }
+
+            var response = await http.DeleteAsync($"/api/events/{eventoAEliminarId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                mostrandoConfirmacionEliminar = false;
+                await LoadEvents();
+            }
+            else
+            {
+                errorServidor = (await response.Content.ReadAsStringAsync()).Trim('"');
+            }
+        }
+        catch
+        {
+            errorServidor = "Error crítico de conexión al eliminar.";
+        }
+        finally
+        {
+            eliminando = false;
+        }
+    }
+
     private async Task EnrollAsPublic(string eventId, string eventName)
     {
         if (string.IsNullOrEmpty(currentUserId))
@@ -242,9 +239,7 @@
 
             if (response.IsSuccessStatusCode)
             {
-                await JSRuntime.InvokeVoidAsync("alert",
-                    $"¡Te has inscrito correctamente al evento '{eventName}' como Público!");
-
+                await JSRuntime.InvokeVoidAsync("alert", $"¡Te has inscrito correctamente al evento '{eventName}' como Público!");
                 var eventoActualizado = EventosActivos?.FirstOrDefault(e => e.Id == eventId);
                 if (eventoActualizado != null && !eventoActualizado.PublicIds.Contains(currentUserId))
                     eventoActualizado.PublicIds.Add(currentUserId);
@@ -263,132 +258,97 @@
         }
     }
 
-    private EventDto? eventoAEliminar;
-    private bool eliminando;
-
-    private void AbrirModalEliminarEvento(EventDto evento)
+    private RenderFragment RenderEventCard(EventDto evento) => __builder =>
     {
-        eventoAEliminar = evento;
-        eliminando = false;
-    }
+        bool isOrganizer = evento.Organizer == currentUserId;
+        bool isParticipant = evento.ParticipantsIds != null && evento.ParticipantsIds.Contains(currentUserId);
+        bool isPublic = evento.PublicIds != null && evento.PublicIds.Contains(currentUserId);
+        bool isAuditor = evento.AuditorId == currentUserId;
+        bool eventoNoIniciado = DateTime.UtcNow < evento.StartDate.ToUniversalTime();
 
-    private void CerrarModalEliminarEvento()
-    {
-        eventoAEliminar = null;
-        eliminando = false;
-    }
+        <div class="event-card cursor-pointer" @onclick='() => Navigation.NavigateTo($"/event/{evento.Id}/categories")'>
 
-    private async Task ConfirmarEliminarEvento()
-    {
-        if (eventoAEliminar == null) return;
-        eliminando = true;
-
-        try
-        {
-            var http = HttpClientFactory.CreateClient("API");
-            var session = await CustomAuthProvider.GetUserSessionAsync();
-            if (!string.IsNullOrEmpty(session?.Token))
-                http.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", session.Token);
-
-            var response = await http.DeleteAsync($"api/events/{eventoAEliminar.Id}");
-
-            if (response.IsSuccessStatusCode)
+            @if (!string.IsNullOrWhiteSpace(evento.ImageUrl))
             {
-                EventosActivos?.RemoveAll(e => e.Id == eventoAEliminar!.Id);
-                eventoAEliminar = null;
-                StateHasChanged();
+                <img src="@(apiBaseUrl + evento.ImageUrl)" alt="@evento.Name" class="card-image" />
             }
             else
             {
-                var msg = await response.Content.ReadAsStringAsync();
-                await JSRuntime.InvokeVoidAsync("alert", $"Error al eliminar: {msg}");
-            }
-        }
-        catch
-        {
-            await JSRuntime.InvokeVoidAsync("alert", "Error de conexión al eliminar el evento.");
-        }
-        finally
-        {
-            eliminando = false;
-        }
-    }
-
-    private string? eventoAsignando = null;
-    private string? eventoConMensaje = null;
-    private string emailAuditor = string.Empty;
-    private string? errorAuditor = null;
-
-    private async Task AsignarAuditor(string eventId)
-    {
-        errorAuditor = null;
-        if (string.IsNullOrWhiteSpace(emailAuditor))
-        {
-            errorAuditor = "Introduce un correo.";
-            return;
-        }
-
-        try
-        {
-            var http = HttpClientFactory.CreateClient("API");
-
-            var existe = await http.GetFromJsonAsync<bool>(
-                $"api/auth/check-email?email={emailAuditor.Trim().ToLower()}");
-
-            if (!existe)
-            {
-                errorAuditor = "No existe ningún usuario con ese correo.";
-                return;
+                <div class="icon-container">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                        <path d="M11.354 4.646a.5.5 0 0 0-.708 0l-6 6a.5.5 0 0 0 .708.708l6-6a.5.5 0 0 0 0-.708z" />
+                    </svg>
+                </div>
             }
 
-            var auditorUser = await http.GetFromJsonAsync<UserDto>(
-                $"api/auth/user-by-email?email={emailAuditor.Trim().ToLower()}");
+            <div class="card-info">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                    <h2 class="card-title" style="margin: 0; flex: 1;">@evento.Name</h2>
+                    
+                    @if (isOrganizer)
+                    {
+                        <div style="display: flex; gap: 0.5rem;" @onclick:stopPropagation="true">
+                            @if (eventoNoIniciado)
+                            {
+                                <button class="btn-edit-pencil" style="background: none; border: none; cursor: pointer; color: #4b5563; padding: 0.25rem; transition: color 0.2s;"
+                                        @onclick='() => Navigation.NavigateTo($"/event/{evento.Id}/edit")' title="Editar Evento">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
+                                    </svg>
+                                </button>
+                            }
+                            <button class="btn-delete-trash" style="background: none; border: none; cursor: pointer; color: #ef4444; padding: 0.25rem; transition: color 0.2s;"
+                                    @onclick='() => ConfirmarEliminar(evento.Id)' title="Eliminar Evento">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
+                                </svg>
+                            </button>
+                        </div>
+                    }
+                </div>
+                
+                <span class="card-date">@evento.StartDate.ToString("dd 'de' MMMM, yyyy")</span>
+                <p class="card-description">@evento.Description</p>
+                <span class="card-modality" style="font-weight: bold; color: #4b5563;">@evento.Modality</span>
 
-            // Hemos quitado la comprobación de "Rol global" porque el auditor ahora puede ser un User cualquiera.
-            if (auditorUser == null)
-            {
-                errorAuditor = "No se pudo recuperar la información del usuario.";
-                return;
-            }
-
-            var session = await ((CustomAuthStateProvider)AuthStateProvider).GetUserSessionAsync();
-            http.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", session?.Token);
-
-            var response = await http.PostAsJsonAsync(
-                $"api/events/{eventId}/assign-auditor",
-                new { AuditorId = auditorUser.Id });
-
-            if (response.IsSuccessStatusCode)
-            {
-                eventoAsignando = null;
-                emailAuditor = string.Empty;
-                eventoConMensaje = eventId;  
-                await LoadEvents();
-                StateHasChanged();
-            }
-            else
-            {
-                errorAuditor = (await response.Content.ReadAsStringAsync()).Trim('"');
-            }
-        }
-        catch
-        {
-            errorAuditor = "Error de conexión.";
-        }
-    }
-
-    public class UserDto
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
-    }
-
-    public class AssignAuditorDto
-    {
-        public string AuditorId { get; set; } = string.Empty;
-    }
+                <div style="margin-top: 1.5rem; border-top: 1px solid #e5e7eb; padding-top: 1rem;" @onclick:stopPropagation="true">
+                    @if (isOrganizer)
+                    {
+                        <span style="display: block; font-size: 0.85rem; color: #16a34a; font-weight: 600; text-align: center;">
+                            ★ Creador del Evento
+                        </span>
+                    }
+                    else if (isAuditor)
+                    {
+                        <span style="display: block; font-size: 0.85rem; color: #b45309; font-weight: 600; text-align: center;">
+                            🔍 Eres el Auditor
+                        </span>
+                    }
+                    else if (isParticipant)
+                    {
+                        <span style="display: block; font-size: 0.85rem; color: #0284c7; font-weight: 600; text-align: center;">
+                            ✓ Inscrito como Participante
+                        </span>
+                    }
+                    else if (isPublic)
+                    {
+                        <span style="display: block; font-size: 0.85rem; color: #9333ea; font-weight: 600; text-align: center;">
+                            ✓ Inscrito como Público
+                        </span>
+                    }
+                    else
+                    {
+                        <button class="btn-outline" style="width: 100%; padding: 0.6rem; font-size: 0.9rem;"
+                                @onclick='() => EnrollAsPublic(evento.Id, evento.Name)'>
+                            Inscribirse al evento
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    };
 
     public class EventDto
     {
