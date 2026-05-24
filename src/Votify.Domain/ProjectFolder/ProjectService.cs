@@ -152,6 +152,19 @@ public class ProjectService
         await _repository.SaveChangesAsync();
     }
 
+    public async Task DeleteAsync(string projectId, string requesterId)
+    {
+        var project = await _repository.GetByIdAsync(projectId)
+            ?? throw new ArgumentException("Proyecto no encontrado.");
+
+        if (!string.IsNullOrEmpty(project.OwnerId) &&
+            !string.Equals(project.OwnerId, requesterId, StringComparison.Ordinal))
+            throw new UnauthorizedAccessException("Solo el creador del proyecto puede eliminarlo.");
+
+        await _repository.DeleteAsync(projectId);
+        await _repository.SaveChangesAsync();
+    }
+
     public List<string> GetProjectTypes()
         => new List<string> { "AI", "Sustainability", "General" };
 

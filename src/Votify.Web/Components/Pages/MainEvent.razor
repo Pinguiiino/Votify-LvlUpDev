@@ -6,6 +6,7 @@
 @inject IHttpClientFactory HttpClientFactory
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IJSRuntime JSRuntime
+@inject CustomAuthStateProvider CustomAuthProvider
 
 <PageTitle>Inicio - Votify</PageTitle>
 
@@ -48,7 +49,7 @@
                 bool isAuditor = evento.AuditorId == currentUserId;
                 bool yaAsignado = !string.IsNullOrEmpty(evento.AuditorId);
 
-                <div class="event-card cursor-pointer" @onclick='() => Navigation.NavigateTo($"/event/{evento.Id}/categories")'>
+                <div class="event-card cursor-pointer" style="position: relative;" @onclick='() => Navigation.NavigateTo($"/event/{evento.Id}/categories")'>
 
                     @if (!string.IsNullOrWhiteSpace(evento.ImageUrl))
                     {
@@ -62,6 +63,20 @@
                                 <path d="M11.354 4.646a.5.5 0 0 0-.708 0l-6 6a.5.5 0 0 0 .708.708l6-6a.5.5 0 0 0 0-.708z" />
                             </svg>
                         </div>
+                    }
+
+                    @if (isOrganizer)
+                    {
+                        <button type="button"
+                                title="Eliminar evento"
+                                @onclick:stopPropagation="true"
+                                @onclick="() => AbrirModalEliminarEvento(evento)"
+                                style="position: absolute; bottom: 0.85rem; right: 0.85rem; width: 2.2rem; height: 2.2rem; border-radius: 50%; border: none; background-color: #ef4444; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; box-shadow: 0 2px 6px rgba(239,68,68,0.4); transition: background-color 0.2s;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                            </svg>
+                        </button>
                     }
 
                     <div class="card-info">
@@ -110,6 +125,34 @@
         </div>
     }
 </div>
+
+@if (eventoAEliminar != null)
+{
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(17,24,39,0.55); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(4px); padding: 1rem;"
+         @onclick="CerrarModalEliminarEvento">
+        <div style="background: white; width: 100%; max-width: 440px; border-radius: 1rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15); padding: 2rem; text-align: center;"
+             @onclick:stopPropagation="true">
+            <div style="width: 3rem; height: 3rem; background-color: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="#ef4444" viewBox="0 0 16 16">
+                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                </svg>
+            </div>
+            <h2 style="font-size: 1.15rem; font-weight: 700; color: #111827; margin: 0 0 0.5rem;">¿Está seguro de que desea eliminar '@eventoAEliminar.Name'?</h2>
+            <p style="font-size: 0.9rem; color: #6b7280; margin: 0 0 1.75rem;">Esta acción no se puede deshacer y eliminará todas sus categorías y proyectos asociados.</p>
+            <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                <button @onclick="CerrarModalEliminarEvento"
+                        style="flex: 1; padding: 0.65rem 1.25rem; border-radius: 0.5rem; border: 1px solid #d1d5db; background: white; color: #374151; font-weight: 600; cursor: pointer; font-size: 0.95rem;">
+                    Cancelar
+                </button>
+                <button @onclick="ConfirmarEliminarEvento" disabled="@eliminando"
+                        style="flex: 1; padding: 0.65rem 1.25rem; border-radius: 0.5rem; border: none; background: #ef4444; color: white; font-weight: 600; cursor: pointer; font-size: 0.95rem; opacity: @(eliminando ? "0.7" : "1");">
+                    @(eliminando ? "Eliminando..." : "Eliminar")
+                </button>
+            </div>
+        </div>
+    </div>
+}
 
 <style>
     .cursor-pointer { cursor: pointer; transition: transform 0.2s; }
@@ -218,8 +261,60 @@
         }
     }
 
-    private string? eventoAsignando = null;   
-    private string? eventoConMensaje = null;  
+    private EventDto? eventoAEliminar;
+    private bool eliminando;
+
+    private void AbrirModalEliminarEvento(EventDto evento)
+    {
+        eventoAEliminar = evento;
+        eliminando = false;
+    }
+
+    private void CerrarModalEliminarEvento()
+    {
+        eventoAEliminar = null;
+        eliminando = false;
+    }
+
+    private async Task ConfirmarEliminarEvento()
+    {
+        if (eventoAEliminar == null) return;
+        eliminando = true;
+
+        try
+        {
+            var http = HttpClientFactory.CreateClient("API");
+            var session = await CustomAuthProvider.GetUserSessionAsync();
+            if (!string.IsNullOrEmpty(session?.Token))
+                http.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", session.Token);
+
+            var response = await http.DeleteAsync($"api/events/{eventoAEliminar.Id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                EventosActivos?.RemoveAll(e => e.Id == eventoAEliminar!.Id);
+                eventoAEliminar = null;
+                StateHasChanged();
+            }
+            else
+            {
+                var msg = await response.Content.ReadAsStringAsync();
+                await JSRuntime.InvokeVoidAsync("alert", $"Error al eliminar: {msg}");
+            }
+        }
+        catch
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Error de conexión al eliminar el evento.");
+        }
+        finally
+        {
+            eliminando = false;
+        }
+    }
+
+    private string? eventoAsignando = null;
+    private string? eventoConMensaje = null;
     private string emailAuditor = string.Empty;
     private string? errorAuditor = null;
 

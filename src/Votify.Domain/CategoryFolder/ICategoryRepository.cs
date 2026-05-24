@@ -9,5 +9,6 @@ public interface ICategoryRepository
     Task AddAsync(Category category);
     Task RemoveVotingSessionsAsync(Category category);
     Task<bool> ExistsByNameInEventAsync(string eventId, string name);
+    Task DeleteAsync(string categoryId);
     Task SaveChangesAsync();
 }

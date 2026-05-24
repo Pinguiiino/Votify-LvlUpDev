@@ -188,6 +188,28 @@ namespace Votify.Api.Controllers
                 .Select(pc => new { pc.CategoryId, Name = pc.Category!.Name })
         };
 
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(string id, [FromBody] DeleteProjectDto dto)
+        {
+            try
+            {
+                await _service.DeleteAsync(id, dto.RequesterId ?? string.Empty);
+                return Ok(new { message = "Proyecto eliminado correctamente." });
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.InnerException?.Message ?? ex.Message);
+            }
+        }
+
         [HttpGet("project-types")]
         public IActionResult GetProjectTypes()
             => Ok(_service.GetProjectTypes());
@@ -233,5 +255,10 @@ namespace Votify.Api.Controllers
     {
         public string? RequesterId { get; set; }
         public string? Reason { get; set; }
+    }
+
+    public class DeleteProjectDto
+    {
+        public string? RequesterId { get; set; }
     }
 }

@@ -56,6 +56,32 @@ public class CategoriesController : ControllerBase
         }
     }
 
+    [HttpDelete("{id}")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> Delete(string id)
+    {
+        try
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            await _service.DeleteAsync(id, userId);
+            return Ok(new { message = "Categoría eliminada correctamente." });
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.InnerException?.Message ?? ex.Message);
+        }
+    }
+
     [HttpPut("{id}/voting")]
     public async Task<IActionResult> UpdateVoting(string id, [FromBody] UpdateCategoryVotingDto dto)
     {

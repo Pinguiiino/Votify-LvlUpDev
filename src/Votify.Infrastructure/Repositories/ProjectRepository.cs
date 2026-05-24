@@ -55,6 +55,32 @@ public class ProjectRepository : IProjectRepository
     public async Task SaveChangesAsync()
         => await _context.SaveChangesAsync();
 
+    public async Task DeleteAsync(string projectId)
+    {
+        // Votes reference VotedProjectId but have no FK cascade from Project — delete manually
+        var votes = await _context.Votes
+            .Where(v => v.VotedProjectId == projectId)
+            .ToListAsync();
+        _context.Votes.RemoveRange(votes);
+
+        // WeightedVotes reference ProjectId but have no FK cascade — delete manually
+        var weightedVotes = await _context.WeightedVotes
+            .Where(wv => wv.ProjectId == projectId)
+            .ToListAsync();
+        _context.WeightedVotes.RemoveRange(weightedVotes);
+
+        // AuditRequests have no FK cascade — delete manually
+        var auditRequests = await _context.AuditRequests
+            .Where(ar => ar.ProjectId == projectId)
+            .ToListAsync();
+        _context.AuditRequests.RemoveRange(auditRequests);
+
+        // Delete the project — ProjectCategories and Materials cascade from Project
+        var project = await _context.Projects.FindAsync(projectId);
+        if (project != null)
+            _context.Projects.Remove(project);
+    }
+
     public async Task<bool> TitleExistsInEventAsync(string title, string eventId)
         => await _context.Projects
             .AnyAsync(p => p.Title == title && p.EventId == eventId);

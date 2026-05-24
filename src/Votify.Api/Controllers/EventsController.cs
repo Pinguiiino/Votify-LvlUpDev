@@ -190,6 +190,32 @@ public class EventsController : ControllerBase
         }
     }
 
+    [HttpDelete("{id}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteEvent(string id)
+    {
+        try
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            await _service.DeleteEventAsync(id, userId);
+            return Ok(new { message = "Evento eliminado correctamente." });
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.InnerException?.Message ?? ex.Message);
+        }
+    }
+
     private object ToDto(Event e, List<Votify.Domain.CategoryFolder.Category> categorias) => new
     {
         e.Id,

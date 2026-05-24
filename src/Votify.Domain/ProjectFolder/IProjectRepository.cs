@@ -9,6 +9,7 @@ public interface IProjectRepository
     Task<List<Project>> GetPendingByEventAsync(string eventId);
     Task<List<Project>> GetByOwnerAsync(string ownerId);
     Task AddAsync(Project project);
+    Task DeleteAsync(string projectId);
     Task SaveChangesAsync();
     Task<bool> TitleExistsInEventAsync(string title, string eventId);
 }

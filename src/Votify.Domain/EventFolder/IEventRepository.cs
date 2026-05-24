@@ -9,5 +9,6 @@ public interface IEventRepository
     Task<List<Category>> GetCategoriesWithDetailsAsync(string eventId);
     Task AddAsync(Event evento);
     Task<bool> ExistsByNameAsync(string name);
+    Task DeleteAsync(string eventId);
     Task SaveChangesAsync();
 }

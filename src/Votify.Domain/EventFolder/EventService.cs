@@ -278,6 +278,18 @@ public class EventService
         return evento;
     }
 
+    public async Task DeleteEventAsync(string eventId, string requesterId)
+    {
+        var evento = await _repository.GetByIdAsync(eventId)
+            ?? throw new ArgumentException("Evento no encontrado.");
+
+        if (!string.Equals(evento.Organizer, requesterId, StringComparison.Ordinal))
+            throw new UnauthorizedAccessException("Solo el organizador puede eliminar este evento.");
+
+        await _repository.DeleteAsync(eventId);
+        await _repository.SaveChangesAsync();
+    }
+
     public async Task<string> GetUserEmailByIdAsync(string id)
     {
         if (string.IsNullOrEmpty(id)) return string.Empty;

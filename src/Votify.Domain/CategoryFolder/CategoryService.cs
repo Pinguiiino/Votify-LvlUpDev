@@ -122,6 +122,21 @@ public class CategoryService
         }
     }
 
+    public async Task DeleteAsync(string categoryId, string requesterId)
+    {
+        var categoria = await _repository.GetByIdAsync(categoryId)
+            ?? throw new ArgumentException("Categoría no encontrada.");
+
+        var evento = await _eventRepository.GetByIdAsync(categoria.EventId)
+            ?? throw new ArgumentException("Evento no encontrado.");
+
+        if (!string.Equals(evento.Organizer, requesterId, StringComparison.Ordinal))
+            throw new UnauthorizedAccessException("Solo el organizador puede eliminar esta categoría.");
+
+        await _repository.DeleteAsync(categoryId);
+        await _repository.SaveChangesAsync();
+    }
+
     public async Task UpdateVotingTypeAsync(string categoryId, UpdateCategoryVotingData data)
     {
         var categoria = await _repository.GetForUpdateAsync(categoryId)

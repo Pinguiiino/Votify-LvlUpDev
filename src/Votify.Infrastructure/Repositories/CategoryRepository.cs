@@ -68,6 +68,35 @@ public class CategoryRepository : ICategoryRepository
             .AnyAsync(c => c.EventId == eventId && c.Name.ToLower() == nombreLimpio);
     }
 
+    public async Task DeleteAsync(string categoryId)
+    {
+        // Get VotingSession IDs for this category
+        var sessionIds = await _context.VotingSessions
+            .Where(vs => vs.CategoryId == categoryId)
+            .Select(vs => vs.Id)
+            .ToListAsync();
+
+        // WeightedVotes have no FK cascade from VotingSession — delete manually
+        if (sessionIds.Any())
+        {
+            var weightedVotes = await _context.WeightedVotes
+                .Where(wv => sessionIds.Contains(wv.VotingSessionId))
+                .ToListAsync();
+            _context.WeightedVotes.RemoveRange(weightedVotes);
+        }
+
+        // ProjectCategory → Category is Restrict — delete these records manually first
+        var projectCategories = await _context.ProjectCategories
+            .Where(pc => pc.CategoryId == categoryId)
+            .ToListAsync();
+        _context.ProjectCategories.RemoveRange(projectCategories);
+
+        // Delete the category — VotingSessions → Criteria/Prizes/Votes cascade
+        var categoria = await _context.Categories.FindAsync(categoryId);
+        if (categoria != null)
+            _context.Categories.Remove(categoria);
+    }
+
     public async Task SaveChangesAsync()
         => await _context.SaveChangesAsync();
 }
