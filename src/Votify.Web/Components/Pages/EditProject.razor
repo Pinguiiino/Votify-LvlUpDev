@@ -66,6 +66,9 @@
                         </button>
                     }
                 </div>
+                <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                    JPG, PNG, WEBP o GIF. Máximo 5 MB.
+                </small>
 
                 @if (subiendoImagen)
                 {
@@ -110,6 +113,9 @@
                                     <label>Enlace</label>
                                     <input type="text" class="form-control form-control-sm @(errorUrlEdicion ? "is-invalid" : "")"
                                            placeholder="https://..." @bind="mat.Url" />
+                                    <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                        Debe empezar por http:// o https://
+                                    </small>
                                     @if (errorUrlEdicion)
                                     {
                                         <div class="validation-error">
@@ -220,6 +226,9 @@
                             <label>Enlace</label>
                             <input type="text" class="form-control form-control-sm @(errorUrl ? "is-invalid" : "")"
                                    placeholder="https://..." @bind="nuevoMaterial.Url" />
+                            <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                Debe empezar por http:// o https://
+                            </small>
                             @if (errorUrl)
                             {
                                 <div class="validation-error">
