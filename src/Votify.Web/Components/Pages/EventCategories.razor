@@ -129,6 +129,9 @@
                 <div class="form-group">
                     <label>Nombre *</label>
                     <input type="text" class="form-control" @bind="draft.Name" placeholder="Ej: Proyectos de IA" />
+                    <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                        Debe ser único en el evento.
+                    </small>
                 </div>
 
                 <div class="form-group">
@@ -205,6 +208,9 @@
                                 <div class="model-config">
                                     <label class="field-label">Top N proyectos a elegir</label>
                                     <input type="number" min="1" class="form-control form-control-sm" @bind="ses.TopN" style="max-width: 100px;" />
+                                    <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                        Número de proyectos que cada votante selecciona. Mínimo 1.
+                                    </small>
                                 </div>
                             }
                             else if (ses.EvaluationType == "PointDistribution")
@@ -213,6 +219,9 @@
                                     <div>
                                         <label class="field-label">Total puntos</label>
                                         <input type="number" min="1" class="form-control form-control-sm" @bind="ses.PointsPerVoter" style="max-width: 100px;" />
+                                        <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                            Puntos totales que cada votante reparte entre los proyectos.
+                                        </small>
                                     </div>
                                     <div>
                                         <label class="field-label">Máx. por proyecto</label>
@@ -226,6 +235,9 @@
                                                 No puede superar el total (@ses.PointsPerVoter pts)
                                             </span>
                                         }
+                                        <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                            No puede superar el total de puntos.
+                                        </small>
                                     </div>
                                 </div>
                             }
@@ -262,6 +274,9 @@
                         {
                             <div class="form-group" style="margin-top: 1.5rem; border-top: 1px dashed #cbd5e1; padding-top: 1rem;">
                                 <label>Criterios de evaluación</label>
+                                <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                    Peso: decimal entre 0 y 1. La suma de todos debe ser exactamente 1.
+                                </small>
                                 @foreach (var cr in ses.Criteria)
                                 {
                                     <div class="item-row">
@@ -329,6 +344,9 @@
                                            @onkeydown='async e => { if (e.Key == "Enter") await AddJuror(ses); }' />
                                     <button type="button" class="btn-ghost" @onclick="() => AddJuror(ses)">Añadir</button>
                                 </div>
+                                <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                    Debe tener una cuenta registrada en Votify.
+                                </small>
                                 
                                 @if (!string.IsNullOrEmpty(ses.JurorError))
                                 {
@@ -359,8 +377,12 @@
                         {
                             <div class="combine-weights">
                                 <div><label>Peso jurado</label><input type="number" step="0.05" @bind="draft.JuryWeight" class="form-control" /></div>
+                              
                                 <div><label>Peso público</label><input type="number" step="0.05" @bind="draft.PublicWeight" class="form-control" /></div>
                             </div>
+                            <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                Decimales. Deben sumar 1. Ej: 0.6 y 0.4.
+                            </small>
                         }
                     </div>
                 }
