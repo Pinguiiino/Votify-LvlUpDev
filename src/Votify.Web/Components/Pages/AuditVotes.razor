@@ -9,6 +9,7 @@
 <PageTitle>Auditoría del Evento - Votify</PageTitle>
 
 <div class="categories-page-container">
+    <Breadcrumb EventId="@EventId" CurrentPageName="Auditoría   " />
     <header class="page-header">
         <button class="back-btn" style="margin-bottom: 1rem;" @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories")'>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
