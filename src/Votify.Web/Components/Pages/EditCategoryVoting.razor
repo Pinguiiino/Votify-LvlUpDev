@@ -121,6 +121,9 @@
                                 <label class="field-label">Top N proyectos a elegir</label>
                                 <input type="number" min="1" class="form-control form-control-sm" @bind="ses.TopN"
                                        style="max-width: 100px;" />
+                                <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                    Número de proyectos que cada votante selecciona. Mínimo 1.
+                                </small>
                             </div>
                         }
                         else if (ses.EvaluationType == "PointDistribution")
@@ -130,11 +133,17 @@
                                     <label class="field-label">Total puntos</label>
                                     <input type="number" min="1" class="form-control form-control-sm" @bind="ses.PointsPerVoter"
                                            style="max-width: 100px;" />
+                                    <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                        Puntos totales que cada votante reparte entre los proyectos.
+                                    </small>
                                 </div>
                                 <div>
                                     <label class="field-label">Máx. por proyecto</label>
                                     <input type="number" min="1" class="form-control form-control-sm"
                                            @bind="ses.MaxPointsPerProject" style="max-width: 100px;" />
+                                    <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                        No puede superar el total de puntos.
+                                    </small>
                                 </div>
                             </div>
                         }
@@ -168,6 +177,9 @@
                     {
                         <div class="form-group" style="margin-top: 1.5rem; border-top: 1px dashed #cbd5e1; padding-top: 1rem;">
                             <label>Criterios de evaluación</label>
+                            <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block; margin-bottom: 0.5rem;">
+                                Peso: decimal entre 0 y 1. La suma de todos debe ser exactamente 1.
+                            </small>
                             @foreach (var cr in ses.Criteria)
                             {
                                 <div class="item-row">
@@ -239,12 +251,18 @@
                                     <input type="datetime-local" class="form-control form-control-sm"
                                            value="@(ses.OpenAt?.ToLocalTime().ToString("yyyy-MM-ddTHH:mm"))"
                                            @onchange='e => OnSessionOpenAtChange(ses, e.Value?.ToString())' />
+                                    <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                        No puede ser anterior a hoy ni superar el fin del evento.
+                                    </small>
                                 </div>
                                 <div>
                                     <label class="field-label">Cierre</label>
                                     <input type="datetime-local" class="form-control form-control-sm"
                                            value="@(ses.CloseAt?.ToLocalTime().ToString("yyyy-MM-ddTHH:mm"))"
                                            @onchange='e => OnSessionCloseAtChange(ses, e.Value?.ToString())' />
+                                    <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                        Debe ser posterior a la apertura y no superar el fin del evento.
+                                    </small>
                                 </div>
                             </div>
                         </div>
@@ -259,6 +277,9 @@
                                            @onkeydown='async e => { if (e.Key == "Enter") await AddJuror(ses); }' />
                                     <button type="button" class="btn-ghost" @onclick="() => AddJuror(ses)">Añadir</button>
                                 </div>
+                                <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                    Debe tener una cuenta registrada en Votify.
+                                </small>
 
                                 @if (!string.IsNullOrEmpty(ses.JurorError))
                                 {
@@ -297,6 +318,9 @@
                                     </div>
                                 }
                             </div>
+                            <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                Decimales. Ej: 0.6 y 0.4.
+                            </small>
                         }
 
                         @if (errorFormulario != null)
