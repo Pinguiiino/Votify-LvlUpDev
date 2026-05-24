@@ -43,10 +43,8 @@
 
     private void PushState()
     {
-        var items = new List<BreadcrumbStateService.BreadcrumbItem>
-        {
-            new("Inicio", "/MainEvent")
-        };
+        // Lista inicial vacía, ya no añadimos "Inicio"
+        var items = new List<BreadcrumbStateService.BreadcrumbItem>();
 
         if (!string.IsNullOrEmpty(EventId))
             items.Add(new(_eventName ?? "Evento", $"/event/{EventId}/categories"));
