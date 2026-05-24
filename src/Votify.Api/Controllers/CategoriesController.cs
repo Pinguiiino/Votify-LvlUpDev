@@ -109,6 +109,35 @@ public class CategoriesController : ControllerBase
         }
     }
 
+    [HttpPut("{id}")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> Update(string id, [FromBody] UpdateCategoryDto dto)
+    {
+        try
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var data = new UpdateCategoryData
+            {
+                Name = dto.Name,
+                Description = dto.Description,
+                AllowSelfVoting = dto.AllowSelfVoting,
+                CombineResults = dto.CombineResults,
+                JuryWeight = dto.JuryWeight,
+                PublicWeight = dto.PublicWeight,
+                VotingSessions = dto.VotingSessions.Select(MapToData).ToList()
+            };
+
+            await _service.UpdateAsync(id, userId, data);
+            return Ok(new { message = "Categoría actualizada correctamente." });
+        }
+        catch (ArgumentException ex) { return BadRequest(ex.Message); }
+        catch (UnauthorizedAccessException ex) { return StatusCode(403, ex.Message); }
+        catch (InvalidOperationException ex) { return Conflict(ex.Message); }
+        catch (Exception ex) { return StatusCode(500, ex.InnerException?.Message ?? ex.Message); }
+    }
+
     private static CreateVotingSessionData MapToData(CreateVotingSessionDto v) => new()
     {
         Name = v.Name,
@@ -246,6 +275,16 @@ public class CreatePrizeDto
 
 public class UpdateCategoryVotingDto
 {
+    public bool AllowSelfVoting { get; set; }
+    public bool CombineResults { get; set; }
+    public double? JuryWeight { get; set; }
+    public double? PublicWeight { get; set; }
+    public List<CreateVotingSessionDto> VotingSessions { get; set; } = new();
+}
+public class UpdateCategoryDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
     public bool AllowSelfVoting { get; set; }
     public bool CombineResults { get; set; }
     public double? JuryWeight { get; set; }

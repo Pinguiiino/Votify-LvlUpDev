@@ -122,6 +122,60 @@ public class CategoryService
         }
     }
 
+    public async Task UpdateAsync(string categoryId, string requesterId, UpdateCategoryData data)
+    {
+        var categoria = await _repository.GetForUpdateAsync(categoryId)
+            ?? throw new ArgumentException("Categoría no encontrada.");
+
+        var evento = await _eventRepository.GetByIdAsync(categoria.EventId)
+            ?? throw new ArgumentException("Evento no encontrado.");
+
+        if (!string.Equals(evento.Organizer, requesterId, StringComparison.Ordinal))
+            throw new UnauthorizedAccessException("Solo el organizador puede editar esta categoría.");
+
+        if (DateTime.UtcNow >= evento.StartDate)
+            throw new InvalidOperationException("No se puede editar la categoría porque el evento ya ha comenzado.");
+
+        var nombreLimpio = (data.Name ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(nombreLimpio)) throw new ArgumentException("Nombre obligatorio.");
+
+        if (!string.Equals(categoria.Name, nombreLimpio, StringComparison.OrdinalIgnoreCase))
+        {
+            if (await _repository.ExistsByNameInEventAsync(categoria.EventId, nombreLimpio))
+                throw new ArgumentException($"Ya existe una categoría con el nombre \"{nombreLimpio}\".");
+        }
+
+        if (data.VotingSessions == null || data.VotingSessions.Count == 0)
+            throw new ArgumentException("Debe haber al menos una votación.");
+
+        foreach (var sesData in data.VotingSessions)
+            ValidateEvaluationParameters(sesData);
+
+        foreach (var sesData in data.VotingSessions)
+        {
+            if (sesData.Prizes != null && sesData.Prizes.Count > evento.MaxProjects)
+                throw new ArgumentException(
+                    $"Una votación no puede tener más premios ({sesData.Prizes.Count}) que el número máximo de proyectos del evento ({evento.MaxProjects}).");
+        }
+
+        categoria.Name = nombreLimpio;
+        categoria.Description = string.IsNullOrWhiteSpace(data.Description) ? null : data.Description.Trim();
+        categoria.AllowSelfVoting = data.AllowSelfVoting;
+        categoria.CombineResults = data.CombineResults;
+        categoria.JuryWeight = data.CombineResults ? data.JuryWeight : null;
+        categoria.PublicWeight = data.CombineResults ? data.PublicWeight : null;
+
+        await _repository.RemoveVotingSessionsAsync(categoria);
+
+        foreach (var sesData in data.VotingSessions)
+        {
+            var sesion = BuildSession(categoria, sesData, evento);
+            categoria.VotingSessions.Add(sesion);
+        }
+
+        await _repository.SaveChangesAsync();
+    }
+
     public async Task DeleteAsync(string categoryId, string requesterId)
     {
         var categoria = await _repository.GetByIdAsync(categoryId)
@@ -195,6 +249,16 @@ public class UpdateCategoryVotingData
 public class CreateCategoryData
 {
     public string EventId { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public bool AllowSelfVoting { get; set; }
+    public bool CombineResults { get; set; }
+    public double? JuryWeight { get; set; }
+    public double? PublicWeight { get; set; }
+    public List<CreateVotingSessionData> VotingSessions { get; set; } = new();
+}
+public class UpdateCategoryData
+{
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public bool AllowSelfVoting { get; set; }
