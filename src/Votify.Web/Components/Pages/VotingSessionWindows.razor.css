@@ -381,8 +381,10 @@
     width: 100%;
     max-width: 580px;
     box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     animation: vw-modal-in 0.2s ease;
+    max-height: 90vh;
 }
 
 @keyframes vw-modal-in {

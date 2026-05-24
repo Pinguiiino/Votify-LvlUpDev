@@ -237,6 +237,9 @@
                                    max="@fechaEventoCierreIso"
                                    value="@editOpenAt"
                                    @onchange="e => OnOpenAtChange(e.Value?.ToString())" />
+                            <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                No puede ser anterior a hoy. El evento transcurre del @eventoStart.ToLocalTime().ToString("dd/MM/yyyy") al @eventoEnd.ToLocalTime().ToString("dd/MM/yyyy").
+                            </small>
                         </div>
                         <div class="vw-form-group">
                             <label class="vw-form-label-sm">Fecha y hora de cierre</label>
@@ -246,6 +249,9 @@
                                    max="@fechaEventoCierreIso"
                                    value="@editCloseAt"
                                    @onchange="e => editCloseAt = e.Value?.ToString() ?? string.Empty" />
+                            <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                Debe ser posterior a la apertura. No puede superar el fin del evento (@eventoEnd.ToLocalTime().ToString("dd/MM/yyyy")).
+                            </small>
                         </div>
                     </div>
                 </div>
