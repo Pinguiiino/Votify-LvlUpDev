@@ -45,6 +45,9 @@
                            @bind-Value="projectModel.Title"
                            @oninput="() => errorTitulo = null" />
                 <ValidationMessage For="@(() => projectModel.Title)" />
+                <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                    Debe ser único en el evento.
+                </small>
                 @if (errorTitulo != null)
                 {
                     <div class="validation-error">@errorTitulo</div>
@@ -60,6 +63,9 @@
             <div class="form-group">
                 <label>Imagen del proyecto</label>
                 <InputFile class="form-control" OnChange="OnImagenSeleccionada" accept="image/*" />
+                <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                    JPG, PNG, WEBP o GIF. Máximo 5 MB.
+                </small>
                 @if (subiendoImagen)
                 {
                     <div style="font-size: 0.85rem; color: #6b7280; margin-top: 0.25rem;">Subiendo imagen...</div>
@@ -224,6 +230,9 @@
                             <label>Enlace</label>
                             <input type="text" class="form-control form-control-sm @(errorUrl ? "is-invalid" : "")"
                                    placeholder="https://..." @bind="nuevoMaterial.Url" />
+                            <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
+                                Debe empezar por http:// o https://
+                            </small>
                             @if (errorUrl)
                             {
                                 <div class="validation-error">
