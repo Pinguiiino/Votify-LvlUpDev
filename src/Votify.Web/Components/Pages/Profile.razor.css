@@ -153,25 +153,3 @@
         background-color: #b91c1c;
     }
 
-/* ── ESTILOS DEL BOTÓN DE VOLVER ── */
-.back-btn {
-    position: absolute;
-    top: 1.5rem;
-    left: 1.5rem;
-    background: transparent;
-    border: none;
-    color: #9ca3af;
-    cursor: pointer;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-}
-
-    .back-btn:hover {
-        background-color: #f3f4f6;
-        color: #111827;
-        transform: translateX(-3px);
-    }

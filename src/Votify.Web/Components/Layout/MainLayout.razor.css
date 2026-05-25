@@ -6,6 +6,8 @@
 
 main {
     flex: 1;
+    background: linear-gradient(135deg, #f0f4ff 0%, #f7f0ff 100%);
+    min-height: 100vh;
 }
 
 .sidebar {
@@ -97,28 +99,6 @@ main {
         top: 0.5rem;
 }
 
-.avatar-nav-link {
-    margin-left: 1.5rem;
-    text-decoration: none !important;
-}
-
-.nav-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-    .nav-avatar:hover {
-        transform: scale(1.05);
-        box-shadow: 0 4px 6px rgba(0,0,0,0.15);
-    }
 
 .btn-login-top {
     font-weight: 600;

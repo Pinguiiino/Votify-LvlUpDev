@@ -6,26 +6,6 @@
     color: #1a1a1a;
 }
 
-.back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: none;
-    border: 1px solid #e5e7eb;
-    color: #374151;
-    font-size: 0.875rem;
-    font-weight: 600;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.15s;
-    margin-bottom: 1.75rem;
-}
-
-.back-btn:hover {
-    background-color: #f3f4f6;
-    border-color: #9ca3af;
-}
 
 .mb-4 {
     font-size: 2rem;

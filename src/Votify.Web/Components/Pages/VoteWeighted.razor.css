@@ -548,20 +548,6 @@
         transform: none;
     }
 
-.back-btn {
-    background: none;
-    border: 1px solid #d1d5db;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    font-size: 0.875rem;
-    transition: background 0.15s;
-    margin-bottom: 0.75rem;
-}
-
-    .back-btn:hover {
-        background: #f3f4f6;
-    }
 
 @media (max-width: 600px) {
     .weighted-container {

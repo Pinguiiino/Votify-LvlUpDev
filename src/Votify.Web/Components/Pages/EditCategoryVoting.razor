@@ -21,13 +21,23 @@
     {
         <div class="empty-state">
             <p>@errorCarga</p>
-            <button class="btn-secondary" @onclick="Volver">← Volver a categorías</button>
+            <button class="btn-volver" @onclick="Volver">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Volver a categorías
+            </button>
         </div>
     }
     else if (!puedeEditar)
     {
         <header class="page-header">
-            <button class="back-btn" @onclick="Volver">← Volver</button>
+            <button class="btn-volver" @onclick="Volver">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Volver
+            </button>
             <div class="header-content">
                 <h1 class="page-title">Edición no disponible</h1>
                 <p class="page-subtitle">
@@ -40,7 +50,12 @@
     else
     {
         <header class="page-header">
-            <button class="back-btn" @onclick="Volver">← Volver</button>
+            <button class="btn-volver" @onclick="Volver">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Volver
+            </button>
             <div class="header-content">
                 <div class="event-badge">@categoriaNombre</div>
                 <h1 class="page-title">Editar tipos de votación</h1>

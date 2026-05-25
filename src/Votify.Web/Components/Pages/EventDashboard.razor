@@ -12,13 +12,11 @@
 
 <div class="container-fluid p-4" style="max-width: 1200px; margin: 0 auto;">
     <Breadcrumb EventId="@EventoId" CurrentPageName="Ranking" />
-    <button class="back-btn"
-            style="margin-bottom: 1.5rem; background: none; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: #4b5563; padding: 0;"
-            @onclick="Volver">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
+    <button class="btn-volver" @onclick="Volver">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
         </svg>
-        Volver a Categorías
+        Volver a categorías
     </button>
 
     <h2 class="mb-4" style="font-weight: 800; color: #111827;">Resultados de la Votación</h2>

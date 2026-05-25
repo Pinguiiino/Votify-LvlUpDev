@@ -11,8 +11,11 @@
 <div class="pd-container">
     <header class="pd-header">
         <Breadcrumb EventId="@EventId" CategoryId="@CategoryId" CurrentPageName="Votar: Reparto" />
-        <button class="back-btn" @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories/{CategoryId}/projects")'>
-            ← Volver a proyectos
+        <button class="btn-volver" @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories/{CategoryId}/projects")'>
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+            </svg>
+            Volver a proyectos
         </button>
         <h1 class="pd-title">Reparto de Puntos</h1>
         <p class="pd-subtitle">

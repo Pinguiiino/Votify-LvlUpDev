@@ -10,22 +10,6 @@
     margin-bottom: 2.5rem;
 }
 
-.vw-back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    background: none;
-    border: none;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #64748b;
-    cursor: pointer;
-    padding: 0;
-    margin-bottom: 1.25rem;
-    transition: color 0.15s;
-}
-
-.vw-back-btn:hover { color: #0f172a; }
 
 .vw-page-title {
     font-size: 1.875rem;
