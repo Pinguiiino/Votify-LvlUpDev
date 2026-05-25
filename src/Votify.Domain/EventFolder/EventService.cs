@@ -110,6 +110,7 @@ public class EventService
         var sesiones = await _votingSessionRepository.GetByEventAsync(eventId);
         var sesionesInfo = sesiones.ToDictionary(vs => vs.Id, vs => vs);
         var projectIds = proyectosInfo.Keys.ToList();
+
         var votosDelEvento = await _voteRepository.GetByProjectIdsAsync(projectIds);
 
         var usuariosQueHanVotado = votosDelEvento.Select(v => v.UserId).Distinct().Count();
@@ -119,11 +120,44 @@ public class EventService
         var rankingWeighted = await BuildWeightedRankingAsync(sesiones);
         var ranking = CombineRankings(rankingTopN, rankingWeighted, proyectosInfo, categoriasInfo, sesionesInfo);
 
+        var weightedSessionIds = sesiones
+            .Where(vs => vs.EvaluationType == EvaluationType.WeightedScale)
+            .Select(vs => vs.Id)
+            .ToList();
+        var votosPonderadosDelEvento = weightedSessionIds.Any()
+            ? await _weightedVoteRepository.GetBySessionIdsAsync(weightedSessionIds)
+            : new List<WeightedVote>();
+
+        var sessionProgresses = new List<SessionProgressDto>();
+        foreach (var vs in sesiones)
+        {
+            string catNombre = categoriasInfo.GetValueOrDefault(vs.CategoryId, "General");
+            string sesionTipo = vs.VoterType.ToString() == "Jury" ? "Jurado" : "Público";
+
+            int votantesUnicosSesion = vs.EvaluationType == EvaluationType.WeightedScale
+                ? votosPonderadosDelEvento.Where(wv => wv.VotingSessionId == vs.Id).Select(wv => wv.UserId).Distinct().Count()
+                : votosDelEvento.Where(v => v.VotingSessionId == vs.Id).Select(v => v.UserId).Distinct().Count();
+
+            int totalPosiblesSesion = vs.VoterType.ToString() == "Jury"
+                ? (vs.JurorEmails?.Count ?? 0)
+                : (evento.Participants.Count + evento.Public.Count);
+
+            sessionProgresses.Add(new SessionProgressDto
+            {
+                VotingSessionId = vs.Id,
+                CategoryName = catNombre,
+                SessionName = sesionTipo,
+                UniqueVoters = votantesUnicosSesion,
+                TotalVoters = totalPosiblesSesion
+            });
+        }
+
         return new EventDashboardDto
         {
             TotalVotantes = totalRegistrados,
             VotosEmitidos = usuariosQueHanVotado,
-            Ranking = ranking.OrderByDescending(p => p.Puntos).ToList()
+            Ranking = ranking.OrderByDescending(p => p.Puntos).ToList(),
+            SessionProgresses = sessionProgresses
         };
     }
 
