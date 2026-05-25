@@ -13,11 +13,11 @@
 <PageTitle>Tus proyectos - Votify</PageTitle>
 
 <div class="myprojects-container" style="position: relative;">
-    
+
     <Breadcrumb CurrentPageName="Mis proyectos" />
     <button class="btn-volver" @onclick='() => Navigation.NavigateTo($"/MainEvent")'>
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
-            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
         </svg>
         Volver
     </button>
@@ -63,8 +63,8 @@
                                     @onclick="() => AbrirModalEliminarProyecto(proyecto)"
                                     style="position: absolute; bottom: 0.85rem; right: 0.85rem; width: 2.2rem; height: 2.2rem; border-radius: 50%; border: none; background-color: #ef4444; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; box-shadow: 0 2px 6px rgba(239,68,68,0.4); transition: background-color 0.2s;">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
                                 </svg>
                             </button>
                             <button type="button"
@@ -149,8 +149,8 @@
                                     @onclick="() => AbrirModalEliminarProyecto(proyecto)"
                                     style="flex-shrink: 0; width: 2.2rem; height: 2.2rem; border-radius: 50%; border: none; background-color: #ef4444; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 6px rgba(239,68,68,0.4); transition: background-color 0.2s; margin-left: 0.75rem;">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
                                 </svg>
                             </button>
                         </div>
@@ -200,8 +200,8 @@
                                     @onclick="() => AbrirModalEliminarProyecto(proyecto)"
                                     style="flex-shrink: 0; width: 2.2rem; height: 2.2rem; border-radius: 50%; border: none; background-color: #ef4444; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 6px rgba(239,68,68,0.4); transition: background-color 0.2s; margin-left: 0.75rem;">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
                                 </svg>
                             </button>
                         </div>
@@ -220,8 +220,8 @@
              @onclick:stopPropagation="true">
             <div style="width: 3rem; height: 3rem; background-color: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="#ef4444" viewBox="0 0 16 16">
-                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
                 </svg>
             </div>
             <h2 style="font-size: 1.15rem; font-weight: 700; color: #111827; margin: 0 0 0.5rem;">¿Está seguro de que desea eliminar '@proyectoAEliminar.Title'?</h2>
@@ -311,6 +311,7 @@
                              style="width: 100%; border-radius: 0.75rem; margin-top: 1.5rem; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);" />
                     }
 
+                    @* === Botón / estado de auditoría === *@
                     @if (!proyectosAuditados.Contains(proyectoSeleccionado.Id))
                     {
                         <button class="btn-outline" style="margin-top: 1.5rem; display: block; width: fit-content; padding: 0.5rem 1rem; border: 1.5px solid #d1d5db; background: transparent; color: #111827; border-radius: 0.5rem; font-weight: 600; cursor: pointer;"
@@ -321,9 +322,145 @@
                     else
                     {
                         <p style="margin-top: 1.5rem; color: #16a34a; font-weight: 600; display: flex; align-items: center; gap: 0.4rem;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" />
+                            </svg>
                             Auditoría solicitada
                         </p>
+                    }
+
+                    @* === Resultados y certificado === *@
+                    @if (cargandoResultados)
+                    {
+                        <p style="margin-top: 1.5rem; color: #6b7280; font-style: italic;">
+                            Comprobando resultados…
+                        </p>
+                    }
+                    else if (resultadosProyecto != null && resultadosProyecto.CanGenerateCertificate)
+                    {
+                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+                            <h3 style="font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.75rem 0;">
+                                Resultados
+                            </h3>
+
+                            @foreach (var cat in resultadosProyecto.CategoryResults)
+                            {
+                                var tieneAlgo = (cat.JurySession?.IsClosed ?? false) || (cat.PublicSession?.IsClosed ?? false);
+                                if (!tieneAlgo) continue;
+
+                                <div style="margin-bottom: 1rem;">
+                                    @if (resultadosProyecto.CategoryResults.Count > 1)
+                                    {
+                                        <div style="font-size: 0.78rem; font-weight: 700; color: #374151; margin-bottom: 0.5rem;">
+                                            @cat.CategoryName
+                                        </div>
+                                    }
+
+                                    @* --- Tarjeta del jurado --- *@
+                                    @if (cat.JurySession?.IsClosed == true)
+                                    {
+                                        @if (cat.JurySession.Position.HasValue)
+                                        {
+                                            <div style="background: #eeedfe; border-radius: 0.75rem; padding: 0.85rem 1rem; display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.5rem;">
+                                                <div style="width: 38px; height: 38px; border-radius: 50%; background: #534ab7; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#eeedfe" viewBox="0 0 16 16">
+                                                        <path d="M14.778.085A.5.5 0 0 1 15 .5V2h.5a.5.5 0 0 1 0 1H15v8a.5.5 0 0 1-.314.464L8 14.5l-6.686-3.036A.5.5 0 0 1 1 11V3H.5a.5.5 0 0 1 0-1H1V.5a.5.5 0 0 1 .629-.483l13 3.5a.5.5 0 0 1 .149.068zM2 3v7.671l6 2.727 6-2.727V3.83l-6-1.615L2 3z" />
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <div style="font-size: 0.78rem; font-weight: 600; color: #534ab7;">
+                                                        Clasificación por parte del jurado
+                                                    </div>
+                                                    <div style="font-size: 1.2rem; font-weight: 700; color: #3c3489;">
+                                                        @(cat.JurySession.Position.Value).º puesto
+                                                        @if (cat.JurySession.TotalRanked.HasValue && cat.JurySession.TotalRanked > 1)
+                                                        {
+                                                            <span style="font-size: 0.85rem; color: #6b7280; font-weight: 500;">
+                                                                de @cat.JurySession.TotalRanked
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div style="background: #f3f4f6; border-radius: 0.75rem; padding: 0.85rem 1rem; display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.5rem;">
+                                                <div style="width: 38px; height: 38px; border-radius: 50%; background: #9ca3af; display: flex; align-items: center; justify-content: center;">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#f3f4f6" viewBox="0 0 16 16">
+                                                        <path d="M14.778.085A.5.5 0 0 1 15 .5V2h.5a.5.5 0 0 1 0 1H15v8a.5.5 0 0 1-.314.464L8 14.5l-6.686-3.036A.5.5 0 0 1 1 11V3H.5a.5.5 0 0 1 0-1H1V.5a.5.5 0 0 1 .629-.483l13 3.5a.5.5 0 0 1 .149.068zM2 3v7.671l6 2.727 6-2.727V3.83l-6-1.615L2 3z" />
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <div style="font-size: 0.78rem; font-weight: 600; color: #4b5563;">
+                                                        Clasificación por parte del jurado
+                                                    </div>
+                                                    <div style="font-size: 0.9rem; color: #6b7280;">
+                                                        No votado por el jurado
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+
+                                    @* --- Tarjeta del público --- *@
+                                    @if (cat.PublicSession?.IsClosed == true)
+                                    {
+                                        @if (cat.PublicSession.Position.HasValue)
+                                        {
+                                            <div style="background: #e1f5ee; border-radius: 0.75rem; padding: 0.85rem 1rem; display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.5rem;">
+                                                <div style="width: 38px; height: 38px; border-radius: 50%; background: #1d9e75; display: flex; align-items: center; justify-content: center;">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#e1f5ee" viewBox="0 0 16 16">
+                                                        <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816zM4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275zM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0zm3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <div style="font-size: 0.78rem; font-weight: 600; color: #0f6e56;">
+                                                        Clasificación por parte del público
+                                                    </div>
+                                                    <div style="font-size: 1.2rem; font-weight: 700; color: #085041;">
+                                                        @(cat.PublicSession.Position.Value).º puesto
+                                                        @if (cat.PublicSession.TotalRanked.HasValue && cat.PublicSession.TotalRanked > 1)
+                                                        {
+                                                            <span style="font-size: 0.85rem; color: #6b7280; font-weight: 500;">
+                                                                de @cat.PublicSession.TotalRanked
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div style="background: #f3f4f6; border-radius: 0.75rem; padding: 0.85rem 1rem; display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.5rem;">
+                                                <div style="width: 38px; height: 38px; border-radius: 50%; background: #9ca3af; display: flex; align-items: center; justify-content: center;">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#f3f4f6" viewBox="0 0 16 16">
+                                                        <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8z" />
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <div style="font-size: 0.78rem; font-weight: 600; color: #4b5563;">
+                                                        Clasificación por parte del público
+                                                    </div>
+                                                    <div style="font-size: 0.9rem; color: #6b7280;">
+                                                        No votado por el público
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            }
+
+                            <button @onclick="GenerarCertificado"
+                                    style="margin-top: 0.5rem; width: 100%; padding: 0.75rem; border: none; border-radius: 0.5rem; background: #534ab7; color: #ffffff; font-weight: 600; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M5.5.5A.5.5 0 0 1 6 0h4a.5.5 0 0 1 .5.5v.211a3 3 0 0 1 .47.298.5.5 0 0 1-.604.798A2 2 0 0 0 9.5 1.5v9a.5.5 0 0 1-1 0v-9a2 2 0 0 0-.866.307.5.5 0 1 1-.604-.798A3 3 0 0 1 7.5.711V.5z" />
+                                    <path d="M2 2a2 2 0 0 0-2 2v6.5A1.5 1.5 0 0 0 1.5 12h3v3.5a.5.5 0 0 0 .854.354L8 13.207l2.646 2.647A.5.5 0 0 0 11.5 15.5V12h3a1.5 1.5 0 0 0 1.5-1.5V4a2 2 0 0 0-2-2H2zm0 1h12a1 1 0 0 1 1 1v6.5a.5.5 0 0 1-.5.5H11V7.5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0-.5.5V11H1.5a.5.5 0 0 1-.5-.5V4a1 1 0 0 1 1-1z" />
+                                </svg>
+                                Generar certificado
+                            </button>
+                        </div>
                     }
                 }
                 else if (tabActiva == "comentarios")
@@ -380,6 +517,7 @@
     private List<string> proyectosAuditados = new();
     private string apiBaseUrl = string.Empty;
     private string currentUserId = string.Empty;
+    private string currentUserName = string.Empty;
 
     public List<ProjectDto>? ProyectosSubidos;
     private List<EventDto> ListaEventos = new();
@@ -394,10 +532,20 @@
     private List<CommentDto> comentariosProyecto = new();
     private Dictionary<string, int> comentariosPorProyecto = new();
 
+    private ProjectResultsDto? resultadosProyecto;
+    private bool cargandoResultados = false;
+
+    private ProjectDto? proyectoAEliminar;
+    private bool eliminandoProyecto;
+
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+        currentUserName = authState.User.Identity?.Name
+            ?? authState.User.FindFirst("name")?.Value
+            ?? authState.User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
+            ?? "Participante";
 
         if (string.IsNullOrEmpty(currentUserId))
         {
@@ -472,29 +620,39 @@
         proyectoSeleccionado = proyecto;
         tabActiva = "info";
         comentariosProyecto = new();
+        resultadosProyecto = null;
         cargandoComentarios = true;
+        cargandoResultados = true;
         StateHasChanged();
 
         var http = HttpClientFactory.CreateClient("API");
+
+        // En paralelo: comentarios y resultados
+        var tareaComentarios = http.GetFromJsonAsync<List<CommentDto>>(
+            $"api/votes/comments/{proyecto.Id}");
+        var tareaResultados = http.GetFromJsonAsync<ProjectResultsDto>(
+            $"api/projects/{proyecto.Id}/results");
+
         try
         {
-            var resultado = await http.GetFromJsonAsync<List<CommentDto>>($"api/votes/comments/{proyecto.Id}");
-            comentariosProyecto = resultado ?? new();
+            comentariosProyecto = await tareaComentarios ?? new();
         }
-        catch
+        catch { comentariosProyecto = new(); }
+        finally { cargandoComentarios = false; }
+
+        try
         {
-            comentariosProyecto = new();
+            resultadosProyecto = await tareaResultados;
         }
-        finally
-        {
-            cargandoComentarios = false;
-        }
+        catch { resultadosProyecto = null; }
+        finally { cargandoResultados = false; }
     }
 
     private void CerrarPopup()
     {
         proyectoSeleccionado = null;
         comentariosProyecto = new();
+        resultadosProyecto = null;
     }
 
     private void AbrirModalRechazo(ProjectDto proyecto)
@@ -506,9 +664,6 @@
     {
         proyectoRechazadoAbierto = null;
     }
-
-    private ProjectDto? proyectoAEliminar;
-    private bool eliminandoProyecto;
 
     private void AbrirModalEliminarProyecto(ProjectDto proyecto)
     {
@@ -600,6 +755,55 @@
         }
     }
 
+    private async Task GenerarCertificado()
+    {
+        if (resultadosProyecto == null) return;
+
+        var clasificaciones = new List<object>();
+        foreach (var cat in resultadosProyecto.CategoryResults)
+        {
+            if (cat.JurySession?.IsClosed == true && cat.JurySession.Position.HasValue)
+            {
+                clasificaciones.Add(new
+                {
+                    categoria = cat.CategoryName,
+                    tipo = "Jurado",
+                    puesto = cat.JurySession.Position.Value,
+                    total = cat.JurySession.TotalRanked
+                });
+            }
+            if (cat.PublicSession?.IsClosed == true && cat.PublicSession.Position.HasValue)
+            {
+                clasificaciones.Add(new
+                {
+                    categoria = cat.CategoryName,
+                    tipo = "Público",
+                    puesto = cat.PublicSession.Position.Value,
+                    total = cat.PublicSession.TotalRanked
+                });
+            }
+        }
+
+        var datos = new
+        {
+            nombreParticipante = currentUserName,
+            nombreEvento = resultadosProyecto.EventName,
+            fechaEvento = resultadosProyecto.EventEndDate.ToString("dd/MM/yyyy"),
+            nombreProyecto = resultadosProyecto.ProjectTitle,
+            clasificaciones = clasificaciones
+        };
+
+        try
+        {
+            await JS.InvokeVoidAsync("votifyCertificate.generar", datos);
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", "Error al generar el certificado.");
+            Console.WriteLine(ex.Message);
+        }
+    }
+
     private enum EventStatus { Activo, Proximo, Finalizado, Desconocido }
 
     private EventStatus GetEventStatus(EventDto? evento)
@@ -662,5 +866,34 @@
         public int TopPosition { get; set; }
         public string VoteType { get; set; } = string.Empty;
         public string EvaluationType { get; set; } = string.Empty;
+    }
+
+    public class ProjectResultsDto
+    {
+        public string ProjectId { get; set; } = "";
+        public string ProjectTitle { get; set; } = "";
+        public string EventId { get; set; } = "";
+        public string EventName { get; set; } = "";
+        public DateTime EventEndDate { get; set; }
+        public List<CategoryResultDto> CategoryResults { get; set; } = new();
+        public bool CanGenerateCertificate { get; set; }
+    }
+
+    public class CategoryResultDto
+    {
+        public string CategoryId { get; set; } = "";
+        public string CategoryName { get; set; } = "";
+        public SessionResultDto? JurySession { get; set; }
+        public SessionResultDto? PublicSession { get; set; }
+    }
+
+    public class SessionResultDto
+    {
+        public string SessionId { get; set; } = "";
+        public string SessionName { get; set; } = "";
+        public bool IsClosed { get; set; }
+        public int? Position { get; set; }
+        public int? TotalRanked { get; set; }
+        public int Points { get; set; }
     }
 }
