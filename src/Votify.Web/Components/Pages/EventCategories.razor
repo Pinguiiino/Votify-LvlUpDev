@@ -25,30 +25,14 @@
             <Breadcrumb EventId="@EventId" CurrentPageName="Categorías" />
             <button class="btn-volver" @onclick="Volver">
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
                 </svg>
                 Volver
             </button>
 
             <div class="header-content">
                 <div class="event-badge">@evento.Modality</div>
-                
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <h1 class="page-title" style="margin: 0;">@evento.Name</h1>
-                    @if (isOrganizer && eventoNoIniciado)
-                    {
-                        <button class="btn-edit-pencil"
-                                style="background: white; border: 1px solid black; border-radius: 6px; cursor: pointer; color: #000; padding: 0.45rem 0.75rem; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem;"
-                                @onclick='() => Navigation.NavigateTo($"/event/{evento.Id}/edit")'
-                                title="Editar Evento">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
-                            </svg>
-                            <span>Editar evento</span>
-                        </button>
-                    }
-                </div>
-
+                <h1 class="page-title">@evento.Name</h1>
                 @if (!string.IsNullOrWhiteSpace(evento.Description))
                 {
                     <p class="page-subtitle">@evento.Description</p>
@@ -94,7 +78,7 @@
                     }
                 }
 
-                @if (isOrganizer && !mostrandoFormulario && editandoCategoriaId == null)
+                @if (isOrganizer && !mostrandoFormulario)
                 {
                     <button class="btn-dark" @onclick="MostrarFormulario">+ Crear categoría</button>
                 }
@@ -104,21 +88,17 @@
         @if (!evento.Categories.Any() && !mostrandoFormulario)
         {
             <div class="empty-state">
-                <p>
-                    Este evento todavía no tiene categorías.
-                    Crea la primera para empezar.
-                </p>
+                <p>Este evento todavía no tiene categorías. Crea la primera para empezar.</p>
             </div>
         }
 
-        @* ── PANEL CREAR ── *@
         @if (mostrandoFormulario && isOrganizer)
         {
             <div class="create-cat-panel">
                 <h3 class="panel-title">Nueva categoría</h3>
                 <p class="panel-subtitle">Configura el nombre, las votaciones y los premios.</p>
 
-                @RenderCategoryForm(draft, false)
+                @RenderCategoryForm(draft)
 
                 @if (errorFormulario != null)
                 {
@@ -129,29 +109,6 @@
                     <button type="button" class="btn-secondary" @onclick="CancelarFormulario">Cancelar</button>
                     <button type="button" class="btn-primary" disabled="@guardando" @onclick="GuardarCategoria">
                         @(guardando ? "Guardando..." : "Guardar categoría")
-                    </button>
-                </div>
-            </div>
-        }
-
-        @* ── PANEL EDITAR ── *@
-        @if (editandoCategoriaId != null && isOrganizer && eventoNoIniciado)
-        {
-            <div class="create-cat-panel">
-                <h3 class="panel-title">Editar categoría</h3>
-                <p class="panel-subtitle">Modifica el nombre, las votaciones y los premios.</p>
-
-                @RenderCategoryForm(draftEdicion, true)
-
-                @if (errorEdicion != null)
-                {
-                    <div class="error-banner">@errorEdicion</div>
-                }
-
-                <div class="panel-actions">
-                    <button type="button" class="btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
-                    <button type="button" class="btn-primary" disabled="@guardandoEdicion" @onclick="GuardarEdicion">
-                        @(guardandoEdicion ? "Guardando..." : "Guardar cambios")
                     </button>
                 </div>
             </div>
@@ -170,7 +127,7 @@
                                 {
                                     <button type="button"
                                             title="Editar categoría"
-                                            @onclick="() => AbrirEdicionCategoria(cat)"
+                                            @onclick='() => Navigation.NavigateTo($"/event/{EventId}/categories/{cat.Id}/edit")'
                                             style="width: 2.2rem; height: 2.2rem; border-radius: 50%; border: none; background-color: #374151; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 6px rgba(55,65,81,0.4); transition: background-color 0.2s;">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
                                             <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
@@ -188,6 +145,7 @@
                                 </button>
                             </div>
                         }
+
                         <div class="cat-card-header" @onclick="() => ToggleExpand(cat.Id)">
                             <div class="cat-title-row">
                                 <div style="flex:1; min-width:0;">
@@ -204,7 +162,6 @@
                                     {
                                         <span class="pill" style="background-color: #fef08a; color: #92400e; border: 1px solid #fde047;">⭐ Eres jurado</span>
                                     }
-
                                     @foreach (var vs in cat.VotingSessions)
                                     {
                                         <span class="pill @(vs.VoterType == "Public" ? "pill-green" : "pill-blue")">
@@ -227,25 +184,6 @@
                         @if (expandedCategoryId == cat.Id)
                         {
                             <div class="cat-card-body">
-                                @if (isOrganizer && PuedeEditarVotaciones(cat))
-                                {
-                                    <div style="display:flex; justify-content:flex-end; margin-bottom: 0.75rem;">
-                                        <a href="@($"/event/{EventId}/categories/{cat.Id}/edit-voting")"
-                                               class="btn-secondary"
-                                               style="text-decoration:none; font-size:0.85rem;">
-                                            ✎ Editar tipos de votación
-                                        </a>
-                                    </div>
-                                }
-                                else if (isOrganizer)
-                                {
-                                    <div style="display:flex; justify-content:flex-end; margin-bottom: 0.75rem;">
-                                        <span style="font-size:0.78rem; color:#94a3b8; font-style:italic;">
-                                            No se pueden editar los tipos de votación: esta ventana ya ha comenzado.
-                                        </span>
-                                    </div>
-                                }
-
                                 @if (cat.CombineResults)
                                 {
                                     <div class="detail-section">
@@ -306,7 +244,6 @@
                                                     <span style="color: #94a3b8; font-style: italic;">Sin ventana temporal configurada</span>
                                                 }
                                             </div>
-
                                             @{
                                                 var estadoKey = GetVsStatusKey(vs);
                                             }
@@ -346,7 +283,6 @@
                                         (vs.VoterType == "Jury" && vs.JurorEmails.Contains(currentUserEmail)) ||
                                         (vs.VoterType == "Public" && (isParticipant || isPublic)));
                                 }
-                                
                                 <a href="@($"/event/{EventId}/categories/{cat.Id}/projects")"
                                        class="btn-primary" style="display:inline-block; text-decoration:none; align-self:flex-start;">
                                     @(puedeVotar ? "Ver proyectos y votar →" : "Ver proyectos →")
@@ -395,17 +331,10 @@
     private EventDetailDto? evento;
     private string? expandedCategoryId;
 
-    // Crear
     private bool mostrandoFormulario;
     private bool guardando;
     private string? errorFormulario;
     private CategoryDraft draft = new();
-
-    // Editar
-    private string? editandoCategoriaId;
-    private bool guardandoEdicion;
-    private string? errorEdicion;
-    private CategoryDraft draftEdicion = new();
 
     private string currentUserId = string.Empty;
     private string currentUserEmail = string.Empty;
@@ -443,98 +372,151 @@
 
     private void ToggleExpand(string catId) => expandedCategoryId = expandedCategoryId == catId ? null : catId;
     private void Volver() => Navigation.NavigateTo("/MainEvent");
-    private void MostrarFormulario() { draft = new CategoryDraft(); errorFormulario = null; mostrandoFormulario = true; editandoCategoriaId = null; }
+    private void MostrarFormulario() { draft = new CategoryDraft(); errorFormulario = null; mostrandoFormulario = true; }
     private void CancelarFormulario() { mostrandoFormulario = false; errorFormulario = null; }
 
-    // ── EDICIÓN ──
-    private void AbrirEdicionCategoria(CategoryDetailDto cat)
-    {
-        editandoCategoriaId = cat.Id;
-        mostrandoFormulario = false;
-        errorEdicion = null;
+    private void AddSession(string voterType) => AddSessionToDraft(draft, voterType);
 
-        draftEdicion = new CategoryDraft
+    private void AddSessionToDraft(CategoryDraft d, string voterType)
+    {
+        var defaultEval = voterType == "Jury" ? "WeightedScale" : "TopN";
+        d.Sessions.Add(new SessionDraft
         {
-            Name = cat.Name,
-            Description = cat.Description,
-            AllowSelfVoting = cat.AllowSelfVoting,
-            CombineResults = cat.CombineResults,
-            JuryWeight = cat.JuryWeight,
-            PublicWeight = cat.PublicWeight,
-            Sessions = cat.VotingSessions.Select(vs => new SessionDraft
-            {
-                VoterType = vs.VoterType,
-                EvaluationType = vs.EvaluationType,
-                CriterionType = vs.CriterionType ?? "Numeric",
-                TopN = vs.TopN,
-                PointsPerVoter = vs.PointsPerVoter,
-                MaxPointsPerProject = vs.MaxPointsPerProject,
-                AllowComments = vs.AllowComments,
-                RequireComments = vs.RequireComments,
-                AllowCommentsPerCriterion = vs.AllowCommentsPerCriterion,
-                OpenAt = vs.OpenAt,
-                CloseAt = vs.CloseAt,
-                JurorEmails = vs.JurorEmails.ToList(),
-                Criteria = vs.Criteria.Select(c => new CriterionDraft { Name = c.Name, Weight = c.Weight }).ToList(),
-                Prizes = vs.Prizes.Select(p => new PrizeDraft { Position = p.Position, Name = p.Name, Description = p.Description }).ToList()
-            }).ToList()
-        };
+            VoterType = voterType,
+            EvaluationType = defaultEval,
+            TopN = defaultEval == "TopN" ? 3 : null,
+        });
     }
 
-    private void CancelarEdicion() { editandoCategoriaId = null; errorEdicion = null; }
+    private void SelectModel(SessionDraft ses, string model) => SelectModelOnDraft(ses, model);
 
-    private async Task GuardarEdicion()
+    private void SelectModelOnDraft(SessionDraft ses, string model)
     {
-        errorEdicion = null;
+        ses.EvaluationType = model;
+        if (model != "WeightedScale") { ses.CriterionType = null; ses.AllowCommentsPerCriterion = false; }
+        else if (string.IsNullOrEmpty(ses.CriterionType)) ses.CriterionType = "Numeric";
+    }
 
-        var error = ValidarDraft(draftEdicion);
-        if (error != null) { errorEdicion = error; return; }
+    private void AddPrize(SessionDraft ses) => AddPrizeToDraft(ses);
+    private void AddPrizeToDraft(SessionDraft ses) => ses.Prizes.Add(new PrizeDraft { Position = ses.Prizes.Count + 1 });
+
+    private async Task AddJuror(SessionDraft ses)
+    {
+        ses.JurorError = null;
+        var correo = ses.InputCorreoJurado?.Trim().ToLower();
+        if (string.IsNullOrWhiteSpace(correo)) return;
+        if (ses.JurorEmails.Contains(correo)) { ses.InputCorreoJurado = string.Empty; return; }
 
         try
         {
-            guardandoEdicion = true;
+            var http = HttpClientFactory.CreateClient("API");
+            var existe = await http.GetFromJsonAsync<bool>($"api/auth/check-email?email={correo}");
+            if (existe) { ses.JurorEmails.Add(correo); ses.InputCorreoJurado = string.Empty; }
+            else ses.JurorError = $"La cuenta '{correo}' no está registrada en Votify.";
+        }
+        catch { ses.JurorError = "Error al verificar el correo con el servidor."; }
+    }
+
+    private string? ValidarDraft(CategoryDraft d)
+    {
+        if (string.IsNullOrWhiteSpace(d.Name)) return "El nombre de la categoría es obligatorio.";
+        if (d.Sessions.Count == 0) return "Debe haber al menos una votación.";
+
+        foreach (var ses in d.Sessions)
+        {
+            string tipoVotante = ses.VoterType == "Jury" ? "Jurado" : "Público";
+
+            if (ses.OpenAt.HasValue && ses.CloseAt.HasValue && ses.CloseAt <= ses.OpenAt)
+                return $"La votación de {tipoVotante}: la fecha de cierre debe ser posterior a la de apertura.";
+            if (ses.OpenAt.HasValue && ses.OpenAt < DateTime.UtcNow)
+                return $"La votación de {tipoVotante}: la fecha de apertura no puede ser anterior a la actual.";
+            if (ses.CloseAt.HasValue && evento != null && ses.CloseAt > evento.EndDate.ToUniversalTime())
+                return $"La votación de {tipoVotante}: la fecha de cierre no puede superar el fin del evento ({evento.EndDate:dd/MM/yyyy}).";
+            if (ses.VoterType == "Jury" && !ses.JurorEmails.Any())
+                return "La votación de Jurado requiere al menos un correo de jurado asignado.";
+            if (ses.EvaluationType == "WeightedScale" && !ses.Criteria.Any())
+                return $"La votación de {tipoVotante} requiere al menos un criterio porque usa Baremo Ponderado.";
+
+            if (ses.Criteria.Any())
+            {
+                double sumaPesos = 0;
+                foreach (var cr in ses.Criteria)
+                {
+                    if (string.IsNullOrWhiteSpace(cr.Name)) return $"Todos los criterios en la votación de {tipoVotante} deben tener un nombre.";
+                    if (cr.Weight <= 0) return $"El peso del criterio '{cr.Name}' debe ser mayor que 0.";
+                    sumaPesos += cr.Weight;
+                }
+                if (Math.Abs(sumaPesos - 1.0) > 0.001)
+                    return $"La suma de los pesos de los criterios en la votación de {tipoVotante} debe ser exactamente 1 (actualmente suma {sumaPesos.ToString("0.##")}).";
+            }
+
+            if (!ses.AllowComments) ses.RequireComments = false;
+            if (ses.EvaluationType != "WeightedScale") ses.AllowCommentsPerCriterion = false;
+
+            if (ses.EvaluationType == "PointDistribution")
+            {
+                if (ses.PointsPerVoter == null || ses.PointsPerVoter <= 0) return $"La votación de {tipoVotante}: el total de puntos debe ser mayor que 0.";
+                if (ses.MaxPointsPerProject == null || ses.MaxPointsPerProject <= 0) return $"La votación de {tipoVotante}: el máximo por proyecto debe ser mayor que 0.";
+                if (ses.MaxPointsPerProject > ses.PointsPerVoter) return $"La votación de {tipoVotante}: el máximo por proyecto ({ses.MaxPointsPerProject}) no puede superar el total de puntos ({ses.PointsPerVoter}).";
+            }
+        }
+        return null;
+    }
+
+    private object BuildSessionsPayload(CategoryDraft d) => d.Sessions.Select(s => new
+    {
+        s.VoterType,
+        s.EvaluationType,
+        s.CriterionType,
+        s.TopN,
+        s.PointsPerVoter,
+        s.MaxPointsPerProject,
+        s.AllowComments,
+        s.RequireComments,
+        s.AllowCommentsPerCriterion,
+        OpenAt = s.OpenAt,
+        CloseAt = s.CloseAt,
+        JurorEmails = s.VoterType == "Jury" ? s.JurorEmails : new List<string>(),
+        Criteria = s.Criteria.Select(c => new { c.Name, c.Weight }),
+        Prizes = s.Prizes.Select(p => new { p.Position, p.Name, p.Description })
+    });
+
+    private async Task GuardarCategoria()
+    {
+        errorFormulario = ValidarDraft(draft);
+        if (errorFormulario != null) return;
+
+        try
+        {
+            guardando = true;
             var payload = new
             {
-                draftEdicion.Name,
-                draftEdicion.Description,
-                draftEdicion.AllowSelfVoting,
-                draftEdicion.CombineResults,
-                JuryWeight = draftEdicion.CombineResults ? draftEdicion.JuryWeight : null,
-                PublicWeight = draftEdicion.CombineResults ? draftEdicion.PublicWeight : null,
-                VotingSessions = BuildSessionsPayload(draftEdicion)
+                EventId = EventId,
+                draft.Name,
+                draft.Description,
+                draft.AllowSelfVoting,
+                draft.CombineResults,
+                JuryWeight = draft.CombineResults ? draft.JuryWeight : null,
+                PublicWeight = draft.CombineResults ? draft.PublicWeight : null,
+                VotingSessions = BuildSessionsPayload(draft)
             };
 
             var http = HttpClientFactory.CreateClient("API");
-            var session = await CustomAuthProvider.GetUserSessionAsync();
-            if (!string.IsNullOrEmpty(session?.Token))
-                http.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", session.Token);
+            var resp = await http.PostAsJsonAsync("/api/categories", payload);
 
-            var resp = await http.PutAsJsonAsync($"/api/categories/{editandoCategoriaId}", payload);
-
-            if (resp.IsSuccessStatusCode)
-            {
-                editandoCategoriaId = null;
-                await CargarEvento();
-            }
-            else
-            {
-                errorEdicion = (await resp.Content.ReadAsStringAsync()).Trim('"');
-            }
+            if (resp.IsSuccessStatusCode) { mostrandoFormulario = false; await CargarEvento(); }
+            else errorFormulario = (await resp.Content.ReadAsStringAsync()).Trim('"');
         }
-        catch (Exception ex) { errorEdicion = $"Error: {ex.Message}"; }
-        finally { guardandoEdicion = false; }
+        catch (Exception ex) { errorFormulario = $"Error: {ex.Message}"; }
+        finally { guardando = false; }
     }
 
-    // ── FORMULARIO COMPARTIDO ──
-    private RenderFragment RenderCategoryForm(CategoryDraft d, bool esEdicion) => __builder =>
+    private RenderFragment RenderCategoryForm(CategoryDraft d) => __builder =>
     {
         <div class="form-group">
             <label>Nombre *</label>
             <input type="text" class="form-control" @bind="d.Name" placeholder="Ej: Proyectos de IA" />
-            <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">
-                Debe ser único en el evento.
-            </small>
+            <small style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; display: block;">Debe ser único en el evento.</small>
         </div>
 
         <div class="form-group">
@@ -764,147 +746,6 @@
         }
     };
 
-    private void AddSession(string voterType) => AddSessionToDraft(draft, voterType);
-
-    private void AddSessionToDraft(CategoryDraft d, string voterType)
-    {
-        var defaultEval = voterType == "Jury" ? "WeightedScale" : "TopN";
-        d.Sessions.Add(new SessionDraft
-        {
-            VoterType = voterType,
-            EvaluationType = defaultEval,
-            TopN = defaultEval == "TopN" ? 3 : null,
-        });
-    }
-
-    private void SelectModel(SessionDraft ses, string model) => SelectModelOnDraft(ses, model);
-
-    private void SelectModelOnDraft(SessionDraft ses, string model)
-    {
-        ses.EvaluationType = model;
-        if (model != "WeightedScale") { ses.CriterionType = null; ses.AllowCommentsPerCriterion = false; }
-        else if (string.IsNullOrEmpty(ses.CriterionType)) ses.CriterionType = "Numeric";
-    }
-
-    private void AddPrize(SessionDraft ses) => AddPrizeToDraft(ses);
-    private void AddPrizeToDraft(SessionDraft ses) => ses.Prizes.Add(new PrizeDraft { Position = ses.Prizes.Count + 1 });
-
-    private async Task AddJuror(SessionDraft ses)
-    {
-        ses.JurorError = null;
-        var correo = ses.InputCorreoJurado?.Trim().ToLower();
-        if (string.IsNullOrWhiteSpace(correo)) return;
-
-        if (ses.JurorEmails.Contains(correo)) { ses.InputCorreoJurado = string.Empty; return; }
-
-        try
-        {
-            var http = HttpClientFactory.CreateClient("API");
-            var existe = await http.GetFromJsonAsync<bool>($"api/auth/check-email?email={correo}");
-            if (existe) { ses.JurorEmails.Add(correo); ses.InputCorreoJurado = string.Empty; }
-            else ses.JurorError = $"La cuenta '{correo}' no está registrada en Votify.";
-        }
-        catch { ses.JurorError = "Error al verificar el correo con el servidor."; }
-    }
-
-    private string? ValidarDraft(CategoryDraft d)
-    {
-        if (string.IsNullOrWhiteSpace(d.Name)) return "El nombre de la categoría es obligatorio.";
-        if (d.Sessions.Count == 0) return "Debe haber al menos una votación.";
-
-        foreach (var ses in d.Sessions)
-        {
-            string tipoVotante = ses.VoterType == "Jury" ? "Jurado" : "Público";
-
-            if (ses.OpenAt.HasValue && ses.CloseAt.HasValue && ses.CloseAt <= ses.OpenAt)
-                return $"La votación de {tipoVotante}: la fecha de cierre debe ser posterior a la de apertura.";
-
-            if (ses.OpenAt.HasValue && ses.OpenAt < DateTime.UtcNow)
-                return $"La votación de {tipoVotante}: la fecha de apertura no puede ser anterior a la actual.";
-
-            if (ses.CloseAt.HasValue && evento != null && ses.CloseAt > evento.EndDate.ToUniversalTime())
-                return $"La votación de {tipoVotante}: la fecha de cierre no puede superar el fin del evento ({evento.EndDate:dd/MM/yyyy}).";
-
-            if (ses.VoterType == "Jury" && !ses.JurorEmails.Any())
-                return "La votación de Jurado requiere al menos un correo de jurado asignado.";
-
-            if (ses.EvaluationType == "WeightedScale" && !ses.Criteria.Any())
-                return $"La votación de {tipoVotante} requiere al menos un criterio porque usa Baremo Ponderado.";
-
-            if (ses.Criteria.Any())
-            {
-                double sumaPesos = 0;
-                foreach (var cr in ses.Criteria)
-                {
-                    if (string.IsNullOrWhiteSpace(cr.Name)) return $"Todos los criterios en la votación de {tipoVotante} deben tener un nombre.";
-                    if (cr.Weight <= 0) return $"El peso del criterio '{cr.Name}' debe ser mayor que 0.";
-                    sumaPesos += cr.Weight;
-                }
-                if (Math.Abs(sumaPesos - 1.0) > 0.001)
-                    return $"La suma de los pesos de los criterios en la votación de {tipoVotante} debe ser exactamente 1 (actualmente suma {sumaPesos.ToString("0.##")}).";
-            }
-
-            if (!ses.AllowComments) ses.RequireComments = false;
-            if (ses.EvaluationType != "WeightedScale") ses.AllowCommentsPerCriterion = false;
-
-            if (ses.EvaluationType == "PointDistribution")
-            {
-                if (ses.PointsPerVoter == null || ses.PointsPerVoter <= 0) return $"La votación de {tipoVotante}: el total de puntos debe ser mayor que 0.";
-                if (ses.MaxPointsPerProject == null || ses.MaxPointsPerProject <= 0) return $"La votación de {tipoVotante}: el máximo por proyecto debe ser mayor que 0.";
-                if (ses.MaxPointsPerProject > ses.PointsPerVoter) return $"La votación de {tipoVotante}: el máximo por proyecto ({ses.MaxPointsPerProject}) no puede superar el total de puntos ({ses.PointsPerVoter}).";
-            }
-        }
-        return null;
-    }
-
-    private object BuildSessionsPayload(CategoryDraft d) => d.Sessions.Select(s => new
-    {
-        s.VoterType,
-        s.EvaluationType,
-        s.CriterionType,
-        s.TopN,
-        s.PointsPerVoter,
-        s.MaxPointsPerProject,
-        s.AllowComments,
-        s.RequireComments,
-        s.AllowCommentsPerCriterion,
-        OpenAt = s.OpenAt,
-        CloseAt = s.CloseAt,
-        JurorEmails = s.VoterType == "Jury" ? s.JurorEmails : new List<string>(),
-        Criteria = s.Criteria.Select(c => new { c.Name, c.Weight }),
-        Prizes = s.Prizes.Select(p => new { p.Position, p.Name, p.Description })
-    });
-
-    private async Task GuardarCategoria()
-    {
-        errorFormulario = ValidarDraft(draft);
-        if (errorFormulario != null) return;
-
-        try
-        {
-            guardando = true;
-            var payload = new
-            {
-                EventId = EventId,
-                draft.Name,
-                draft.Description,
-                draft.AllowSelfVoting,
-                draft.CombineResults,
-                JuryWeight = draft.CombineResults ? draft.JuryWeight : null,
-                PublicWeight = draft.CombineResults ? draft.PublicWeight : null,
-                VotingSessions = BuildSessionsPayload(draft)
-            };
-
-            var http = HttpClientFactory.CreateClient("API");
-            var resp = await http.PostAsJsonAsync("/api/categories", payload);
-
-            if (resp.IsSuccessStatusCode) { mostrandoFormulario = false; await CargarEvento(); }
-            else errorFormulario = (await resp.Content.ReadAsStringAsync()).Trim('"');
-        }
-        catch (Exception ex) { errorFormulario = $"Error: {ex.Message}"; }
-        finally { guardando = false; }
-    }
-
     private static string FormatEval(VotingSessionDto vs) => vs.EvaluationType switch
     {
         "WeightedScale" => "Baremo ponderado",
@@ -912,29 +753,6 @@
         "TopN" => $"Top {vs.TopN}",
         _ => vs.EvaluationType
     };
-
-    private static bool PuedeEditarVotaciones(CategoryDetailDto cat)
-    {
-        if (cat.VotingSessions == null || cat.VotingSessions.Count == 0) return false;
-        var ahora = DateTime.UtcNow;
-        return cat.VotingSessions.All(vs =>
-        {
-            if (vs.ManualStatus == "open" || vs.ManualStatus == "paused" || vs.ManualStatus == "closed") return false;
-            if (vs.OpenAt.HasValue && vs.OpenAt.Value <= ahora) return false;
-            return true;
-        });
-    }
-
-    private void OnSessionOpenAtChange(SessionDraft ses, string? value)
-    {
-        ses.OpenAt = string.IsNullOrEmpty(value) ? null : DateTime.Parse(value).ToUniversalTime();
-        if (ses.OpenAt.HasValue && ses.CloseAt.HasValue && ses.CloseAt <= ses.OpenAt) ses.CloseAt = null;
-    }
-
-    private void OnSessionCloseAtChange(SessionDraft ses, string? value)
-    {
-        ses.CloseAt = string.IsNullOrEmpty(value) ? null : DateTime.Parse(value).ToUniversalTime();
-    }
 
     private static string GetVsStatusKey(VotingSessionDto vs)
     {
