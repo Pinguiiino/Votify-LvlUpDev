@@ -76,6 +76,8 @@ h1:focus {
     margin-bottom: 1.25rem;
     line-height: 1.4;
     font-family: inherit;
+    align-self: flex-start;
+    width: fit-content;
 }
 
 .btn-volver:hover {

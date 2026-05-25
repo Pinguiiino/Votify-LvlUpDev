@@ -8,6 +8,13 @@
     padding: 2rem;
 }
 
+.profile-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 440px;
+}
+
 .auth-card {
     width: 100%;
     max-width: 440px;
