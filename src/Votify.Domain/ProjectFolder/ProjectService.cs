@@ -165,6 +165,116 @@ public class ProjectService
         await _repository.SaveChangesAsync();
     }
 
+    public async Task<ProjectResultsDto?> GetResultsAsync(string projectId, EventService eventService)
+    {
+        var project = await _repository.GetByIdAsync(projectId);
+        if (project == null) return null;
+
+        var evento = await _eventRepository.GetByIdAsync(project.EventId);
+        if (evento == null) return null;
+
+        // Reutilizamos el dashboard del evento, que ya calcula puntos
+        // para los 3 tipos de evaluación (TopN, PointDistribution, WeightedScale).
+        var dashboard = await eventService.GetDashboardStatsAsync(project.EventId);
+        var ranking = dashboard?.Ranking ?? new List<ProjectResultDto>();
+
+        var dto = new ProjectResultsDto
+        {
+            ProjectId = project.Id,
+            ProjectTitle = project.Title,
+            EventId = evento.Id,
+            EventName = evento.Name,
+            EventEndDate = evento.EndDate
+        };
+
+        // Cargar las categorías del evento con sus sesiones de votación
+        var categoriasDelEvento = await eventService.GetCategoriesWithDetailsAsync(evento.Id);
+
+        // Por cada ProjectCategory del proyecto, construimos el resultado
+        foreach (var pc in project.ProjectCategories)
+        {
+            if (pc.CategoryId == null) continue;
+
+            var cat = categoriasDelEvento.FirstOrDefault(c => c.Id == pc.CategoryId);
+            if (cat == null) continue;
+
+            var catResult = new CategoryResultDto
+            {
+                CategoryId = cat.Id,
+                CategoryName = cat.Name
+            };
+
+            var sesionJurado = cat.VotingSessions.FirstOrDefault(vs => vs.VoterType == VoterType.Jury);
+            var sesionPublico = cat.VotingSessions.FirstOrDefault(vs => vs.VoterType == VoterType.Public);
+
+            if (sesionJurado != null)
+                catResult.JurySession = BuildSessionResult(sesionJurado, cat.Name, project.Title, ranking);
+            if (sesionPublico != null)
+                catResult.PublicSession = BuildSessionResult(sesionPublico, cat.Name, project.Title, ranking);
+
+            dto.CategoryResults.Add(catResult);
+        }
+
+        // El certificado se habilita si CUALQUIER sesión de CUALQUIER categoría está cerrada
+        dto.CanGenerateCertificate = dto.CategoryResults.Any(cr =>
+            (cr.JurySession?.IsClosed ?? false) ||
+            (cr.PublicSession?.IsClosed ?? false));
+
+        return dto;
+    }
+
+    private static SessionResultDto BuildSessionResult(
+        VotingSession session,
+        string categoryName,
+        string projectTitle,
+        List<ProjectResultDto> globalRanking)
+    {
+        bool isClosed = IsSessionClosed(session);
+
+        var result = new SessionResultDto
+        {
+            SessionId = session.Id,
+            SessionName = session.Name,
+            IsClosed = isClosed
+        };
+
+        if (!isClosed) return result;
+
+        // El dashboard usa la clave "CategoriaNombre|SesionNombre"
+        var compositeKey = $"{categoryName}|{session.Name}";
+
+        var sessionRanking = globalRanking
+            .Where(r => r.Categoria == compositeKey)
+            .OrderByDescending(r => r.Puntos)
+            .ToList();
+
+        if (sessionRanking.Count == 0) return result;
+
+        result.TotalRanked = sessionRanking.Count;
+
+        // Los títulos son únicos dentro de un evento (TitleExistsInEventAsync lo garantiza)
+        var idx = sessionRanking.FindIndex(r => r.Nombre == projectTitle);
+        if (idx >= 0)
+        {
+            result.Position = idx + 1;
+            result.Points = sessionRanking[idx].Puntos;
+        }
+
+        return result;
+    }
+
+    private static bool IsSessionClosed(VotingSession s)
+    {
+        // Mismo criterio que el resto del sistema (VotingSession.IsOpen invertido)
+        if (s.ManualStatus == "closed") return true;
+        if (s.ManualStatus == "paused") return false;
+        if (s.ManualStatus == "open") return false;
+
+        var effectiveClose = s.AdjustedCloseAt ?? s.CloseAt;
+        if (!s.OpenAt.HasValue || !effectiveClose.HasValue) return false;
+        return DateTime.UtcNow > effectiveClose.Value;
+    }
+
     public List<string> GetProjectTypes()
         => new List<string> { "AI", "Sustainability", "General" };
 

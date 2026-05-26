@@ -10,8 +10,14 @@ builder.Services.AddDbContextFactory<VotifyDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
-
+    .AddInteractiveServerComponents()
+    .AddHubOptions(options =>
+    {
+        options.ClientTimeoutInterval = TimeSpan.FromMinutes(2);
+        options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+        options.HandshakeTimeout = TimeSpan.FromSeconds(30);
+        options.MaximumReceiveMessageSize = 1024 * 1024; // 1 MB, para mensajes grandes como el JSON del certificado
+    });
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient("API", c => c.BaseAddress = new Uri("https://localhost:7150"));
 

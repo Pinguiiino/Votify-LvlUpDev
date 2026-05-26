@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Votify.Domain.EventFolder;
 using Votify.Domain.ProjectFolder;
 
 namespace Votify.Api.Controllers
@@ -8,11 +9,16 @@ namespace Votify.Api.Controllers
     public class ProjectsController : ControllerBase
     {
         private readonly ProjectService _service;
+        private readonly EventService _eventService;
         private readonly IWebHostEnvironment _env;
 
-        public ProjectsController(ProjectService service, IWebHostEnvironment env)
+        public ProjectsController(
+            ProjectService service,
+            EventService eventService,
+            IWebHostEnvironment env)
         {
             _service = service;
+            _eventService = eventService;
             _env = env;
         }
 
@@ -157,6 +163,15 @@ namespace Votify.Api.Controllers
 
             var url = $"/uploads/projects/{fileName}";
             return Ok(new { url });
+        }
+
+      
+        [HttpGet("{id}/results")]
+        public async Task<IActionResult> GetResults(string id)
+        {
+            var results = await _service.GetResultsAsync(id, _eventService);
+            if (results == null) return NotFound();
+            return Ok(results);
         }
 
         private static object ToDto(Project p) => new

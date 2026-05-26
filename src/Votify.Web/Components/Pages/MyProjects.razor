@@ -795,11 +795,10 @@
 
         try
         {
-            await JS.InvokeVoidAsync("votifyCertificate.generar", datos);
+            _ = JS.InvokeVoidAsync("votifyCertificate.generar", datos).AsTask();
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", "Error al generar el certificado.");
             Console.WriteLine(ex.Message);
         }
     }
