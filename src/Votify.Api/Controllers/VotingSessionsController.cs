@@ -106,34 +106,20 @@ namespace Votify.Api.Controllers
             if (session == null)
                 return NotFound("Sesión de votación no encontrada.");
 
-            var now = DateTime.UtcNow;
-            switch (dto.Action?.ToLower())
+            try
             {
-                case "open":
-                    if (session.OpenAt.HasValue && session.OpenAt.Value > now)
-                        session.OpenAt = now;
-                    session.ManualStatus = "open";
-                    session.IsManuallyAdjusted = true;
-                    break;
-
-                case "pause":
-                    session.ManualStatus = "paused";
-                    session.IsManuallyAdjusted = true;
-                    break;
-
-                case "resume":
-                    session.ManualStatus = "open";
-                    session.IsManuallyAdjusted = true;
-                    break;
-
-                case "close":
-                    session.AdjustedCloseAt = now;
-                    session.ManualStatus = "closed";
-                    session.IsManuallyAdjusted = true;
-                    break;
-
-                default:
-                    return BadRequest("Acción no reconocida. Use: open, pause, resume, close.");
+                switch (dto.Action?.ToLower())
+                {
+                    case "open":    session.Abrir();    break;
+                    case "pause":   session.Pausar();   break;
+                    case "resume":  session.Reanudar(); break;
+                    case "close":   session.Cerrar();   break;
+                    default: return BadRequest("Acción no reconocida. Use: open, pause, resume, close.");
+                }
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
             }
 
             await _service.UpdateAsync(session);

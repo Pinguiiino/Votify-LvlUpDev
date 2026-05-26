@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Votify.Domain.CategoryFolder;
+using Votify.Domain.VoteFolder.States;
 
 namespace Votify.Domain.VoteFolder;
 
@@ -19,6 +20,31 @@ public enum EvaluationType
 
 public class VotingSession
 {
+    private IVotingSessionState _estado = ScheduledState.Instance;
+
+    internal void TransicionarA(IVotingSessionState nuevo)
+    {
+        _estado = nuevo;
+        ManualStatus = nuevo.StatusKey;
+        IsManuallyAdjusted = true;
+    }
+
+    public void RestaurarEstado()
+    {
+        _estado = ManualStatus switch
+        {
+            "open"   => OpenState.Instance,
+            "paused" => PausedState.Instance,
+            "closed" => ClosedState.Instance,
+            _        => ScheduledState.Instance
+        };
+    }
+
+    public void Abrir()     => _estado.Abrir(this);
+    public void Pausar()    => _estado.Pausar(this);
+    public void Reanudar()  => _estado.Reanudar(this);
+    public void Cerrar()    => _estado.Cerrar(this);
+
     public string Id { get; set; }
     public string CategoryId { get; set; }
     public string Name { get; set; }
@@ -41,18 +67,7 @@ public class VotingSession
     public DateTime? AdjustedCloseAt { get; set; }
     public DateTime? EffectiveCloseAt => AdjustedCloseAt ?? CloseAt;
     public string? ManualStatus { get; set; }
-    public bool IsOpen
-    {
-        get
-        {
-            if (ManualStatus == "closed" || ManualStatus == "paused") return false;
-            if (ManualStatus == "open") return true;
-
-            var now = DateTime.UtcNow;
-            return OpenAt.HasValue && CloseAt.HasValue
-                && now >= OpenAt && now <= EffectiveCloseAt;
-        }
-    }
+    public bool IsOpen => _estado.PuedeVotar(this);
     public int? ReminderMinutesBeforeClose { get; set; }
     public bool IsManuallyAdjusted { get; set; } = false;
     public List<string> JurorEmails { get; set; } = new();
