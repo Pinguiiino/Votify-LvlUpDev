@@ -2,9 +2,8 @@
 // Generación de certificado PDF en el frontend con jsPDF.
 // Soporta múltiples clasificaciones (varias categorías, Jurado/Público).
 //
-// Incluir en _Host.cshtml o App.razor antes de </body>:
-//   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-//   <script src="~/js/votify-certificate.js"></script>
+// IMPORTANTE: usa blob + link en vez de doc.save() para evitar que el
+// diálogo nativo "Guardar como" pause la pestaña y rompa SignalR.
 
 window.votifyCertificate = {
     generar: function (datos) {
@@ -126,7 +125,7 @@ window.votifyCertificate = {
         doc.setTextColor(120, 120, 140);
         doc.text('Firma autorizada · Votify', pageWidth / 2, pageHeight - 17, { align: 'center' });
 
-        // ─── Descargar ───────────────────────────────────────────
+        // ─── Descargar (sin diálogo "Guardar como" bloqueante) ────
         const nombreArchivo = `Certificado_${datos.nombreProyecto.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
         const blob = doc.output('blob');
         const url = URL.createObjectURL(blob);
