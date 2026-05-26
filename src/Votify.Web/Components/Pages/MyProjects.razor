@@ -310,6 +310,44 @@
                         <img src="@(apiBaseUrl + proyectoSeleccionado.ImageUrl)" alt="@proyectoSeleccionado.Title"
                              style="width: 100%; border-radius: 0.75rem; margin-top: 1.5rem; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);" />
                     }
+                    @if (proyectoSeleccionado.Materials != null && proyectoSeleccionado.Materials.Any())
+                    {
+                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+                            <h4 style="margin: 0 0 0.75rem; font-size: 0.85rem; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.05em;">
+                                Materiales adjuntos
+                            </h4>
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                @foreach (var mat in proyectoSeleccionado.Materials)
+                                {
+                                    <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 0.85rem 1rem;">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+                                            <span style="font-size: 0.75rem; font-weight: 600; background: #dbeafe; color: #1e40af; padding: 0.15rem 0.55rem; border-radius: 1rem;">
+                                                @(Translations.TipoMaterial.GetValueOrDefault(mat.Type, mat.Type))
+                                            </span>
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(mat.Description))
+                                        {
+                                            <p style="margin: 0 0 0.5rem; font-size: 0.875rem; color: #4b5563;">@mat.Description</p>
+                                        }
+                                        <a href="@mat.Url" target="_blank"
+                                           style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; color: #2563eb; word-break: break-all;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1.002 1.002 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4.018 4.018 0 0 1-.128-1.287z" />
+                                                <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243z" />
+                                            </svg>
+                                            @mat.Url
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <p style="color: #9ca3af; font-size: 0.875rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #f3f4f6;">
+                            Sin materiales adjuntos.
+                        </p>
+                    }
 
                     @* === Botón / estado de auditoría === *@
                     @if (!proyectosAuditados.Contains(proyectoSeleccionado.Id))
@@ -849,6 +887,15 @@
         public string? ImageUrl { get; set; }
         public string ValidationStatus { get; set; } = "Pending";
         public string? RejectionReason { get; set; }
+        public List<MaterialDto> Materials { get; set; } = new();
+    }
+
+    public class MaterialDto
+    {
+        public string Id { get; set; } = "";
+        public string Type { get; set; } = "";
+        public string Url { get; set; } = "";
+        public string? Description { get; set; }
     }
 
     public class EventDto
