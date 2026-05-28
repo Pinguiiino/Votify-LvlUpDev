@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Votify.Domain\Votify.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Votify.Api\Votify.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
