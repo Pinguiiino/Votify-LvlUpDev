@@ -6,6 +6,7 @@
     <Project Path="src/Votify.Web/Votify.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Votify.IntegrationTests/Votify.IntegrationTests.csproj" />
     <Project Path="tests/Votify.Tests/Votify.Tests.csproj" />
   </Folder>
 </Solution>
