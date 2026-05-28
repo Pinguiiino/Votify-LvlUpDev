@@ -63,7 +63,7 @@
                         <a href="@($"/event/{EventId}/create-project")" class="btn-dark">+ Subir proyecto</a>
                     }
 
-                    @if (isGlobalAuditor)
+                    @if (isGlobalAuditor || isAuditor)
                     {
                         <a href="@($"/event/{EventId}/audit")" class="btn-dark">Auditar</a>
                     }
@@ -343,6 +343,7 @@
     private bool isOrganizer = false;
     private bool isParticipant = false;
     private bool isPublic = false;
+    private bool isAuditor = false;
     private bool eventoNoIniciado = false;
     private bool eventoFinalizado = false;
 
@@ -365,6 +366,7 @@
             isOrganizer = evento.Organizer == currentUserId;
             isParticipant = evento.ParticipantsIds.Contains(currentUserId);
             isPublic = evento.PublicIds.Contains(currentUserId);
+            isAuditor = evento.AuditorId == currentUserId;
             eventoNoIniciado = DateTime.UtcNow < evento.StartDate;
             eventoFinalizado = DateTime.UtcNow > evento.EndDate;
         }
@@ -814,6 +816,7 @@
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public string Organizer { get; set; } = string.Empty;
+        public string AuditorId { get; set; } = string.Empty;
         public List<string> ParticipantsIds { get; set; } = new();
         public List<string> PublicIds { get; set; } = new();
         public List<CategoryDetailDto> Categories { get; set; } = new();
