@@ -98,7 +98,7 @@ namespace Votify.Tests
             // Act & Assert
             var ex = await Assert.ThrowsAsync<InvalidOperationException>(
                 () => _strategy.ValidateAsync(session, input));
-            Assert.Contains("10 puntos", ex.Message);
+            Assert.Contains("50 puntos", ex.Message);
         }
 
         [Fact]
