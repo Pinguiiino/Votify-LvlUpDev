@@ -109,40 +109,6 @@ namespace Votify.Domain.VoteFolder
             return await _repository.AddAsync(vote);
         }
 
-        [Obsolete("Usa CastVotesByStrategyAsync con TopN input.")]
-        public async Task CastTopNVotesAsync(
-        string userId, string categoryId, string votingSessionId,
-        List<(string ProjectId, int Position, string? Comment)> rankedProjects)
-        {
-            var input = new VoteStrategyInput
-            {
-                UserId = userId,
-                CategoryId = categoryId,
-                RankedProjects = rankedProjects
-                    .Select(r => new RankedProjectInput(r.ProjectId, r.Position, r.Comment))
-                    .ToArray()
-            };
-            await CastVotesByStrategyAsync(votingSessionId, input);
-        }
-
-        [Obsolete("Usa CastVotesByStrategyAsync con WeightedScale input.")]
-        public async Task CastWeightedVotesAsync(
-        string userId, string categoryId, string votingSessionId,
-        List<(string ProjectId, string? Comment, List<(string CriterionId, double Score, string? Comment)> Scores)> projectEvals)
-        {
-            var input = new VoteStrategyInput
-            {
-                UserId = userId,
-                CategoryId = categoryId,
-                WeightedProjects = projectEvals.Select(e => new WeightedProjectInput(
-                    e.ProjectId,
-                    e.Comment,
-                    e.Scores.Select(s => new CriterionScoreInput(s.CriterionId, s.Score, s.Comment)).ToArray()
-                )).ToArray()
-            };
-            await CastVotesByStrategyAsync(votingSessionId, input);
-        }
-
         public async Task<List<WeightedVoteDto>> GetWeightedVotesByUserAndSessionAsync(
             string userId, string votingSessionId)
         {
