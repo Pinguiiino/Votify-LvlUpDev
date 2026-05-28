@@ -439,7 +439,7 @@ namespace Votify.Tests
         public void RestaurarEstado_ManualStatusNull_RestauraScheduledState()
         {
             // Arrange
-            var session = CreateScheduledSession(openAt: DateTime.UtcNow.AddDays(-1));
+            var session = CreateScheduledSession(openAt: DateTime.UtcNow.AddDays(1));
             session.ManualStatus = null;
 
             // Act
