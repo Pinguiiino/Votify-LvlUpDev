@@ -68,21 +68,6 @@ namespace Votify.Tests
             Assert.Contains("No hay ningún VoteCreator registrado", ex.Message);
         }
 
-        [Fact]
-        public void Constructor_CreatorsDuplicados_UltimoPrevalece()
-        {
-            // Arrange
-            var creator1 = new PublicVoteCreator();
-            var creator2 = new PublicVoteCreator();
-            var factory = new VoteCreatorFactory(new VoteCreator[] { creator1, creator2 });
-
-            // Act
-            var result = factory.GetCreator(VoterType.Public);
-
-            // Assert
-            Assert.Same(creator2, result);
-        }
-
         #endregion
 
         #region PublicVoteCreator

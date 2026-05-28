@@ -12,15 +12,16 @@ namespace Votify.Tests
     public class TopNVotingStrategyTests
     {
         private readonly Mock<IVoteRepository> _voteRepoMock;
-        private readonly Mock<VoteCreatorFactory> _voteCreatorFactoryMock;
+        private readonly VoteCreatorFactory _voteCreatorFactory;
         private readonly TopNVotingStrategy _strategy;
 
         public TopNVotingStrategyTests()
         {
             
             _voteRepoMock = new Mock<IVoteRepository>();
-            _voteCreatorFactoryMock = new Mock<VoteCreatorFactory>();
-            _strategy = new TopNVotingStrategy(_voteRepoMock.Object, _voteCreatorFactoryMock.Object);
+            _voteCreatorFactory = new VoteCreatorFactory(
+                new VoteCreator[] { new PublicVoteCreator(), new ExpertVoteCreator() });
+            _strategy = new TopNVotingStrategy(_voteRepoMock.Object, _voteCreatorFactory);
         }
 
         [Fact]

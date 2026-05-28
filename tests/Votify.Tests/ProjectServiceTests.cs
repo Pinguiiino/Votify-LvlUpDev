@@ -1,12 +1,13 @@
-using Xunit;
 using Moq;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Votify.Domain.ProjectFolder;
 using Votify.Domain.CategoryFolder;
 using Votify.Domain.EventFolder;
+using Votify.Domain.ProjectFolder;
+using Votify.Domain.UserFolder;
 using Votify.Domain.VoteFolder;
+using Xunit;
 
 namespace Votify.Tests
 {
