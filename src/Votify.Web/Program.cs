@@ -19,7 +19,11 @@ builder.Services.AddRazorComponents()
         options.MaximumReceiveMessageSize = 1024 * 1024; // 1 MB, para mensajes grandes como el JSON del certificado
     });
 builder.Services.AddHttpClient();
-builder.Services.AddHttpClient("API", c => c.BaseAddress = new Uri("https://localhost:7150"));
+builder.Services.AddHttpClient("API", client =>
+{
+    var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7150";
+    client.BaseAddress = new Uri(apiBaseUrl);
+});
 
 builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
