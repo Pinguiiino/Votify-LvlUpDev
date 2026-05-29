@@ -196,7 +196,7 @@
     {
         await LoadStats();
 
-        var apiBaseUrl = Config["ApiBaseUrl"] ?? "https://localhost:7150";
+        var apiBaseUrl = Config["ConnectionStrings"] ?? "https://localhost:7150";
         _hub = new HubConnectionBuilder()
             .WithUrl($"{apiBaseUrl}/hubs/votes")
             .Build();
