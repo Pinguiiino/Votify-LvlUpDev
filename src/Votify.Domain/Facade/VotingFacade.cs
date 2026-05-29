@@ -6,12 +6,6 @@ using Votify.Domain.VoteFolder.Strategies;
 
 namespace Votify.Domain.Facade;
 
-/// <summary>
-/// Fachada del subsistema de votación.
-/// Simplifica la interacción con el Estado (VotingSession),
-/// Factory (VoteCreatorFactory), Estrategia (VotingStrategyResolver),
-/// Repositorio (IVoteRepository) y Observador (IVoteSubject).
-/// </summary>
 public class VotingFacade
 {
     private readonly IVotingSessionRepository _sessionRepo;
@@ -37,14 +31,7 @@ public class VotingFacade
         _voteCreatorFactory = voteCreatorFactory;
     }
 
-    /// <summary>
-    /// Orquesta todo el flujo de votación en una sola llamada:
-    /// 1. Valida que la sesión exista y esté abierta (Patrón Estado)
-    /// 2. Verifica que no sea voto propio (regla de negocio)
-    /// 3. Resuelve y ejecuta la estrategia de votación (Patrón Estrategia)
-    ///    que internamente usa la Factoría (Patrón Factory Method) para crear el voto
-    ///    y lo persiste en el repositorio.
-    /// </summary>
+    
     public async Task<VoteResultDto> SubmitVoteAsync(VoteRequestDto request)
     {
         var session = await ValidateSessionAsync(request.VotingSessionId, request.CategoryId);
@@ -62,10 +49,7 @@ public class VotingFacade
             EvaluationType: session.EvaluationType.ToString());
     }
 
-    /// <summary>
-    /// Valida que la sesión exista, pertenezca a la categoría
-    /// y esté en estado abierto (Patrón Estado).
-    /// </summary>
+    
     private async Task<VotingSession> ValidateSessionAsync(string sessionId, string categoryId)
     {
         var session = await _sessionRepo.GetByIdAsync(sessionId)
@@ -80,9 +64,7 @@ public class VotingFacade
         return session;
     }
 
-    /// <summary>
-    /// Verifica la regla de negocio de voto propio.
-    /// </summary>
+    
     private async Task ValidateSelfVotingAsync(VoteRequestDto request)
     {
         var category = await _categoryRepo.GetByIdAsync(request.CategoryId);
@@ -128,10 +110,6 @@ public class VotingFacade
             .ToArray() ?? Array.Empty<PointAllocationInput>()
     };
 }
-
-// ─────────────────────────────────────────────
-// DTOs de entrada/salida de la Fachada
-// ─────────────────────────────────────────────
 
 public record VoteRequestDto(
     string UserId,
