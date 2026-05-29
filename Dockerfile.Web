@@ -10,7 +10,8 @@ RUN dotnet restore "src/Votify.Web/Votify.Web.csproj"
 
 COPY . .
 WORKDIR "/src/src/Votify.Web"
-RUN dotnet publish -c Release -o /app/publish
+# Aquí está el cambio clave:
+RUN dotnet publish -c Release -o /app/publish -p:ErrorOnDuplicatePublishOutputFiles=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
