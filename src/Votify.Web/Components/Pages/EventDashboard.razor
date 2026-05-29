@@ -195,8 +195,11 @@
     {
         await LoadStats();
 
+        @inject IConfiguration Config
+
+        var apiBaseUrl = Config["ApiBaseUrl"] ?? "https://localhost:7150";
         _hub = new HubConnectionBuilder()
-            .WithUrl("https://localhost:7150/hubs/votes")
+            .WithUrl($"{apiBaseUrl}/hubs/votes")
             .Build();
 
         _hub.On<string, string, string>("VoteCast", async (eventId, categoryId, sessionId) =>
