@@ -1,0 +1,24 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copiar todos los archivos de proyecto para que pueda resolver las referencias
+COPY ["src/Votify.Api/Votify.Api.csproj", "src/Votify.Api/"]
+COPY ["src/Votify.Web/Votify.Web.csproj", "src/Votify.Web/"]
+COPY ["src/Votify.Domain/Votify.Domain.csproj", "src/Votify.Domain/"]
+COPY ["src/Votify.Infrastructure/Votify.Infrastructure.csproj", "src/Votify.Infrastructure/"]
+
+# Restaurar dependencias de la API
+RUN dotnet restore "src/Votify.Api/Votify.Api.csproj"
+
+# Copiar el código fuente completo y compilar
+COPY . .
+WORKDIR "/src/src/Votify.Api"
+RUN dotnet publish -c Release -o /app/publish
+
+# Generar la imagen final ligera
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+ENTRYPOINT ["dotnet", "Votify.Api.dll"]
