@@ -1,0 +1,20 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY ["src/Votify.Api/Votify.Api.csproj", "src/Votify.Api/"]
+COPY ["src/Votify.Web/Votify.Web.csproj", "src/Votify.Web/"]
+COPY ["src/Votify.Domain/Votify.Domain.csproj", "src/Votify.Domain/"]
+COPY ["src/Votify.Infrastructure/Votify.Infrastructure.csproj", "src/Votify.Infrastructure/"]
+
+RUN dotnet restore "src/Votify.Web/Votify.Web.csproj"
+
+COPY . .
+WORKDIR "/src/src/Votify.Web"
+RUN dotnet publish -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+ENTRYPOINT ["dotnet", "Votify.Web.dll"]
