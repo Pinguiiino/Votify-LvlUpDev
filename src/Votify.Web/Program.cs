@@ -21,7 +21,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient("API", client =>
 {
-    var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7150";
+    var apiBaseUrl = builder.Configuration["ConnectionStrings"] ?? "https://localhost:7150";
     client.BaseAddress = new Uri(apiBaseUrl);
 });
 
