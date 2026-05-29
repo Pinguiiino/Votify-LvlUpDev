@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY ["src/Votify.Api/Votify.Api.csproj", "src/Votify.Api/"]
@@ -10,9 +10,10 @@ RUN dotnet restore "src/Votify.Web/Votify.Web.csproj"
 
 COPY . .
 WORKDIR "/src/src/Votify.Web"
-RUN dotnet publish -c Release -o /app/publish
+# Aquí está el cambio clave:
+RUN dotnet publish -c Release -o /app/publish -p:ErrorOnDuplicatePublishOutputFiles=false
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 EXPOSE 8080
